@@ -97,6 +97,8 @@ class Runner(object):
     def __init__(self):
 
         self._myproj = pyproj.Proj("+init=EPSG:32613")
+        self._data_dir = 'data/shed9'
+
 
 
     def list_gps_users(self):
@@ -516,26 +518,29 @@ class Runner(object):
             route_id = item[1]
             ave_dist = item[0]
 
-            f = open("data/closest_routes.csv", "a")
+            f = open("%s/closest_routes.csv" % self._data_dir, "a")
+
             f.write("%s, %s, %0.2f ave dist(m), %0.2f trip dist (m), %0.2f km/h, %d sec\n" % \
                     (file_name, repr(route_id), ave_dist, trip_dist, speed_kph, duration))
+
             f.close()
 
     def compare_trips_to_routes(self):
 
-        f = open('data/bus_routes.json', 'r')
+        f = open('data/transit/bus_routes.json', 'r')
         bus_routes = simplejson.load(f)
         f.close()
 
         for route_id in bus_routes.iterkeys():
             print "route_id", route_id
 
-        for item in scandir.scandir('../maup/user_trips'):
+        for item in scandir.scandir('%s/user_trips' % self._data_dir):
             if item.is_file():
                 if item.name.startswith('user_trip_'):
                     self.compare_one_trip(item.path, bus_routes)
 
-    def make_google_maps_file(self, file_name, file_trip):
+    def make_google_maps_file(self, route=None, user_id=None, trip=None, data_dir=None):
+        # route=50410, user_id=559, trip=15, data_dir='data/shed9'
         """
         1: { center: {lat: 52.878, lng: -106.629},},
         2: { center: {lat: 52.714, lng: -106.7005},},
@@ -543,7 +548,8 @@ class Runner(object):
         4: { center: {lat: 52.25, lng: -106.71},}
         """
 
-        f = open(file_name, "r")
+        route_file = "data/transit/route_points_%06d.csv" % route
+        f = open(route_file, "r")
         line_count = 0
 
         path = []
@@ -556,16 +562,17 @@ class Runner(object):
             utm_x = float(parts[1].strip())
             utm_y = float(parts[2].strip())
 
-            lon, lat =  myProj(utm_x, utm_y, inverse=True)
+            lon, lat = self._myproj(utm_x, utm_y, inverse=True)
             path.append((lat, lon))
 
         f.close()
 
         #############################
-        f = open(file_trip, "r")
+        trip_file = "%s/user_trips/user_trip_%d_%d.csv" % (data_dir, user_id, trip)
+        f = open(trip_file, "r")
         line_count = 0
 
-        trip = []
+        trip_list = []
 
         for line in f:
             line_count += 1
@@ -577,14 +584,14 @@ class Runner(object):
 
             print "trip parts", parts
 
-            lon, lat =  myProj(utm_x, utm_y, inverse=True)
-            trip.append((lat, lon))
+            lon, lat = self._myproj(utm_x, utm_y, inverse=True)
+            trip_list.append((lat, lon))
 
         f.close()
 
         ##################################
 
-        f = open("data/map.html", "w")
+        f = open("%s/ map_trip_%d_%d_%d.html" % (data_dir, route, user_id, trip), "w")
         f.write("%s\n" % TOP)
 
         for item in path:
@@ -593,7 +600,7 @@ class Runner(object):
         # 1: { center: {lat: 52.878, lng: -106.629},},
         f.write("%s\n" % MIDDLE)
 
-        for i, item in enumerate(trip):
+        for i, item in enumerate(trip_list):
             f.write("%d: {center:{lat: %f, lng: %f},},\n" % (i, item[0], item[1]))
 
         f.write("%s\n" % BOTTOM)
@@ -610,7 +617,7 @@ if __name__ == "__main__":
 
     #runner.find_points_near_stops(user_id=555, radius=100)
     #runner.check_user_stops(user_id=555, radius=100)
-    runner.make_stop_map(user_id=555, radius=100, stop_index=660)
+    # runner.make_stop_map(user_id=555, radius=100, stop_index=660)
 
     #runner.find_points_near_stops(user_id=513, radius=100)
     #runner.check_user_stops(user_id=513, radius=100)
@@ -620,7 +627,10 @@ if __name__ == "__main__":
     #runner.check_user_stops(user_id=1301, radius=100)
     #runner.make_stop_map(user_id=1301, radius=100, stop_index=34)
 
-    #runner.compare_trips_to_routes()
+    # runner.compare_trips_to_routes()
+    #runner.make_google_maps_file(route=50009, user_id=559, trip=121, data_dir='data/shed9')
+    runner.make_google_maps_file(route=50402, user_id=559, trip=60, data_dir='data/shed9')
+
     #.make_google_maps_file("data/route_points_050410.csv", "../maup/user_trips/user_trip_1301_15.csv")
     
     #runner.make_google_maps_file("data/route_points_050005.csv", "../maup/user_trips/1323/user_trip_1323_23.csv")
