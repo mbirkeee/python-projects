@@ -3,6 +3,7 @@ import pyproj
 import numpy
 import math
 import time
+from password import MYSQL_PASSWORD
 
 class Runner(object):
     """
@@ -1417,7 +1418,7 @@ class MySQL(object):
     def get_gps(self):
 
         db = MySQLdb.connect(host="crepe.usask.ca", user="slb405",
-            db="SHED9", passwd="abgEFIJXl_%Q18")
+            db="SHED9", passwd="%s" % MYSQL_PASSWORD)
 
         c = db.cursor()
 
