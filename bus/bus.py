@@ -7,85 +7,7 @@ import os
 import scandir
 
 
-TOP = """
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
-    <meta charset="utf-8">
-    <title>Simple Polylines</title>
-    <style>
-      /* Always set the map height explicitly to define the size of the div
-       * element that contains the map. */
-      #map {
-        height: 100%;
-      }
-      /* Optional: Makes the sample page fill the window. */
-      html, body {
-        height: 100%;
-        margin: 0;
-        padding: 0;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="map"></div>
-    <script>
 
-      // This example creates a 2-pixel-wide red polyline showing the path of
-      // the first trans-Pacific flight between Oakland, CA, and Brisbane,
-      // Australia which was made by Charles Kingsford Smith.
-
-      function initMap() {
-        var map = new google.maps.Map(document.getElementById('map'), {
-          zoom: 12,
-          center: {lat: 52.2, lng: -106.65},
-          mapTypeId: 'terrain'
-        });
-
-        var flightPlanCoordinates = [
-"""
-
-MIDDLE = """
-        ];
-        var flightPath = new google.maps.Polyline({
-          path: flightPlanCoordinates,
-          geodesic: true,
-          strokeColor: '#FF0000',
-          strokeOpacity: 1.0,
-          strokeWeight: 2
-        });
-
-        flightPath.setMap(map);
-        var trip = {
-"""
-
-
-BOTTOM = """
-        };
-
-
-        for (var point in trip) {
-          var circle = new google.maps.Circle({
-            strokeColor: '#0000FF',
-            strokeOpacity: 0.25,
-            strokeWeight: 2,
-            fillColor: '#0000FF',
-            fillOpacity: 0.25,
-            map: map,
-            center: trip[point].center,
-            radius: 30
-          });
-        }
-      }
-    </script>
-    <script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBlabwKhgVWHc5Yfr3bUYGSUDJyYTKX5QY&callback=initMap">
-    </script>
-  </body>
-</html>
-
-"""
 class Runner(object):
     """
     A collection of utilities to process the SHED10 data.  The approach taken
@@ -103,7 +25,8 @@ class Runner(object):
 
     def list_gps_users(self):
         line_count = 0
-        f = open("../maup/gps_utm.csv")
+        f = open("%s/gps_utm.csv" % self._data_dir)
+
         user_dict = {}
 
         line = ''
@@ -540,6 +463,8 @@ class Runner(object):
                     self.compare_one_trip(item.path, bus_routes)
 
     def make_google_maps_file(self, route=None, user_id=None, trip=None, data_dir=None):
+
+
         # route=50410, user_id=559, trip=15, data_dir='data/shed9'
         """
         1: { center: {lat: 52.878, lng: -106.629},},
@@ -547,6 +472,8 @@ class Runner(object):
         3: { center: {lat: 52.052, lng: -106.7243},},
         4: { center: {lat: 52.25, lng: -106.71},}
         """
+
+        from map_html import ROUTE_BOTTOM, ROUTE_TOP, ROUTE_MIDDLE
 
         route_file = "data/transit/route_points_%06d.csv" % route
         f = open(route_file, "r")
@@ -592,31 +519,33 @@ class Runner(object):
         ##################################
 
         f = open("%s/ map_trip_%d_%d_%d.html" % (data_dir, route, user_id, trip), "w")
-        f.write("%s\n" % TOP)
+        f.write("%s\n" % ROUTE_TOP)
 
         for item in path:
             f.write("{lat: %f, lng: %f},\n" % (item[0], item[1]))
 
         # 1: { center: {lat: 52.878, lng: -106.629},},
-        f.write("%s\n" % MIDDLE)
+        f.write("%s\n" % ROUTE_MIDDLE)
 
         for i, item in enumerate(trip_list):
             f.write("%d: {center:{lat: %f, lng: %f},},\n" % (i, item[0], item[1]))
 
-        f.write("%s\n" % BOTTOM)
+        f.write("%s\n" % ROUTE_BOTTOM)
 
 if __name__ == "__main__":
 
 
     runner = Runner()
 
-    #runner.list_gps_users()
+    # runner.list_gps_users()
+    # raise ValueError('done')
+
     # runner.make_bus_stops()
     # runner.make_bus_files()
 
 
-    #runner.find_points_near_stops(user_id=555, radius=100)
-    #runner.check_user_stops(user_id=555, radius=100)
+    # runner.find_points_near_stops(user_id=555, radius=100)
+    # runner.check_user_stops(user_id=555, radius=100)
     # runner.make_stop_map(user_id=555, radius=100, stop_index=660)
 
     #runner.find_points_near_stops(user_id=513, radius=100)
@@ -628,13 +557,9 @@ if __name__ == "__main__":
     #runner.make_stop_map(user_id=1301, radius=100, stop_index=34)
 
     # runner.compare_trips_to_routes()
-    #runner.make_google_maps_file(route=50009, user_id=559, trip=121, data_dir='data/shed9')
-    runner.make_google_maps_file(route=50402, user_id=559, trip=60, data_dir='data/shed9')
 
-    #.make_google_maps_file("data/route_points_050410.csv", "../maup/user_trips/user_trip_1301_15.csv")
-    
-    #runner.make_google_maps_file("data/route_points_050005.csv", "../maup/user_trips/1323/user_trip_1323_23.csv")
-    # ../maup/user_trips/user_trip_559_104.csv, '50402', 27.13 ave dist(m), 7775.15 trip dist (m), 16.89 km/h, 1657 sec
+    runner.make_google_maps_file(route=50085, user_id=1043, trip=117, data_dir='data/shed9')
 
-    # runner.make_google_maps_file("data/route_points_050402.csv", "../maup/user_trips/user_trip_559_104.csv")
+    #runner.make_google_maps_file(route=50402, user_id=559, trip=137, data_dir='data/shed9')
+
 

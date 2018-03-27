@@ -1,2 +1,4 @@
 bus/password.py
 bus/data
+*.pyc
+.DS_Store

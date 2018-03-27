@@ -1486,7 +1486,7 @@ if __name__ == "__main__":
 #    runner.trip_length_plot()
 #    runner.trip_time_plot()
 
-    runner.make_trip_csvs(user_id=559, n=3)
+    runner.make_trip_csvs(user_id=1043, n=3)
 #    runner.make_trip_csvs(user_id=559, n=2)
 #    runner.make_trip_csvs(user_id=1301, n=2)
 #    runner.make_trip_csvs(user_id=1302, n=2)
