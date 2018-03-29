@@ -54,57 +54,147 @@ class Runner(object):
         for user_id, count in user_dict.iteritems():
             print "User ID: %d GPS points: %d" %(user_id, count)
 
-    def find_points_near_stops(self, user_id=None, radius=None):
+    def find_points_near_stops_2(self, user_id=None, radius=100):
+        """
+        Just loops through a users GPS points and detects when
+        """
 
-        stop_point_dict = {}
-
-        f = open('data/bus_stops.json', 'r')
-        bus_stops = simplejson.load(f)
-        f.close()
+    def load_user_gps(self, user_id):
 
         line_count = 0
-        f = open("../maup/gps_utm.csv")
+        file_name = "%s/user_gps/user_gps_%d.csv" % (self._data_dir, user_id)
+        f = open(file_name)
 
+        points = []
         for line in f:
             line_count += 1
             if line_count == 1: continue
             parts = line.split(",")
-            user_id_gps = int(parts[0].strip())
+            x = float(parts[0].strip())
+            y = float(parts[1].strip())
+            sec = int(parts[2].strip())
+            points.append((x, y, sec))
 
-            if user_id_gps != user_id:
-                continue
+        f.close()
+        print "Read %s (%d points)" % (file_name, len(points))
+        return points
 
-            x = float(parts[1].strip())
-            y = float(parts[2].strip())
-            sec = int(parts[3].strip())
 
-            for stop_index, d in bus_stops.iteritems():
-                stop_x = d.get('x')
-                stop_y = d.get('y')
+    def get_point_velocity(self, start, stop):
+
+        dist = self.get_dist((start[0], start[1]), (stop[0], stop[1]))
+        duration = stop[2] - start[2]
+
+        velocity_ms =  float(dist)/float(duration)
+        velocity_kph = 3600.0 * velocity_ms / 1000.0
+        return velocity_kph
+
+
+    def process_stop_points(self, stop_data):
+
+        point_list = stop_data.get('points')
+
+        if len(point_list) < 10:
+            # print "IGNORE less than 5 points"
+            return
+
+        start_point = point_list[0]
+        end_point = point_list[-1]
+
+        time_at_stop = end_point[2] - start_point[2]
+
+        if time_at_stop > 600:
+            # print "IGNORE... AT STOP TOO LONG"
+            return
+
+        if time_at_stop < 30:
+            # print "IGNORE...TOO SHORT"
+            return
+
+        print "------- Time at stop: %d" % time_at_stop
+
+        velocity = self.get_point_velocity(start_point, end_point)
+        #print "velocity through stop ====> %.2f" % velocity
+
+        velocity_in = self.get_point_velocity(point_list[0], point_list[5])
+        velocity_out = self.get_point_velocity(point_list[-5], point_list[-1])
+
+        if abs(velocity_in - velocity_out) > 10.0:
+            print "VELO IN %.2f -- %.2f %d" % (velocity_in, velocity_out, stop_data.get('image_index'))
+            self.make_stop_map(stop_data)
+
+
+    def find_points_near_stops(self, user_id=None, radius=None):
+
+        stop_point_dict = {}
+
+        f = open('data/transit/bus_stops.json', 'r')
+        bus_stops = simplejson.load(f)
+        f.close()
+
+        user_points = self.load_user_gps(user_id)
+
+        image_index = 0
+
+        f = open("%s/user_gps/user_gps_%d.csv" % (self._data_dir, user_id))
+
+        for stop_index, d in bus_stops.iteritems():
+            stop_x = d.get('x')
+            stop_y = d.get('y')
+
+            near_stop = False
+            point_list = []
+            stop_data = {}
+
+            for point in user_points:
+                x = point[0]
+                y = point[1]
+                sec = point[2]
 
                 dist = self.get_dist((x, y), (stop_x, stop_y))
 
                 if dist < radius:
-                    print "point is near stop: %s" % d.get('name')
-                    key = "%d (%s)" % (int(stop_index), d.get('name'))
+                    if near_stop == False:
+                        print "Enter Stop: %s" % d.get('name')
+                        point_list = []
 
-                    stop_data = stop_point_dict.get(key, {})
-                    stop_points = stop_data.get('points', [])
-                    stop_points.append((x, y, sec))
-                    stop_data['points'] = stop_points
-                    stop_data['name'] = d.get('name')
-                    stop_data['index'] = stop_index
-                    stop_data['x'] = stop_x
-                    stop_data['y'] = stop_y
-                    stop_point_dict[key] = stop_data
+                        stop_data['x'] = stop_x
+                        stop_data['y'] = stop_y
+                        stop_data['stop_index'] = stop_index
+                        stop_data['user_id'] = user_id
+                        stop_data['image_index'] = image_index
+                        stop_data['radius'] = radius
 
-        f.close()
+                    near_stop = True
+                    point_list.append(point)
 
-        file_name = "data/user_radius_%d_%d.json" % (user_id, radius)
+                else:
+                    if near_stop:
+                        print "Exit Stop: %s" % d.get('name')
+                        stop_data['points'] = point_list
+                        self.process_stop_points(stop_data)
 
-        f = open(file_name, 'w')
-        simplejson.dump(stop_point_dict, f, indent=4)
-        f.close()
+                        image_index += 1
+                    near_stop = False
+                    point_list = []
+                    stop_data = {}
+
+                    # key = "%d (%s)" % (int(stop_index), d.get('name'))
+                    #
+                    # stop_data = stop_point_dict.get(key, {})
+                    # stop_points = stop_data.get('points', [])
+                    # stop_points.append((x, y, sec))
+                    # stop_data['points'] = stop_points
+                    # stop_data['name'] = d.get('name')
+                    #
+
+                    # stop_point_dict[key] = stop_data
+
+
+#        file_name = "data/user_radius_%d_%d.json" % (user_id, radius)
+#        f = open(file_name, 'w')
+#        simplejson.dump(stop_point_dict, f, indent=4)
+#        f.close()
 
     def check_user_stops(self, user_id=None, radius=None):
 
@@ -118,37 +208,46 @@ class Runner(object):
             stop_points = value.get('points')
             print "Stop: %s points: %d" % (key, len(stop_points))
 
-    def make_stop_map(self, user_id=None, radius=None, stop_index=None):
+    def make_stop_map(self, stop_data):
 
-        from map_stop import TOP as MAP_TOP
-        from map_stop import BOTTOM as MAP_BOTTOM
-        from map_stop import CIRCLE1, CIRCLE2
+        from map_html import TOP as MAP_TOP
+        from map_html import BOTTOM as MAP_BOTTOM
+        from map_html import CIRCLE1, CIRCLE2
 
-        file_name = "data/user_radius_%d_%d.json" % (user_id, radius)
-
-        f = open(file_name, 'r')
-        stop_data_points = simplejson.load(f)
-        f.close()
+        # print type(user_id)
+        # file_name = "%s/user_radius_%d_%d_stop_%d_%d.json" % \
+        #             (self._data_dir, user_id, radius, stop_index, image_index)
+        #
+        # f = open(file_name, 'r')
+        # stop_data_points = simplejson.load(f)
+        # f.close()
 
         stop_points = None
 
-        for key, value in stop_data_points.iteritems():
-            stop_index_this = int(value.get('index'))
-            if stop_index_this == stop_index:
-                stop_points = value.get('points')
-                break
+        point_list = stop_data.get('points')
+        stop_index = int(stop_data.get('stop_index'))
+        user_id = stop_data.get('user_id')
+        radius = stop_data.get('radius')
+        image_index = stop_data.get('image_index')
 
-        if stop_points is None:
+        # for key, value in stop_data_points.iteritems():
+        #     stop_index_this = int(value.get('index'))
+        #     if stop_index_this == stop_index:
+        #         stop_points = value.get('points')
+        #         break
+
+        if point_list is None:
             print "No GPS points detected"
 
-        map_name = "maps/map_user_radius_stop_%d_%d_%d.html" % (user_id, radius, stop_index)
+        map_name = "%s/maps/map_user_radius_stop_%d_%d_%d_%d.html" % \
+                   (self._data_dir, user_id, radius, stop_index, image_index)
 
         f = open(map_name, "w")
         f.write(MAP_TOP)
         f.write("var circle1 = {\n")
 
-        stop_x = value.get('x')
-        stop_y = value.get('y')
+        stop_x = stop_data.get('x')
+        stop_y = stop_data.get('y')
 
         lon, lat =  self._myproj(stop_x, stop_y, inverse=True)
 
@@ -157,7 +256,7 @@ class Runner(object):
         f.write(CIRCLE1)
 
         f.write("var circle2 = {\n")
-        for i, point in enumerate(stop_points):
+        for i, point in enumerate(point_list):
 
             lon, lat = self._myproj(point[0], point[1], inverse=True)
             f.write("%d: {center:{lat: %f, lng: %f},},\n" % (i, lat, lon))
@@ -332,6 +431,7 @@ class Runner(object):
 
         x1 = point1[0]
         y1 = point1[1]
+
         x2 = point2[0]
         y2 = point2[1]
 
@@ -552,13 +652,13 @@ if __name__ == "__main__":
     #runner.check_user_stops(user_id=513, radius=100)
     #runner.make_stop_map(user_id=513, radius=100, stop_index=1069)
 
-    #runner.find_points_near_stops(user_id=1301, radius=100)
+    runner.find_points_near_stops(user_id=1111, radius=50)
     #runner.check_user_stops(user_id=1301, radius=100)
     #runner.make_stop_map(user_id=1301, radius=100, stop_index=34)
 
     # runner.compare_trips_to_routes()
 
-    runner.make_google_maps_file(route=50085, user_id=1043, trip=117, data_dir='data/shed9')
+    #runner.make_google_maps_file(route=50085, user_id=1043, trip=117, data_dir='data/shed9')
 
     #runner.make_google_maps_file(route=50402, user_id=559, trip=137, data_dir='data/shed9')
 

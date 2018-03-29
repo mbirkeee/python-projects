@@ -172,6 +172,42 @@ class Runner(object):
         print "keep_count", keep_count
         print "toss_user_count", toss_user_count
 
+    def make_user_gps_files(self):
+
+        file_name = "%s/gps_utm.csv" % self._data_dir
+        self.test_sorted(file_name)
+
+        f = open(file_name, "r")
+        line_count = 0
+
+        prev_user = None
+        f_out = None
+
+        for line in f:
+            line_count += 1
+            if line_count == 1: continue
+            parts = line.split(",")
+            user_id = int(parts[0].strip())
+            x = float(parts[1].strip())
+            y = float(parts[2].strip())
+            sat_sec = int(parts[3].strip())
+
+            if user_id != prev_user:
+                if f_out is not None:
+                    f_out.close()
+
+                output_file_name = "%s/user_gps/user_gps_%d.csv" % (self._data_dir, user_id)
+                f_out = open(output_file_name, "w")
+                print "Creating file: %s" % output_file_name
+                f_out.write("utm_x,utm_y,time\n")
+                prev_user = user_id
+
+            f_out.write("%f,%f,%d\n" % (x, y, sat_sec))
+
+        f_out.close()
+        f.close()
+
+
     def convert_to_utm(self):
         """
         Convert the lat/lon position to UTM and discard any points outside Saskatoon
@@ -1476,6 +1512,8 @@ if __name__ == "__main__":
 #    runner.remove_duplicates()
 
 #    runner.convert_to_utm()
+
+    runner.make_user_gps_files()
 #    runner.aggregate()
 #    runner.min_max_time()
 
@@ -1486,7 +1524,9 @@ if __name__ == "__main__":
 #    runner.trip_length_plot()
 #    runner.trip_time_plot()
 
-    runner.make_trip_csvs(user_id=1043, n=3)
+
+
+#    runner.make_trip_csvs(user_id=1043, n=3)
 #    runner.make_trip_csvs(user_id=559, n=2)
 #    runner.make_trip_csvs(user_id=1301, n=2)
 #    runner.make_trip_csvs(user_id=1302, n=2)
