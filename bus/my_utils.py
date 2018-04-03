@@ -1,14 +1,14 @@
 import datetime
 import time
+import simplejson
 
 def seconds_to_string(seconds):
     t = datetime.datetime.fromtimestamp(seconds)
-    tt= t.strftime("%Y-%m-%d:%H:%M:%S")
+    tt = t.strftime("%Y-%m-%d:%H:%M:%S")
     return tt
 
 def string_to_seconds(s):
 
-    seconds = None
     try:
         t = time.strptime(s.strip(), "%Y-%m-%d:%H:%M:%S")
         return int(time.mktime(t))
@@ -47,6 +47,72 @@ def string_to_seconds(s):
 
     raise ValueError("Invalid time string: %s" % s)
 
+
+class TransitData(object):
+
+    def __init__(self):
+        self._bus_stops = None
+
+    def load_stops(self):
+        file_name = './data/transit/bus_stops.json'
+        f = open(file_name, 'r')
+        self._bus_stops = simplejson.load(f)
+        f.close()
+
+    def get_data(self):
+        return self._bus_stops
+
+    def get_bounding_box(self):
+
+        min_lat =  9999999999.0
+        min_lon =  9999999999.0
+        max_lat = -9999999999.0
+        max_lon = -9999999999.0
+
+        for key, value in self._bus_stops.iteritems():
+
+            lat = value.get('lat')
+            lon = value.get('lon')
+
+            if lat < min_lat:
+                min_lat = lat
+
+            if lat > max_lat:
+                max_lat = lat
+
+            if lon < min_lon:
+                min_lon = lon
+
+            if lon > max_lon:
+                max_lon = lon
+
+        return (min_lat, min_lon), (max_lat, max_lon)
+
+    def get_bounding_box_utm(self):
+
+        min_x =  9999999999.0
+        min_y =  9999999999.0
+        max_x = -9999999999.0
+        max_y = -9999999999.0
+
+        for key, value in self._bus_stops.iteritems():
+
+            x = value.get('x')
+            y = value.get('y')
+
+            if x < min_x:
+                min_x = x
+
+            if x > max_x:
+                max_x = x
+
+            if y < min_y:
+                min_y = y
+
+            if y > max_y:
+                max_y = y
+
+        return (min_x, min_y), (max_x, max_y)
 
 class UserGPS(object):
 

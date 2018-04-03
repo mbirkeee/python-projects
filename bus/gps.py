@@ -41,7 +41,7 @@ class Runner(object):
 
         self._max_time_index = int(float(self._max_time - self._min_time)/self._aggregate_sec)
 
-        self._data_dir = "data/shed9"
+        self._data_dir = "data/shed10"
 
     def filter_battery(self):
         """

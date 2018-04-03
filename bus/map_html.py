@@ -25,12 +25,41 @@ TOP = """
 
       function initMap() {
         var map = new google.maps.Map(document.getElementById('map'), {
-          zoom: 12,
-          center: {lat: 52.2, lng: -106.65},
+          zoom: 13,
+          center: {lat: 52.125, lng: -106.65},
           mapTypeId: 'terrain'
         });
 """
 
+CIRCLE_RED_20 = """
+for (var point in circle) {
+  var circ = new google.maps.Circle({
+    strokeColor: '#FF0000',
+    strokeOpacity: 0.25,
+    strokeWeight: 1,
+    fillColor: '#FF0000',
+    fillOpacity: 0.25,
+    map: map,
+    center: circle[point].center,
+    radius: 20
+  });
+}
+"""
+
+CIRCLE_RED_50 = """
+for (var point in circle) {
+  var circ = new google.maps.Circle({
+    strokeColor: '#FF0000',
+    strokeOpacity: 0.25,
+    strokeWeight: 1,
+    fillColor: '#FF0000',
+    fillOpacity: 0.25,
+    map: map,
+    center: circle[point].center,
+    radius: 50
+  });
+}
+"""
 
 CIRCLE1 = """
 for (var point in circle1) {
@@ -61,6 +90,8 @@ for (var point in circle2) {
   });
 }
 """
+
+
 
 BOTTOM = """
       }

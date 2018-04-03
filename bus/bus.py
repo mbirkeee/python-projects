@@ -244,8 +244,8 @@ class Runner(object):
 
         f = open(map_name, "w")
         f.write(MAP_TOP)
-        f.write("var circle1 = {\n")
 
+        f.write("var circle1 = {\n")
         stop_x = stop_data.get('x')
         stop_y = stop_data.get('y')
 
