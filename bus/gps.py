@@ -18,6 +18,8 @@ class Runner(object):
         self.users_battery = {}
         self.user_dict = {}
 
+        self._proj = pyproj.Proj("+init=EPSG:32613")
+
         self._toss_user_id = []
         self._keep_user_id = []
 
@@ -25,14 +27,21 @@ class Runner(object):
         self._max_time = 0
         self._max_time_index = 0
 
-        self._min_time = 1481300627
-        self._max_time = 1489015809
+        # Shed 10
+        # self._min_time = 1481300627
+        # self._max_time = 1489015809
+
+        # Shed 9
+        self._min_time = 1420114010
+        self._max_time = 1483156800
 
         self._aggregate_sec = 300.0
 
         self._gps_user_data = []
 
         self._max_time_index = int(float(self._max_time - self._min_time)/self._aggregate_sec)
+
+        self._data_dir = "data/shed10"
 
     def filter_battery(self):
         """
@@ -45,7 +54,7 @@ class Runner(object):
         max_possible_battery_count = 28 * 60 * 24 / 5
 
         line_count = 0
-        f = open("battery.csv", "r")
+        f = open("%s/battery.csv" % self._data_dir, "r")
 
         for line in f:
             # print line
@@ -76,7 +85,8 @@ class Runner(object):
                   (user_count, repr(user_id), repr(value), percentage)
             user_count += 1
 
-            if percentage < 50.0:
+            # if percentage < 50.0:
+            if float(value) < 2000.0:
                 self._toss_user_id.append(user_id)
             else:
                 self._keep_user_id.append(user_id)
@@ -111,8 +121,8 @@ class Runner(object):
         - not within saskatoon
         - >100m accuracy
         """
-        f = open("gps.csv", "r")
-        f2 = open("gps_filtered_by_user.csv", "w")
+        f = open("%s/gps.csv" % self._data_dir, "r")
+        f2 = open("%s/gps_filtered.csv" % self._data_dir, "w")
 
         line_count = 0
         keep_count = 0
@@ -162,6 +172,42 @@ class Runner(object):
         print "keep_count", keep_count
         print "toss_user_count", toss_user_count
 
+    def make_user_gps_files(self):
+
+        file_name = "%s/gps_utm.csv" % self._data_dir
+        self.test_sorted(file_name)
+
+        f = open(file_name, "r")
+        line_count = 0
+
+        prev_user = None
+        f_out = None
+
+        for line in f:
+            line_count += 1
+            if line_count == 1: continue
+            parts = line.split(",")
+            user_id = int(parts[0].strip())
+            x = float(parts[1].strip())
+            y = float(parts[2].strip())
+            sat_sec = int(parts[3].strip())
+
+            if user_id != prev_user:
+                if f_out is not None:
+                    f_out.close()
+
+                output_file_name = "%s/user_gps/user_gps_%d.csv" % (self._data_dir, user_id)
+                f_out = open(output_file_name, "w")
+                print "Creating file: %s" % output_file_name
+                f_out.write("utm_x,utm_y,time\n")
+                prev_user = user_id
+
+            f_out.write("%f,%f,%d\n" % (x, y, sat_sec))
+
+        f_out.close()
+        f.close()
+
+
     def convert_to_utm(self):
         """
         Convert the lat/lon position to UTM and discard any points outside Saskatoon
@@ -170,13 +216,11 @@ class Runner(object):
         skip_count = 0
         index = 0
 
-        f = open("gps_filtered_no_duplicates.csv", "r")
-        f2 = open("gps_utm.csv", "w")
+        f = open("%s/gps_filtered_no_duplicates.csv" % self._data_dir, "r")
+        f2 = open("%s/gps_utm.csv" % self._data_dir, "w")
 
         #f2.write("user_id, lat, long, utm_x, utm_y, time\n")
         f2.write("user_id, utm_x, utm_y, time\n")
-
-        myProj = pyproj.Proj("+init=EPSG:32613")
 
         for line in f:
             line = line.strip()
@@ -195,7 +239,7 @@ class Runner(object):
             line_count += 1
             #if line_count > 100: break
 
-            x, y  = myProj(lon, lat)
+            x, y  = self._proj(lon, lat)
             #line = "%s, %f, %f, %f, %f, %d\n" % (user_id, lat, lon, x, y, sat_sec)
             line = "%s, %f, %f, %d\n" % (user_id, x, y, sat_sec)
 
@@ -284,7 +328,7 @@ class Runner(object):
 
     def min_max_time(self):
 
-        input_file = "gps_utm.csv"
+        input_file = "%s/gps_utm.csv" % self._data_dir
 
         self.test_sorted(input_file)
 
@@ -363,7 +407,7 @@ class Runner(object):
     def make_one_trip_csv(self, user_id, trip_count, start_sec, stop_sec):
         print "make trip csv", user_id, trip_count, start_sec, stop_sec
 
-        file_name = "user_trips/user_trip_%d_%d.csv" % (user_id, trip_count)
+        file_name = "%s/user_trips/user_trip_%d_%d.csv" % (self._data_dir, user_id, trip_count)
 
         f = open(file_name, "w")
         f.write("x_utm, y_utm, sec\n")
@@ -390,7 +434,7 @@ class Runner(object):
 
         user_id_in = user_id
 
-        f = open("gps_utm.csv", "r")
+        f = open("%s/gps_utm.csv" % self._data_dir, "r")
 
         line_count = 0
         for line in f:
@@ -409,7 +453,7 @@ class Runner(object):
 
         f.close()
 
-        trip_data_filename = "trip_data_%d.csv" % n
+        trip_data_filename = "%s/trip_data_%d.csv" % (self._data_dir, n)
 
         f = open(trip_data_filename, "r")
         line_count=0
@@ -440,16 +484,14 @@ class Runner(object):
 
         size = 100
 
-        myProj = pyproj.Proj("+init=EPSG:32613")
-
-        start_x, start_y  = myProj(-106.7649138128, 52.058367)
-        stop_x, stop_y = myProj(-106.52225318, 52.214608 )
+        start_x, start_y  = self._proj(-106.7649138128, 52.058367)
+        stop_x, stop_y = self._proj(-106.52225318, 52.214608 )
 
         x_bins = 1 + int((stop_x - start_x) / float(size))
         y_bins = 1 + int((stop_y - start_y) / float(size))
 
-        input_file = "aggregated_2.csv"
-        output_file = "trip_data_%d.csv" % n
+        input_file = "%s/aggregated_2.csv" % self._data_dir
+        output_file = "%s/trip_data_%d.csv" % (self._data_dir, n)
 
         f = open(input_file, "r")
         f2 = open(output_file, "w")
@@ -534,7 +576,7 @@ class Runner(object):
         f2.close()
         f.close()
 
-        # return
+        return
 
         heatmap_trip_yes = numpy.zeros((x_bins, y_bins), dtype=numpy.uint32)
         heatmap_trip_no = numpy.zeros((x_bins, y_bins), dtype=numpy.uint32)
@@ -931,15 +973,12 @@ class Runner(object):
         Loop over all the GPS datapoints.  Determine which time bin index they fall into.
         """
 
-
         # THE DATA MUST BE GROUPED BY USER AND SORTED BY TIME!!!!!
-        input_file = "gps_utm.csv"
-        output_file = "aggregated_2.csv"
+        input_file = "%s/gps_utm.csv" % self._data_dir
+        output_file = "%s/aggregated_2.csv" % self._data_dir
 
-        myProj = pyproj.Proj("+init=EPSG:32613")
-
-        start_x, start_y = myProj(-106.7649138128, 52.058367)
-        stop_x, stop_y = myProj(-106.52225318, 52.214608)
+        start_x, start_y = self._proj(-106.7649138128, 52.058367)
+        stop_x, stop_y = self._proj(-106.52225318, 52.214608)
 
         # x_bins = 1 + int((stop_x - start_x) / float(size))
         # y_bins = 1 + int((stop_y - start_y) / float(size))
@@ -1101,7 +1140,7 @@ class Runner(object):
         - GROUPED BY USER ID
         - SORTED BY TIME
         """
-        f = open("gps_filtered_by_user.csv")
+        f = open("%s/gps_filtered.csv" % self._data_dir)
 
         data = {}
         dup_count = 0
@@ -1110,7 +1149,7 @@ class Runner(object):
 
         for line in f:
             parts = line.split(",")
-            user_id = parts[0].strip()
+            user_id = int(parts[0].strip())
             lat = parts[1].strip()
             lon = parts[2].strip()
             sat_sec = int(parts[3].strip())
@@ -1143,7 +1182,7 @@ class Runner(object):
         print "duplicate count", dup_count
         print "error count", err_count
 
-        f2 = open("gps_filtered_no_duplicates.csv", "w")
+        f2 = open("%s/gps_filtered_no_duplicates.csv" % self._data_dir, "w")
 
         for user_id, user_data in data.iteritems():
 
@@ -1463,29 +1502,31 @@ class MySQL(object):
 
 if __name__ == "__main__":
 
-    mysql = MySQL()
-    mysql.get_battery()
-    mysql.get_gps()
-
-    raise ValueError("done")
+#    mysql = MySQL()
+#    mysql.get_battery()
+#    mysql.get_gps()
 
     runner = Runner()
-
 #    runner.filter_battery()
 #    runner.filter_gps()
-#    runner.remove_diplicates()
-    runner.convert_to_utm()
+#    runner.remove_duplicates()
+
+#    runner.convert_to_utm()
+
+    runner.make_user_gps_files()
 #    runner.aggregate()
 #    runner.min_max_time()
 
 #    runner.aggregate_2()
-#    runner.detect_trips(n=2)
+#    runner.detect_trips(n=3)
 
 #    runner.trip_stats()
 #    runner.trip_length_plot()
 #    runner.trip_time_plot()
 
-#    runner.make_trip_csvs(user_id=1323, n=2)
+
+
+#    runner.make_trip_csvs(user_id=1043, n=3)
 #    runner.make_trip_csvs(user_id=559, n=2)
 #    runner.make_trip_csvs(user_id=1301, n=2)
 #    runner.make_trip_csvs(user_id=1302, n=2)
