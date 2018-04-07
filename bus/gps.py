@@ -28,12 +28,12 @@ class Runner(object):
         self._max_time_index = 0
 
         # Shed 10
-        # self._min_time = 1481300627
-        # self._max_time = 1489015809
+        self._min_time = 1481300627
+        self._max_time = 1489015809
 
         # Shed 9
-        self._min_time = 1420114010
-        self._max_time = 1483156800
+        # self._min_time = 1420114010
+        # self._max_time = 1483156800
 
         self._aggregate_sec = 300.0
 
@@ -1513,11 +1513,13 @@ if __name__ == "__main__":
 
 #    runner.convert_to_utm()
 
-    runner.make_user_gps_files()
+
+#    runner.make_user_gps_files()
 #    runner.aggregate()
 #    runner.min_max_time()
 
 #    runner.aggregate_2()
+
 #    runner.detect_trips(n=3)
 
 #    runner.trip_stats()
@@ -1525,8 +1527,7 @@ if __name__ == "__main__":
 #    runner.trip_time_plot()
 
 
-
-#    runner.make_trip_csvs(user_id=1043, n=3)
+    runner.make_trip_csvs(user_id=767, n=3)
 #    runner.make_trip_csvs(user_id=559, n=2)
 #    runner.make_trip_csvs(user_id=1301, n=2)
 #    runner.make_trip_csvs(user_id=1302, n=2)

@@ -19,7 +19,7 @@ class Runner(object):
     def __init__(self):
 
         self._myproj = pyproj.Proj("+init=EPSG:32613")
-        self._data_dir = 'data/shed9'
+        self._data_dir = 'data/shed10'
 
 
 
@@ -507,6 +507,22 @@ class Runner(object):
         trip_points, speed_kph, duration, trip_dist = self.get_trip_points(file_name)
         print "number of points", len(trip_points)
 
+        if trip_dist < 1000:
+            print "ignore trip dist < 1000m"
+            return
+
+        if trip_points < 20:
+            print "ignoring trip with less than 20 points"
+            return
+
+        if duration < 600:
+            print "ignoring trip with duration less than 600 seconds"
+            return
+
+        if speed_kph < 10.0:
+            print "ignoring trip with speed less than 10 kph"
+            return
+
         count = 0
         result = []
 
@@ -527,26 +543,33 @@ class Runner(object):
             ave_dist = numpy.average(closest_list, axis=0)
             # print closest_list
             print "Compare trip %s to route %s dist %f" %(file_name, repr(route_id), ave_dist)
-            result.append((ave_dist, route_id))
 
-        result = sorted(result)
+            if ave_dist > 30.0:
+                #print "discard route %s wth ave dist %f > 30m" % (repr(route_id), ave_dist)
+                continue
+
+            print "FOUND POTENTIAL BUS TRIP!!!"
+            result.append((ave_dist, route_id))
 
         for item in result:
             print "Route ID: %s Ave Dist: %s" % (repr(item[1]), repr(item[0]))
 
         print "Speed (km/h): %f Duration: %d" % (speed_kph, duration)
 
-        if len(result) > 0:
-            item = result[0]
+        if len(result) == 0:
+            print "No potential bus trips detected"
+            return
+
+        f = open("%s/closest_routes.csv" % self._data_dir, "a")
+
+        for item in result:
             route_id = item[1]
             ave_dist = item[0]
-
-            f = open("%s/closest_routes.csv" % self._data_dir, "a")
 
             f.write("%s, %s, %0.2f ave dist(m), %0.2f trip dist (m), %0.2f km/h, %d sec\n" % \
                     (file_name, repr(route_id), ave_dist, trip_dist, speed_kph, duration))
 
-            f.close()
+        f.close()
 
     def compare_trips_to_routes(self):
 
@@ -618,7 +641,7 @@ class Runner(object):
 
         ##################################
 
-        f = open("%s/ map_trip_%d_%d_%d.html" % (data_dir, route, user_id, trip), "w")
+        f = open("%s/map_trip_%d_%d_%d.html" % (data_dir, route, user_id, trip), "w")
         f.write("%s\n" % ROUTE_TOP)
 
         for item in path:
@@ -627,8 +650,14 @@ class Runner(object):
         # 1: { center: {lat: 52.878, lng: -106.629},},
         f.write("%s\n" % ROUTE_MIDDLE)
 
+        print len(trip_list)
+
         for i, item in enumerate(trip_list):
-            f.write("%d: {center:{lat: %f, lng: %f},},\n" % (i, item[0], item[1]))
+            g = int(250.0 * float(i)/float(len(trip_list)))
+            r = 256 - g
+            c = "#%02x%02x%02x" % (r,g,0)
+            print c
+            f.write('%d: {center:{lat: %f, lng: %f},color:"%s"},\n' % (i, item[0], item[1], c))
 
         f.write("%s\n" % ROUTE_BOTTOM)
 
@@ -644,22 +673,21 @@ if __name__ == "__main__":
     # runner.make_bus_files()
 
 
-    # runner.find_points_near_stops(user_id=555, radius=100)
-    # runner.check_user_stops(user_id=555, radius=100)
+    #runner.find_points_near_stops(user_id=555, radius=100)
+    #runner.check_user_stops(user_id=555, radius=100)
     # runner.make_stop_map(user_id=555, radius=100, stop_index=660)
 
     #runner.find_points_near_stops(user_id=513, radius=100)
     #runner.check_user_stops(user_id=513, radius=100)
     #runner.make_stop_map(user_id=513, radius=100, stop_index=1069)
 
-    runner.find_points_near_stops(user_id=1111, radius=50)
+    #runner.find_points_near_stops(user_id=1111, radius=50)
     #runner.check_user_stops(user_id=1301, radius=100)
     #runner.make_stop_map(user_id=1301, radius=100, stop_index=34)
 
-    # runner.compare_trips_to_routes()
+    #runner.compare_trips_to_routes()
 
-    #runner.make_google_maps_file(route=50085, user_id=1043, trip=117, data_dir='data/shed9')
-
+    runner.make_google_maps_file(route=49989, user_id=1346, trip=34, data_dir='data/shed10')
     #runner.make_google_maps_file(route=50402, user_id=559, trip=137, data_dir='data/shed9')
 
 

@@ -147,7 +147,7 @@ ROUTE_MIDDLE = """
         var flightPath = new google.maps.Polyline({
           path: flightPlanCoordinates,
           geodesic: true,
-          strokeColor: '#FF0000',
+          strokeColor: '#0000FF',
           strokeOpacity: 1.0,
           strokeWeight: 2
         });
@@ -163,11 +163,11 @@ ROUTE_BOTTOM = """
 
         for (var point in trip) {
           var circle = new google.maps.Circle({
-            strokeColor: '#0000FF',
-            strokeOpacity: 0.25,
+            strokeColor: trip[point].color,
+            strokeOpacity: 1,
             strokeWeight: 2,
-            fillColor: '#0000FF',
-            fillOpacity: 0.25,
+            fillColor: trip[point].color,
+            fillOpacity: 1,
             map: map,
             center: trip[point].center,
             radius: 30
