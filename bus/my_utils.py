@@ -53,6 +53,17 @@ class TransitData(object):
     def __init__(self):
         self._bus_stops = None
 
+    def load_route(self, route_id):
+        f = open('data/transit/bus_routes.json', 'r')
+        bus_routes = simplejson.load(f)
+        f.close()
+
+        # for route_id in bus_routes.iterkeys():
+        #     print "route_id", route_id, type(route_id)
+
+        route_data = bus_routes.get(str(route_id))
+        return route_data
+
     def load_stops(self):
         file_name = './data/transit/bus_stops.json'
         f = open(file_name, 'r')
@@ -159,7 +170,7 @@ class UserGPS(object):
             self._result.append((x, y, seconds))
 
 
-        print "Loaded %s" % file_name
+        # print "Loaded %s" % file_name
 
         return self._result
 
