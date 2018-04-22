@@ -97,7 +97,7 @@ BOTTOM = """
       }
     </script>
     <script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBlabwKhgVWHc5Yfr3bUYGSUDJyYTKX5QY&callback=initMap">
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBlabwKhgVWHc5Yfr3bUYGSUDJyYTKX5QY&libraries=visualization&callback=initMap">
     </script>
   </body>
 </html>

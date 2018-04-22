@@ -9,6 +9,9 @@ def seconds_to_string(seconds):
 
 def string_to_seconds(s):
 
+    if s is None:
+        return
+
     try:
         t = time.strptime(s.strip(), "%Y-%m-%d:%H:%M:%S")
         return int(time.mktime(t))
@@ -70,7 +73,11 @@ class TransitData(object):
         self._bus_stops = simplejson.load(f)
         f.close()
 
+    def get_stops(self):
+        return self._bus_stops
+
     def get_data(self):
+        raise ValueError("fix me obsolete")
         return self._bus_stops
 
     def get_bounding_box(self):
@@ -169,8 +176,10 @@ class UserGPS(object):
 
             self._result.append((x, y, seconds))
 
-
-        # print "Loaded %s" % file_name
+        print "Earliest time:", seconds_to_string(self._min_time)
+        print "Latest time:", seconds_to_string(self._max_time)
+        print "Total points:", len(self._result)
+        print "Loaded %s" % file_name
 
         return self._result
 
