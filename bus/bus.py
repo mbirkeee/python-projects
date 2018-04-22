@@ -6,7 +6,9 @@ import simplejson
 import os
 import scandir
 
-
+import my_utils
+from my_utils import UserGPS
+from my_utils import TransitData
 
 class Runner(object):
     """
@@ -20,7 +22,6 @@ class Runner(object):
 
         self._myproj = pyproj.Proj("+init=EPSG:32613")
         self._data_dir = 'data/shed10'
-
 
 
     def list_gps_users(self):
@@ -375,15 +376,17 @@ class Runner(object):
         f.close()
 
     def trip_fill(self, route_data):
-        # Sort the data.  Sequence is first item
 
+        # Sort the data.  Sequence is first item
         sort_list = [(item[0], (item[1], item[2])) for item in route_data]
         s = sorted(sort_list)
+
+        # This results is a list of GPS points for the route
         route_data = [item[1] for item in s]
 
-        print "points", len(route_data)
         while True:
 
+            point2 = None
             points_added = 0
             filled_route = []
 
@@ -585,6 +588,78 @@ class Runner(object):
                 if item.name.startswith('user_trip_'):
                     self.compare_one_trip(item.path, bus_routes)
 
+    def correlate_test(self):
+
+        # print my_utils.seconds_to_string(1487863933)
+        # return
+
+        # for 1346
+        start_sec = my_utils.string_to_seconds("2017-02-13")
+        stop_sec = my_utils.string_to_seconds("2017-02-14")
+
+        start_sec = my_utils.string_to_seconds("2017-02-23")
+        stop_sec = my_utils.string_to_seconds("2017-02-24")
+
+        dist_list = []
+
+        # user_gps = UserGPS(10, 1346)
+        user_gps = UserGPS(10, 555)
+
+        user_points = user_gps.load(start_sec=start_sec, stop_sec=stop_sec)
+
+        # print "Got %d user points" % len(user_points)
+        transit_gps = TransitData()
+#        transit_points = transit_gps.load_route(49989)
+        transit_points = transit_gps.load_route(50347)
+
+
+        prev_pos = None
+
+        for user_point in user_points:
+            #print user_point
+            user_pos = (user_point[0], user_point[1])
+            user_time = user_point[2]
+            min_dist = None
+            for route_point in transit_points:
+                dist = self.get_dist(user_pos, route_point)
+                if min_dist is None or dist < min_dist:
+                    min_dist = dist
+
+
+            score = 100.0 - min_dist
+
+            if prev_pos:
+                dist_to_prev = self.get_dist(prev_pos, user_pos)
+                score = score * dist_to_prev
+
+
+            prev_pos = user_pos
+
+            if score < 0: score = 0
+            dist_list.append((user_time, score))
+
+        for minute in xrange(24*60):
+
+            bin_middle = start_sec + (minute * 60)
+            bin_start = bin_middle - (20 * 60)
+            bin_end = bin_middle + (20 * 60)
+
+            ave_score = 0
+            count = 0
+
+            for item in dist_list:
+                if item[0] < bin_start or item[0] > bin_end: continue
+
+                ave_score += item[1]
+                count += 1
+
+            # if count == 0:
+            #     ave_score = 0
+            # else:
+            #     ave_score = float(ave_score)/float(count)
+
+            print "%f,%f" % (float(minute), float(ave_score))
+
     def make_google_maps_file(self, route=None, user_id=None, trip=None, data_dir=None):
 
 
@@ -687,7 +762,9 @@ if __name__ == "__main__":
 
     #runner.compare_trips_to_routes()
 
-    runner.make_google_maps_file(route=49989, user_id=1346, trip=34, data_dir='data/shed10')
+    runner.correlate_test()
+
+    #runner.make_google_maps_file(route=49989, user_id=1346, trip=34, data_dir='data/shed10')
     #runner.make_google_maps_file(route=50402, user_id=559, trip=137, data_dir='data/shed9')
 
 

@@ -3,3 +3,5 @@ bus/data
 *.pyc
 .DS_Store
 .idea
+*.csv
+temp.txt
