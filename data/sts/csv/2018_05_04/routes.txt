@@ -19,7 +19,7 @@ Bedford / Feehan & Royal,3,000000,FF8000,,10115,https://transit.saskatoon.ca/201
 Cross / Murray & Bowman,3,000000,FF8000,,10113,https://transit.saskatoon.ca/2016-route-change/2016-schedules-and-routes,,311
 St Joseph,3,000000,FF8000,,10048,https://transit.saskatoon.ca/2016-route-change/2016-schedules-and-routes,,352
 Bishop Murray,3,000000,FF0000,,10049,https://transit.saskatoon.ca/2016-route-change/2016-schedules-and-routes,,358
-Bedford / Feehan & Royal",3,000000,FF8000,,10040,https://transit.saskatoon.ca/2016-route-change/2016-schedules-and-routes,,315
+Bedford / Feehan & Royal,3,000000,FF8000,,10040,https://transit.saskatoon.ca/2016-route-change/2016-schedules-and-routes,,315
 Oskayak & Nutana,3,000000,FF8000,,10042,https://transit.saskatoon.ca/2016-route-change/2016-schedules-and-routes,,325
 Holy Cross,3,000000,FF8000,,10043,https://transit.saskatoon.ca/2016-route-change/2016-schedules-and-routes,,332
 Aden Bowman,3,000000,FF8000,,10045,https://transit.saskatoon.ca/2016-route-change/2016-schedules-and-routes,,336
