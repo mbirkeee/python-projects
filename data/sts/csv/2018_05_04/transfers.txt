@@ -1,0 +1,24 @@
+from_stop_id,to_stop_id,transfer_type,min_transfer_time
+City Centre,City Centre,2,30
+Wildwood-Centre Mall,Wildwood-Centre Mall,2,30
+Lawson,Lawson,2,30
+University-Place Riel,University-Place Riel,2,30
+Market Mall,Market Mall,2,30
+Confederation,Confederation,2,30
+3241,3241,2,30
+3241,4314,2,120
+3241,4315,2,120
+4314,3241,2,120
+4314,4314,2,30
+4314,4315,2,120
+4315,3241,2,120
+4315,4314,2,120
+4315,4315,2,30
+5651,5651,2,1
+5651,5652,2,30
+5652,5651,2,30
+4042,4042,2,1
+4042,4043,2,60
+4043,4043,2,1
+4043,4042,2,60
+
