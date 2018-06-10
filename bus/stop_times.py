@@ -12,6 +12,7 @@ from my_utils import TransitData
 
 
 USE_GOOGLE = True
+OPEN_NEW = False
 
 LATEST_TIME = (24 * 60 * 60) - 1
 
@@ -142,6 +143,8 @@ class TransitRoutes(object):
     def __init__(self, base_path):
         self._base_path = base_path
         self._data = {}
+        self._duplicates = {}
+
         self.read_file()
 
     def read_file(self):
@@ -195,27 +198,73 @@ class TransitRoutes(object):
                     route_id = int(parts[5].strip())
                     short_name = parts[8].strip()
                     long_name = parts[0].strip()
+
+                    # I am not sure what the route type is
+                    route_type = int(parts[1].strip())
+                    if route_type != 3:
+                        raise ValueError("route type not 3")
+
                 else:
                     route_id = int(parts[1].strip())
                     short_name = parts[3].strip()
                     long_name = parts[4].strip()
 
                 if self._data.get(route_id):
-                    print "ALREADY HAVE ROUTE ID!!!!!!", route_id
+                    raise ValueError("already have", route_id)
                     continue
 
-                self._data[route_id] = (short_name, long_name)
 
-            print "%s: read %d lines" % (file_name, line_count)
+                if route_id <= 10080:
+                    self._data[route_id] = (short_name, long_name)
+                else:
+                    self._duplicates[route_id] = (short_name, long_name)
+
+                #duplicate_route_id = self.find_duplicate_route(short_name, long_name)
 
             for key, value in self._data.iteritems():
                 print "route id: %d data: %s" % (key, repr(value))
-            return
+
+            temp = {}
+            for route_id, value in self._duplicates.iteritems():
+                short_name = value[0]
+                long_name = value[1]
+                duplicate_route_id = self.find_duplicate_route(short_name, long_name)
+                if duplicate_route_id is None:
+                    raise ValueError("no duplicate for %d" % key)
+                temp[route_id] = duplicate_route_id
+
+            self._duplicates = temp
+            for route_id, value in self._duplicates.iteritems():
+                print "duplicate for route id: %d --> %s" % (route_id, repr(value))
+
+            print len(self._data)
+            print len(self._duplicates)
+
+            print "%s: read %d lines" % (file_name, line_count)
 
         finally:
             if f:
                 print "closing file"
                 f.close()
+
+
+    def get_primary_route_id(self, route_id):
+        primary_id = self._duplicates.get(route_id)
+        return primary_id
+
+    def find_duplicate_route(self, short_name, long_name):
+
+        duplicate_route_id = None
+        for route_id, data in self._data.iteritems():
+            # print "compare %s %s to %s" % (short_name, long_name, data)
+            if short_name == data[0] and long_name == data[1]:
+                duplicate_route_id = route_id
+                break
+
+        # if duplicate_route_id is not None:
+        #     print "Found the match!!!"
+
+        return duplicate_route_id
 
     def get_route_name_from_id(self, route_id):
         data = self._data.get(route_id)
@@ -253,6 +302,8 @@ class TransitTrips(object):
 
     def read_file(self):
         """
+
+        OPEN_NEW
 
          0: entityid,
          1: block_id,
@@ -292,7 +343,7 @@ class TransitTrips(object):
         if USE_GOOGLE:
             file_name = os.path.join(self._base_path, "trips.txt")
         else:
-            file_name = os.path.join(self._base_path, "TransitTripsNew.csv")
+            file_name = os.path.join(self._base_path, "TransitTrips.csv")
 
         line_count = 0
         f = None
@@ -313,10 +364,15 @@ class TransitTrips(object):
                     service_type = self.make_service_type_from_google_data(parts[7].strip())
                     trip_id = int(parts[8].strip())
                     headsign = parts[5].strip()
-                else:
+                elif OPEN_NEW:
                     route_id = int(parts[3])
                     service_type = self.make_service_type_from_google_data(parts[8].strip())
                     trip_id = int(parts[9].strip())
+                    headsign = parts[6].strip()
+                else:
+                    route_id = int(parts[1].strip())
+                    service_type = int(parts[2].strip())
+                    trip_id = int(parts[3].strip())
                     headsign = parts[6].strip()
 
                 if self._data.get(trip_id):
@@ -371,6 +427,14 @@ class StopTimes(object):
         self._route_id_dict = {}
 
         self._base_path = base_path
+
+        self._count_duplicate = 0
+        self._count_primary = 0
+
+        self._count_duplicate_keys_total = 0
+
+        self._key_counts = {}
+
         self.read_file()
 
 
@@ -512,7 +576,7 @@ class StopTimes(object):
                     continue
 
                 # print stop_id, trip_ip, depart_time
-                print "LINE", line, trip_id, stop_id
+                # print "LINE", line, trip_id, stop_id
 
                 stop_data = self._data.get(stop_id, {})
 
@@ -521,15 +585,32 @@ class StopTimes(object):
                 headsign = self.trips.get_headsign(trip_id)
                 route_name = self.get_route_name_from_id(route_id)
 
-                print depart_time, service_type, route_id
+                primary_route_id = self.routes.get_primary_route_id(route_id)
+                if primary_route_id is None:
+                    # This is a primary route
+                    self._count_primary += 1
+                else:
+                    # This is a duplicate route
+                    self._count_duplicate +=1
+
+                if primary_route_id is not None:
+                    # Do not include duplicate routes in result
+                    continue
+
+                # print depart_time, service_type, route_id
 
                 if USE_GOOGLE:
-                    key = "%d-%d-%s-%s" % (depart_time, service_type, route_name, headsign)
+                    # key = "%d-%d-%s-%s" % (depart_time, service_type, route_name, headsign)
+                    key = "%d-%d-%d" % (depart_time, service_type, route_id)
                 else:
                     key = "%d-%d-%d" % (depart_time, service_type, route_id)
 
                 if stop_data.has_key(key):
-                    print "Already have key", key
+                    print "Already have key", key, depart_time_str, stop_id
+                    x = self._key_counts.get(key, 0)
+                    x += 1
+                    self._key_counts[key] = x
+                    self._count_duplicate_keys_total += 1
                     continue
 
                 if route_id is None:
@@ -556,9 +637,15 @@ class StopTimes(object):
             read_time = time.time() - start_time
             print "file: %s read time: %.2f sec" % (file_name, read_time)
 
+            print "primary count", self._count_primary
+            print "duplicate count", self._count_duplicate
+            print "duplicate_key count", self._count_duplicate_keys_total
+
             # for route_id, count in self._route_id_dict.iteritems():
             #     print "route_id", route_id, count
 
+            for k, v in self._key_counts.iteritems():
+                print k, v
 
             # start_time = time.time()
             # pickle.dump( self._data, open( file_name_pickle, "wb" ) )
@@ -574,19 +661,53 @@ class StopTimes(object):
                 print "closing file"
                 f.close()
 
+
+def test_fetch():
+
+
+    import urllib2
+    # url = 'http://opendata-saskatoon.cloudapp.net:8080/v1/SaskatoonOpenDataCatalogueBeta/TransitStopTimes?limit=100&format=json'
+    url = 'http://opendata-saskatoon.cloudapp.net/DataBrowser/DownloadCsv?container=SaskatoonOpenDataCatalogueBeta&entitySet=TransitStops'
+
+    response = urllib2.urlopen(url)
+    print "Response:", response
+    json = response.read()
+    response.close()
+    f = open("test.json", "w")
+    f.write(json)
+    f.close()
+
+def test_read():
+
+    f = open("test.json", "r")
+    data = simplejson.load(f)
+    f.close()
+    for k in data.iterkeys():
+        print k
+    stuff = data.get('d')
+    for item in stuff:
+        print item
+    print len(stuff)
+
 if __name__ == "__main__":
+
+
+    # test_fetch()
+    #test_read()
+    # sys.exit(0)
 
     if USE_GOOGLE:
         base = '../data/sts/csv/2018_05_04'
     else:
         base = '../../bus-data/open_data/2018_05_04'
 
+
     stops = StopTimes(base)
 
     stop_data = stops.get_data()
     stop_ids = stops.get_stop_ids()
 
-    #sys.exit(0)
+#    sys.exit(0)
 
     service_dict = {
         SERVICE.MWF: "MWF",
@@ -610,4 +731,3 @@ if __name__ == "__main__":
                 print "   %s: Time: %s Route: %s (%s) SIGN: %s (trip_id: %d) route_id: %d" % \
                       (service_desc, t, route_name, route_number, headsign, trip_id, route_id)
 
-        break
