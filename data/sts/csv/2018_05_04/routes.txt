@@ -19,7 +19,7 @@ Bedford / Feehan & Royal,3,000000,FF8000,,10115,https://transit.saskatoon.ca/201
 Cross / Murray & Bowman,3,000000,FF8000,,10113,https://transit.saskatoon.ca/2016-route-change/2016-schedules-and-routes,,311
 St Joseph,3,000000,FF8000,,10048,https://transit.saskatoon.ca/2016-route-change/2016-schedules-and-routes,,352
 Bishop Murray,3,000000,FF0000,,10049,https://transit.saskatoon.ca/2016-route-change/2016-schedules-and-routes,,358
-Bedford / Feehan & Royal",3,000000,FF8000,,10040,https://transit.saskatoon.ca/2016-route-change/2016-schedules-and-routes,,315
+Bedford / Feehan & Royal,3,000000,FF8000,,10040,https://transit.saskatoon.ca/2016-route-change/2016-schedules-and-routes,,315
 Oskayak & Nutana,3,000000,FF8000,,10042,https://transit.saskatoon.ca/2016-route-change/2016-schedules-and-routes,,325
 Holy Cross,3,000000,FF8000,,10043,https://transit.saskatoon.ca/2016-route-change/2016-schedules-and-routes,,332
 Aden Bowman,3,000000,FF8000,,10045,https://transit.saskatoon.ca/2016-route-change/2016-schedules-and-routes,,336
@@ -34,7 +34,7 @@ Kenderdine / City Centre,3,000000,A47CC1,,10126,https://transit.saskatoon.ca/201
 Evergreen / City Centre,3,000000,96D5CC,,10125,https://transit.saskatoon.ca/2016-route-change/2016-schedules-and-routes,,40
 Bishop Murray,3,000000,FF0000,,10124,https://transit.saskatoon.ca/2016-route-change/2016-schedules-and-routes,,358
 Sasktel Centre / North Ind,3,000000,000000,,10134,https://transit.saskatoon.ca/2016-route-change/2016-schedules-and-routes,,514
-Cross / Murray & Bowman",3,000000,FF8000,,10038,https://transit.saskatoon.ca/2016-route-change/2016-schedules-and-routes,,311
+Cross / Murray & Bowman,3,000000,FF8000,,10038,https://transit.saskatoon.ca/2016-route-change/2016-schedules-and-routes,,311
 Sasktel  Centre,3,000000,ED0874,,10031,https://transit.saskatoon.ca/2016-route-change/2016-schedules-and-routes,,25
 University / Confederation,3,000000,D1C85D,,10030,https://transit.saskatoon.ca/2016-route-change/2016-schedules-and-routes,,22
 Lawson Heights / City Centre,3,000000,FFCCCC,,10033,https://transit.saskatoon.ca/2016-route-change/2016-schedules-and-routes,,30
