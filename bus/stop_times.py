@@ -105,7 +105,16 @@ class Stops(object):
                         stop_id = int(parts[10].strip())
                     except:
                         print "Failed to get stop ID from line", parts
-                        continue
+
+                        try:
+                            stop_id = int(parts[2].strip())
+                            if not stop_id:
+                                raise "bad"
+                        except:
+                            print "Failed again to get stip ID", parts
+                            continue
+
+                        print "USE %d" % stop_id
 
                     name = parts[8].strip()
                 else:
@@ -114,6 +123,7 @@ class Stops(object):
                     except:
                         print "Failed to get stop ID from line", parts
                         continue
+
                     name = parts[3].strip()
 
                 if self._data.get(stop_id):
@@ -221,8 +231,8 @@ class TransitRoutes(object):
 
                 #duplicate_route_id = self.find_duplicate_route(short_name, long_name)
 
-            for key, value in self._data.iteritems():
-                print "route id: %d data: %s" % (key, repr(value))
+#            for key, value in self._data.iteritems():
+#                print "route id: %d data: %s" % (key, repr(value))
 
             temp = {}
             for route_id, value in self._duplicates.iteritems():
@@ -234,8 +244,8 @@ class TransitRoutes(object):
                 temp[route_id] = duplicate_route_id
 
             self._duplicates = temp
-            for route_id, value in self._duplicates.iteritems():
-                print "duplicate for route id: %d --> %s" % (route_id, repr(value))
+#            for route_id, value in self._duplicates.iteritems():
+#                print "duplicate for route id: %d --> %s" % (route_id, repr(value))
 
             print len(self._data)
             print len(self._duplicates)
@@ -606,7 +616,7 @@ class StopTimes(object):
                     key = "%d-%d-%d" % (depart_time, service_type, route_id)
 
                 if stop_data.has_key(key):
-                    print "Already have key", key, depart_time_str, stop_id
+                    # print "Already have key", key, depart_time_str, stop_id
                     x = self._key_counts.get(key, 0)
                     x += 1
                     self._key_counts[key] = x
@@ -644,8 +654,8 @@ class StopTimes(object):
             # for route_id, count in self._route_id_dict.iteritems():
             #     print "route_id", route_id, count
 
-            for k, v in self._key_counts.iteritems():
-                print k, v
+            #for k, v in self._key_counts.iteritems():
+            #    print k, v
 
             # start_time = time.time()
             # pickle.dump( self._data, open( file_name_pickle, "wb" ) )
@@ -716,7 +726,7 @@ if __name__ == "__main__":
     }
 
     for stop_id in stop_ids:
-        print "STOP ID:", stop_id, "NAME:", stops.get_stop_name_from_id(stop_id)
+        print "== STOP_ID:", stop_id, "NAME:", stops.get_stop_name_from_id(stop_id)
 
         for service_type, service_desc in service_dict.iteritems():
             departures = stops.get_stop_departures(stop_id, service_type)
@@ -728,6 +738,14 @@ if __name__ == "__main__":
                 headsign = item.get(KEY.HEADSIGN)
 
                 t = int_to_timestr(item.get(KEY.DEPART_TIME))
-                print "   %s: Time: %s Route: %s (%s) SIGN: %s (trip_id: %d) route_id: %d" % \
-                      (service_desc, t, route_name, route_number, headsign, trip_id, route_id)
+#                print "   %s: Time: %s Route: %s (%s) SIGN: %s (trip_id: %d) route_id: %d" % \
+#                      (service_desc, t, route_name, route_number, headsign, trip_id, route_id)
+
+                print "==   %s: Time: %s  %3d : %-30s     SIGN: %s" % \
+                      (service_desc, t, int(route_number), route_name, headsign)
+
+             #   display = "   %s: Time: %s Route: %s (%s)" % \
+             #         (service_desc, t, route_name, route_number)
+
+              #  length = len(display)
 
