@@ -666,8 +666,17 @@ def test_fetch():
 
     import urllib
     import urllib2
+
     base = "http://opendata-saskatoon.cloudapp.net:8080/v1/SaskatoonOpenDataCatalogueBeta"
-    url = "TransitStopTimes?$filter=%s&format=json" % urllib.quote("stop_id eq '3094'")
+
+
+    # This seems to work to get data for just one stop
+#    url = "TransitStopTimes?$filter=%s&format=json" % urllib.quote("stop_id eq '3094'")
+
+    # Get stops from 3000 to 4000
+    url = "TransitStops?$filter=%s&format=json" % urllib.quote("stop_id ge '3000' and stop_id lt '4000'")
+
+
     url = "%s/%s" % (base, url)
     print url
     # raise ValueError("DONE")
