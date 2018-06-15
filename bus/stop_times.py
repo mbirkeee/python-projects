@@ -674,10 +674,14 @@ class StopTimes(object):
 
 def test_fetch():
 
-
+    import urllib
     import urllib2
-    # url = 'http://opendata-saskatoon.cloudapp.net:8080/v1/SaskatoonOpenDataCatalogueBeta/TransitStopTimes?limit=100&format=json'
-    url = 'http://opendata-saskatoon.cloudapp.net/DataBrowser/DownloadCsv?container=SaskatoonOpenDataCatalogueBeta&entitySet=TransitStops'
+    base = "http://opendata-saskatoon.cloudapp.net:8080/v1/SaskatoonOpenDataCatalogueBeta"
+    url = "TransitStopTimes?$filter=%s&format=json" % urllib.quote("stop_id eq '3094'")
+    url = "%s/%s" % (base, url)
+    print url
+    # raise ValueError("DONE")
+    #url = 'http://opendata-saskatoon.cloudapp.net/DataBrowser/DownloadCsv?container=SaskatoonOpenDataCatalogueBeta&entitySet=TransitStops'
 
     response = urllib2.urlopen(url)
     print "Response:", response
@@ -702,9 +706,9 @@ def test_read():
 if __name__ == "__main__":
 
 
-    # test_fetch()
-    #test_read()
-    # sys.exit(0)
+    test_fetch()
+    test_read()
+    sys.exit(0)
 
     if USE_GOOGLE:
         base = '../data/sts/csv/2018_05_04'
