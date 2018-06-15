@@ -720,7 +720,7 @@ if __name__ == "__main__":
 #    sys.exit(0)
 
     service_dict = {
-        SERVICE.MWF: "MWF",
+        SERVICE.MWF: "M-F",
         SERVICE.SAT: "SAT",
         SERVICE.SUN: "SUN"
     }
