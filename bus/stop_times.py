@@ -5,6 +5,7 @@ import time
 import simplejson
 import os
 import sys
+import time
 
 import my_utils
 from my_utils import UserGPS
@@ -676,20 +677,68 @@ def test_fetch():
 
     import urllib
     import urllib2
+
     base = "http://opendata-saskatoon.cloudapp.net:8080/v1/SaskatoonOpenDataCatalogueBeta"
-    url = "TransitStopTimes?$filter=%s&format=json" % urllib.quote("stop_id eq '3094'")
-    url = "%s/%s" % (base, url)
-    print url
+
+
+    # This seems to work to get data for just one stop
+#    url = "TransitStopTimes?$filter=%s&format=json" % urllib.quote("stop_id eq '3094'")
+
+    table = "TransitStopTimes"
+
+    # Get stops from 3000 to 4000
+#    url = "TransitStops?$filter=%s&format=json" % urllib.quote("stop_id ge '3000' and stop_id lt '4000'")
+
+
+    next_partition_key = None
+    next_row_key = None
+    index = 0
+
+    while True:
+
+        if next_partition_key is None:
+            url = "%s/%s?format=json" % (base, table)
+        else:
+            url = "%s/%s?NextPartitionKey=%s&NextRowKey=%s&format=json" % \
+                  (base, table, next_partition_key, next_row_key)
+
+        print url
     # raise ValueError("DONE")
     #url = 'http://opendata-saskatoon.cloudapp.net/DataBrowser/DownloadCsv?container=SaskatoonOpenDataCatalogueBeta&entitySet=TransitStops'
 
-    response = urllib2.urlopen(url)
-    print "Response:", response
-    json = response.read()
-    response.close()
-    f = open("test.json", "w")
-    f.write(json)
-    f.close()
+
+        response = urllib2.urlopen(url)
+    # print "Response:", response, repr(response)
+
+        json = response.read()
+
+        response.close()
+
+        d = simplejson.loads(json)
+        stuff = d.get('d')
+        print "READ %d items" % len(stuff)
+
+        info = response.info()
+        next_partition_key = info.get('x-ms-continuation-NextPartitionKey')
+        next_row_key = info.get('x-ms-continuation-NextRowKey')
+
+        print "next_partition", next_partition_key
+        print "next_row", next_row_key
+
+        f = open("transit_stops_%d.json" % index, "w")
+        f.write(json)
+        f.close()
+
+        index += 1
+        if next_partition_key is None:
+            break
+
+        time.sleep(1)
+
+    print "Done"
+    #next_row_key = info.getHeader('x-ms-continuation-NextRowKey')
+
+
 
 def test_read():
 
@@ -699,15 +748,17 @@ def test_read():
     for k in data.iterkeys():
         print k
     stuff = data.get('d')
-    for item in stuff:
-        print item
-    print len(stuff)
+
+    print "Read %s items" % len(stuff)
+
+    # for item in stuff:
+    #     print item
 
 if __name__ == "__main__":
 
 
     test_fetch()
-    test_read()
+    # test_read()
     sys.exit(0)
 
     if USE_GOOGLE:
