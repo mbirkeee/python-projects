@@ -1,6 +1,7 @@
 import datetime
 import time
 import simplejson
+import pyproj
 
 def seconds_to_string(seconds):
     t = datetime.datetime.fromtimestamp(seconds)
@@ -55,6 +56,7 @@ class TransitData(object):
 
     def __init__(self):
         self._bus_stops = None
+        self._myproj = pyproj.Proj("+init=EPSG:32613")
 
     def load_route(self, route_id):
         f = open('data/transit/bus_routes.json', 'r')
@@ -72,6 +74,56 @@ class TransitData(object):
         f = open(file_name, 'r')
         self._bus_stops = simplejson.load(f)
         f.close()
+
+
+    def load_stops_from_csv(self, file_name):
+        """
+        0 stop_id,
+        1 stop_code,
+        2 stop_lat,
+        3 stop_lon,
+        4 location_type,
+        5 wheelchair_boarding,
+        6 name
+        """
+        result = {}
+
+        line_count = 0
+        f = open(file_name)
+
+        for line in f:
+            line_count += 1
+            if line_count == 1: continue
+
+            try:
+                parts = line.split(",")
+                stop_code = int(parts[1].strip())
+                name = parts[6].strip()
+                lat = float(parts[2].strip())
+                lon = float(parts[3].strip())
+
+                print stop_code, lat, lon, name
+
+                x, y  = self._myproj(lon, lat)
+                stop_data = {
+                    'lat'   : lat,
+                    'lon'   : lon,
+                    'x'     : x,
+                    'y'     : y,
+                    'name'  : name
+                }
+
+                result[stop_code] = stop_data
+
+            except Exception as err:
+                print "Exception processing line: %s" % repr(err)
+                print "line: %s" % line
+
+
+        f.close()
+
+        self._bus_stops = result
+
 
     def get_stops(self):
         return self._bus_stops
