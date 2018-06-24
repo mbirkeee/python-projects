@@ -11,10 +11,6 @@ import my_utils
 from my_utils import UserGPS
 from my_utils import TransitData
 
-
-USE_GOOGLE = True
-OPEN_NEW = False
-
 LATEST_TIME = (24 * 60 * 60) - 1
 
 class SERVICE(object):
@@ -55,38 +51,17 @@ class Stops(object):
 
     def read_file(self):
         """
-         0: entityid,
-         1: stop_id,
-         2: stop_code,
-         3: stop_name,
-         4: stop_desc,
-         5: stop_lat,
-         6: stop_lon,
-         7: zone_id,
-         8: stop_url,
-         9: location_type,
-        10: parent_station
+        0 stop_id,
+        1 stop_code,
+        2 stop_lat,
+        3 stop_lon,
+        4 location_type,
+        5 wheelchair_boarding,
+        6 name
 
-        From google zip
-
-         0: stop_lat,
-         1: wheelchair_boarding,
-         2: stop_code,
-         3: stop_lon,
-         4: stop_timezone,
-         5: stop_url,
-         6: parent_station,
-         7: stop_desc,
-         8: stop_name,
-         9: location_type,
-        10: stop_id,
-        11: zone_id
         """
-        if USE_GOOGLE:
-            file_name = os.path.join(self._base_path, "stops.txt")
-        else:
-            file_name = os.path.join(self._base_path, "TransitStops.csv")
 
+        file_name = os.path.join(self._base_path, "my-TransitStops.csv")
 
         line_count = 0
         f = None
@@ -101,31 +76,13 @@ class Stops(object):
                 line = line.strip()
                 parts = line.split(",")
 
-                if USE_GOOGLE:
-                    try:
-                        stop_id = int(parts[10].strip())
-                    except:
-                        print "Failed to get stop ID from line", parts
+                try:
+                    stop_id = int(parts[0].strip())
+                except:
+                    print "Failed to get stop ID from line", parts
+                    continue
 
-                        try:
-                            stop_id = int(parts[2].strip())
-                            if not stop_id:
-                                raise "bad"
-                        except:
-                            print "Failed again to get stip ID", parts
-                            continue
-
-                        print "USE %d" % stop_id
-
-                    name = parts[8].strip()
-                else:
-                    try:
-                        stop_id = int(parts[1].strip())
-                    except:
-                        print "Failed to get stop ID from line", parts
-                        continue
-
-                    name = parts[3].strip()
+                name = parts[6].strip()
 
                 if self._data.get(stop_id):
                     print "Already have stop_id!", stop_id
@@ -160,37 +117,15 @@ class TransitRoutes(object):
 
     def read_file(self):
         """
-
-        From downloaded CSV
-
-        0: entityid,
-        1: route_id,
-        2: agency_id,
-        3: route_short_name,
-        4: route_long_name,
-        5: route_desc,
-        6: route_type,
-        7: route_url,
-        8: route_color,
-        9: route_text_color
-
-        From google zip
-
-        0: route_long_name,
-        1: route_type,
-        2: route_text_color,
-        3: route_color,
-        4: agency_id,
-        5: route_id,
-        6: route_url,
-        7: route_desc,
-        8: route_short_name
+        0 route_id,
+        1 route_type,
+        2 route_color,
+        3 text_color,
+        4 name_short,
+        5 name_long
 
         """
-        if USE_GOOGLE:
-            file_name = os.path.join(self._base_path, "routes.txt")
-        else:
-            file_name = os.path.join(self._base_path, "TransitRoutes.csv")
+        file_name = os.path.join(self._base_path, "my-TransitRoutes.csv")
 
         line_count = 0
         f = None
@@ -205,25 +140,15 @@ class TransitRoutes(object):
                 line = line.strip()
                 parts = line.split(",")
 
-                if USE_GOOGLE:
-                    route_id = int(parts[5].strip())
-                    short_name = parts[8].strip()
-                    long_name = parts[0].strip()
+                route_id = int(parts[0].strip())
+                short_name = parts[4].strip()
+                long_name = parts[5].strip()
 
-                    # I am not sure what the route type is
-                    route_type = int(parts[1].strip())
-                    if route_type != 3:
-                        raise ValueError("route type not 3")
+                # I am not sure what the route type is
+                route_type = int(parts[1].strip())
 
-                else:
-                    route_id = int(parts[1].strip())
-                    short_name = parts[3].strip()
-                    long_name = parts[4].strip()
-
-                if self._data.get(route_id):
-                    raise ValueError("already have", route_id)
-                    continue
-
+                if route_type != 3:
+                    raise ValueError("route type not 3")
 
                 if route_id <= 10080:
                     self._data[route_id] = (short_name, long_name)
@@ -248,8 +173,8 @@ class TransitRoutes(object):
 #            for route_id, value in self._duplicates.iteritems():
 #                print "duplicate for route id: %d --> %s" % (route_id, repr(value))
 
-            print len(self._data)
-            print len(self._duplicates)
+            print "number of routes:", len(self._data)
+            print "number of duplicates:", len(self._duplicates)
 
             print "%s: read %d lines" % (file_name, line_count)
 
@@ -313,48 +238,18 @@ class TransitTrips(object):
 
     def read_file(self):
         """
-
-        OPEN_NEW
-
-         0: entityid,
-         1: block_id,
-         2: bikes_allowed,
-         3: route_id,
-         4: wheelchair_accessible,
-         5: direction_id,
-         6: trip_headsign,
-         7: shape_id,
-         8: service_id,
-         9: trip_id,
-        10: trip_short_name
-
-        From downloaded CSV
-        0: entityid,
-        1: route_id,
-        2: service_id,
-        3: trip_id,
-        4: trip_headsign,
-        5: direction_id,
-        6: block_id,
-        7: shape_id
-
-        Froom google zip file
-        0: block_id,
-        1: bikes_allowed,
-        2: route_id,
-        3: wheelchair_accessible,
-        4: direction_id,
-        5: trip_headsign,
-        6: shape_id,
-        7: service_id,
-        8: trip_id,
-        9: trip_short_name
+        0 trip_id,
+        1 route_id,
+        2 block_id,
+        3 shape_id,
+        4 service_id,
+        5 direction,
+        6 bikes,
+        7 wheelchairs,
+        8 headsign
         """
 
-        if USE_GOOGLE:
-            file_name = os.path.join(self._base_path, "trips.txt")
-        else:
-            file_name = os.path.join(self._base_path, "TransitTrips.csv")
+        file_name = os.path.join(self._base_path, "my-TransitTrips.csv")
 
         line_count = 0
         f = None
@@ -370,21 +265,10 @@ class TransitTrips(object):
                 line = line.strip()
                 parts = line.split(",")
 
-                if USE_GOOGLE:
-                    route_id = int(parts[2].strip())
-                    service_type = self.make_service_type_from_google_data(parts[7].strip())
-                    trip_id = int(parts[8].strip())
-                    headsign = parts[5].strip()
-                elif OPEN_NEW:
-                    route_id = int(parts[3])
-                    service_type = self.make_service_type_from_google_data(parts[8].strip())
-                    trip_id = int(parts[9].strip())
-                    headsign = parts[6].strip()
-                else:
-                    route_id = int(parts[1].strip())
-                    service_type = int(parts[2].strip())
-                    trip_id = int(parts[3].strip())
-                    headsign = parts[6].strip()
+                route_id = int(parts[1].strip())
+                service_type = self.make_service_type_from_google_data(parts[4].strip())
+                trip_id = int(parts[0].strip())
+                headsign = parts[8].strip()
 
                 if self._data.get(trip_id):
                     print "ALREADY HAVE TRIP ID!!!!!!", trip_id
@@ -504,31 +388,14 @@ class StopTimes(object):
 
     def read_file(self):
         """
-        From google zipfile
+        From my download
 
-        0: trip_id,
-        1: arrival_time,
-        2: departure_time,
-        3: stop_id,
-        4: stop_sequence,
-        5: stop_headsign,
-        6: pickup_type,
-        7: drop_off_type,
-        8: shape_dist_traveled,
-        9: timepoint
-
-        From CSV download
-
-        0: entityid,
-        1: trip_id,
-        2: arrival_time,
-        3: departure_time,
-        4: stop_id,
-        5: stop_sequence,
-        6: stop_headsign,
-        7: pickup_type,
-        8: drop_off_type,
-        9: shape_dist_traveled
+        0 stop_id,
+        1 trip_id,
+        2 arrival_time,
+        3 departure_time,
+        4 stop_sequence,
+        5 shape_dist_traveled
 
         """
 
@@ -546,11 +413,7 @@ class StopTimes(object):
         #     print "loaded data from pickle"
         #     return
 
-        if USE_GOOGLE:
-            file_name = os.path.join(self._base_path, "stop_times.txt")
-        else:
-            file_name = os.path.join(self._base_path, "TransitStopTimes.csv")
-
+        file_name = os.path.join(self._base_path, "my-TransitStopTimes.csv")
         line_count = 0
         f = None
 
@@ -565,19 +428,14 @@ class StopTimes(object):
                 line = line.strip()
                 parts = line.split(",")
 
-                if USE_GOOGLE:
-                    trip_id = int(parts[0].strip())
-                    depart_time_str = parts[2].strip()
+                trip_id = int(parts[1].strip())
+                depart_time_str = parts[3].strip()
 
-                    try:
-                        stop_id = self.make_stop_id_from_google(parts[3].strip())
-                    except:
-                        print "Failed to get stop id from: %s" % repr(parts[3].strip())
-                        stop_id = None
-                else:
-                    trip_id = int(parts[1].strip())
-                    depart_time_str = parts[3].strip()
-                    stop_id = int(parts[4].strip())
+                try:
+                    stop_id = self.make_stop_id_from_google(parts[0].strip())
+                except:
+                    print "Failed to get stop id from: %s" % repr(parts[0].strip())
+                    stop_id = None
 
                 depart_time = timestr_to_int(depart_time_str)
                 #print "%s -> %d -> %s" % (depart_time_str, depart_time, int_to_timestr(depart_time))
@@ -609,12 +467,7 @@ class StopTimes(object):
                     continue
 
                 # print depart_time, service_type, route_id
-
-                if USE_GOOGLE:
-                    # key = "%d-%d-%s-%s" % (depart_time, service_type, route_name, headsign)
-                    key = "%d-%d-%d" % (depart_time, service_type, route_id)
-                else:
-                    key = "%d-%d-%d" % (depart_time, service_type, route_id)
+                key = "%d-%d-%d" % (depart_time, service_type, route_id)
 
                 if stop_data.has_key(key):
                     # print "Already have key", key, depart_time_str, stop_id
@@ -757,22 +610,14 @@ def test_read():
 if __name__ == "__main__":
 
 
-    test_fetch()
-    # test_read()
-    sys.exit(0)
-
-    if USE_GOOGLE:
-        base = '../data/sts/csv/2018_05_04'
-    else:
-        base = '../../bus-data/open_data/2018_05_04'
-
+    base = '../data/sts/csv/2018_05_04'
 
     stops = StopTimes(base)
 
     stop_data = stops.get_data()
     stop_ids = stops.get_stop_ids()
 
-#    sys.exit(0)
+    # sys.exit(0)
 
     service_dict = {
         SERVICE.MWF: "M-F",
