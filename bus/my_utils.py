@@ -113,7 +113,8 @@ class DaCentriods(object):
 
     def make_da_cvs_from_text(self):
 
-        f = open("../data/DA_centriods.txt")
+        # I think that DA_centriods.txt is a file produced by ArcGIS
+        f = open("../data/DA_centriods.txt", 'r')
         count = 0
 
         for line in f:
@@ -141,15 +142,19 @@ class DaCentriods(object):
             x, y  = self._myproj(lon, lat)
 
             self._data_centriods[da_id] = {
-                'x'     : x,
-                'y'     : y,
-                'lat'   : lat,
-                'lon'   : lon,
-                'da_fid' : da_fid,
-                'pop'   : population
+                'x'         : x,
+                'y'         : y,
+                'lat'       : lat,
+                'lon'       : lon,
+                'da_fid'    : da_fid,
+                'pop'       : population
             }
 
         f.close()
+
+    def get_list(self):
+        result = [k for k in self._data_centriods.iterkeys()]
+        return result
 
     def get_centriods(self):
         return self._data_centriods

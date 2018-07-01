@@ -25,6 +25,7 @@ class KEY(object):
     ROUTE_ID        = '3'
     TRIP_ID         = '4'
     HEADSIGN        = '5'
+    DIRECTION       = '6'
 
 def timestr_to_int(input):
 
@@ -44,9 +45,12 @@ def int_to_timestr(input):
 
 
 class Stops(object):
+
     def __init__(self, base_path):
+
         self._base_path = base_path
         self._data = {}
+        self._myproj = pyproj.Proj("+init=EPSG:32613")
         self.read_file()
 
     def read_file(self):
@@ -63,6 +67,7 @@ class Stops(object):
 
         file_name = os.path.join(self._base_path, "my-TransitStops.csv")
 
+        result = {}
         line_count = 0
         f = None
 
@@ -73,38 +78,50 @@ class Stops(object):
                 line_count += 1
                 if line_count == 1: continue
 
-                line = line.strip()
-                parts = line.split(",")
-
                 try:
-                    stop_id = int(parts[0].strip())
-                except:
-                    print "Failed to get stop ID from line", parts
-                    continue
+                    parts = line.split(",")
+                    stop_code = int(parts[1].strip())
+                    name = parts[6].strip()
+                    lat = float(parts[2].strip())
+                    lon = float(parts[3].strip())
 
-                name = parts[6].strip()
+                    print stop_code, lat, lon, name
 
-                if self._data.get(stop_id):
-                    print "Already have stop_id!", stop_id
-                    continue
+                    x, y  = self._myproj(lon, lat)
+                    stop_data = {
+                        'lat'   : lat,
+                        'lon'   : lon,
+                        'x'     : x,
+                        'y'     : y,
+                        'name'  : name
+                    }
 
-                self._data[stop_id] = name
+                    result[stop_code] = stop_data
 
-            print "%s: read %d lines" % (file_name, line_count)
+                except Exception as err:
+                    print "Exception processing line: %s" % repr(err)
+                    print "line: %s" % line
 
-            # for key, value in self._data.iteritems():
-            #     print "stop id: %d data: %s" % (key, repr(value))
-
-            return
 
         finally:
-            if f:
-                print "closing file"
-                f.close()
+            if f: f.close()
+
+        self._data = result
 
     def get_name(self, stop_id):
         # print "Getting STOP name for stop id", stop_id
-        return self._data.get(stop_id, "Unknown (%d)" % stop_id)
+
+        stop_data = self._data.get(stop_id)
+        if stop_data is None:
+            return None
+
+        return stop_data.get('name')
+
+    def get_utm(self, stop_id):
+        stop_data = self._data.get(stop_id)
+        if stop_data is None:
+            return None
+        return (stop_data.get('x'), stop_data.get('y'))
 
 class TransitRoutes(object):
 
@@ -237,6 +254,7 @@ class TransitTrips(object):
 
 
     def read_file(self):
+
         """
         0 trip_id,
         1 route_id,
@@ -269,12 +287,13 @@ class TransitTrips(object):
                 service_type = self.make_service_type_from_google_data(parts[4].strip())
                 trip_id = int(parts[0].strip())
                 headsign = parts[8].strip()
+                direction = int(parts[5].strip())
 
                 if self._data.get(trip_id):
                     print "ALREADY HAVE TRIP ID!!!!!!", trip_id
                     continue
 
-                self._data[trip_id] = (route_id, service_type, headsign)
+                self._data[trip_id] = (route_id, service_type, headsign, direction)
 
             print "read %d lines" % line_count
             read_time = time.time() - start_time
@@ -296,6 +315,12 @@ class TransitTrips(object):
         if data is None:
             return None
         return data[0]
+
+    def get_direction(self, trip_id):
+        data = self._data.get(trip_id)
+        if data is None:
+            return None
+        return data[3]
 
     def get_service_type(self, trip_id):
         data = self._data.get(trip_id)
@@ -333,7 +358,10 @@ class StopTimes(object):
         self.read_file()
 
 
-    def get_stop_name_from_id(self, stop_id):
+    def get_stop_utm(self, stop_id):
+        return self.stops.get_utm(stop_id)
+
+    def get_stop_name(self, stop_id):
         return self.stops.get_name(stop_id)
 
     def get_route_name_from_id(self, route_id):
@@ -351,6 +379,83 @@ class StopTimes(object):
 
         stop_ids = [key for key in self._data.iterkeys()]
         return stop_ids
+
+
+    def get_stop_route_departures(self, stop_id, route_id, direction, service_type):
+        departures = self.get_stop_departures(stop_id, service_type)
+        result = []
+        for departure in departures:
+            route_id_d = departure.get(KEY.ROUTE_ID)
+            direction_d = departure.get(KEY.DIRECTION)
+            if route_id_d != route_id:
+                continue
+            if direction_d != direction:
+                continue
+
+            result.append(departure)
+
+        return result
+
+    def get_estimated_wait(self, stop_id, route_id, direction, service_type, time_of_day):
+        departures = self.get_stop_route_departures(stop_id, route_id, direction, service_type)
+        departure_count = len(departures)
+        wait_sec = None
+
+        if departure_count == 0:
+            raise ValueError("No departures")
+
+        elif departure_count == 1:
+            departure = departures[0]
+            depart_time = departure.get(KEY.DEPART_TIME)
+            interval = depart_time - time_of_day
+
+            if interval > 0:
+                if interval <= (60 * 60):
+                    wait_sec = interval
+
+        else:
+            after = None
+            before = None
+            # There is more that 1 departure.
+            for departure in departures:
+                depart_time = departure.get(KEY.DEPART_TIME)
+
+                # Find the first departure after the time
+                if depart_time > time_of_day:
+                    if after is None or depart_time < after:
+                        after = depart_time
+
+                # Find the most recent departure before the time
+                if depart_time < time_of_day:
+                    if before is None or depart_time > before:
+                        before = depart_time
+
+            print "Time of day: %s" % int_to_timestr(time_of_day)
+
+            if before is not None and after is not None:
+                print "Before: %s After: %s" % (int_to_timestr(before), int_to_timestr(after))
+                interval = after - before
+                if interval > 2 * 60 * 60:
+                    print "IGNORE GIANT INTERVAL!!!", interval
+                else:
+                    wait_sec = interval / 2
+
+            elif after is None:
+                # Have missed last departure of the day... return none
+                print "Before: %s" % (int_to_timestr(before))
+
+            elif before is None:
+                print "After: %s" % (int_to_timestr(after))
+                # waiting for first departure of day
+                interval = after - time_of_day
+                if interval <= (60 * 60):
+                    wait_sec = interval
+
+        return wait_sec
+
+        return 1000
+
+
 
     def get_stop_departures(self, stop_id, service_type, start_time=0, stop_time=LATEST_TIME):
 
@@ -452,6 +557,7 @@ class StopTimes(object):
                 route_id = self.trips.get_route_id(trip_id)
                 service_type = self.trips.get_service_type(trip_id)
                 headsign = self.trips.get_headsign(trip_id)
+                direction = self.trips.get_direction(trip_id)
                 route_name = self.get_route_name_from_id(route_id)
 
                 primary_route_id = self.routes.get_primary_route_id(route_id)
@@ -466,8 +572,8 @@ class StopTimes(object):
                     # Do not include duplicate routes in result
                     continue
 
-                # print depart_time, service_type, route_id
-                key = "%d-%d-%d" % (depart_time, service_type, route_id)
+                # print depart_time, service_type, route_id, direction
+                key = "%d-%d-%d-%d" % (depart_time, service_type, route_id, direction)
 
                 if stop_data.has_key(key):
                     # print "Already have key", key, depart_time_str, stop_id
@@ -493,7 +599,8 @@ class StopTimes(object):
                         KEY.DEPART_TIME : depart_time,
                         KEY.SERVICE_TYPE : service_type,
                         KEY.ROUTE_ID : route_id,
-                        KEY.HEADSIGN : headsign
+                        KEY.HEADSIGN : headsign,
+                        KEY.DIRECTION : direction
                 }
                 self._data[stop_id] = stop_data
 
@@ -626,7 +733,7 @@ if __name__ == "__main__":
     }
 
     for stop_id in stop_ids:
-        print "== STOP_ID:", stop_id, "NAME:", stops.get_stop_name_from_id(stop_id)
+        print "== STOP_ID:", stop_id, "NAME:", stops.get_stop_name(stop_id)
 
         for service_type, service_desc in service_dict.iteritems():
             departures = stops.get_stop_departures(stop_id, service_type)

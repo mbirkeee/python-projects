@@ -1,5 +1,6 @@
 bus/password.py
 bus/data
+bus/junk
 *.pyc
 .DS_Store
 .idea
