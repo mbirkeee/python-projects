@@ -20,12 +20,17 @@ class SERVICE(object):
     SUN     = 3
 
 class KEY(object):
-    SERVICE_TYPE    = '1'
-    DEPART_TIME     = '2'
-    ROUTE_ID        = '3'
-    TRIP_ID         = '4'
-    HEADSIGN        = '5'
-    DIRECTION       = '6'
+    SERVICE_TYPE    = 'serv_type'
+    DEPART_TIME     = 'depart_time'
+    ROUTE_ID        = 'route_id'
+    TRIP_ID         = 'trip_id'
+    HEADSIGN        = 'headsign'
+    DIRECTION       = 'direction'
+    STOP_ID         = 'stop_id'
+    EST_WAIT_SEC    = 'est_wait_sec'
+    DISTANCE        = 'dist'
+    POPULATION      = 'pop'
+    WEIGHT          = 'weight'
 
 def timestr_to_int(input):
 
