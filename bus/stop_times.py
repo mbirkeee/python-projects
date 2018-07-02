@@ -172,10 +172,18 @@ class TransitRoutes(object):
                 if route_type != 3:
                     raise ValueError("route type not 3")
 
-                if route_id <= 10080:
-                    self._data[route_id] = (short_name, long_name)
-                else:
-                    self._duplicates[route_id] = (short_name, long_name)
+                print "read route ID", route_id
+
+
+                # if route_id <= 10080:
+                #     self._data[route_id] = (short_name, long_name)
+                # else:
+                #     self._duplicates[route_id] = (short_name, long_name)
+
+                if self._data.has_key(route_id):
+                    raise ValueError("THIS IS A DUP!!!")
+
+                self._data[route_id] = (short_name, long_name)
 
                 #duplicate_route_id = self.find_duplicate_route(short_name, long_name)
 
@@ -188,7 +196,9 @@ class TransitRoutes(object):
                 long_name = value[1]
                 duplicate_route_id = self.find_duplicate_route(short_name, long_name)
                 if duplicate_route_id is None:
-                    raise ValueError("no duplicate for %d" % key)
+                    # raise ValueError("no duplicate for %d" % route_id)
+                    continue
+
                 temp[route_id] = duplicate_route_id
 
             self._duplicates = temp
@@ -205,6 +215,7 @@ class TransitRoutes(object):
                 print "closing file"
                 f.close()
 
+        #raise ValueError("temp stop")
 
     def get_primary_route_id(self, route_id):
         primary_id = self._duplicates.get(route_id)

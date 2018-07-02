@@ -84,7 +84,8 @@ class Runner(object):
 
     def __init__(self):
 
-        self._base_path = "../data/sts/csv/2018_05_04/"
+        self._base_path = "../data/sts/csv/2018_06_21/"
+#        self._base_path = "../data/sts/csv/2018_05_04/"
         self._service_type = SERVICE.MWF
         self._time_of_day = 8 * 60 * 60  # 8 AM
 
@@ -126,27 +127,30 @@ class Runner(object):
 
             sum_weight_pop = 0.0
 
-            for da_id in intersecting_das:
-                pop = self._intersect.get_da_pop(da_id)
+            if intersecting_das is None:
+                print "no intersecting DAs!!!!"
+            else:
+                for da_id in intersecting_das:
+                    pop = self._intersect.get_da_pop(da_id)
 
-                stop_utm = self._stop_times.get_stop_utm(stop_id)
-                # print stop_utm
-                da_utm = self._intersect.get_da_utm(da_id)
-                # print da_utm
-                dist = get_dist(stop_utm, da_utm)
-                # print dist
+                    stop_utm = self._stop_times.get_stop_utm(stop_id)
+                    # print stop_utm
+                    da_utm = self._intersect.get_da_utm(da_id)
+                    # print da_utm
+                    dist = get_dist(stop_utm, da_utm)
+                    # print dist
 
-                w = self._weight.butterworth(dist, 250, 1, 6)
+                    w = self._weight.butterworth(dist, 250, 1, 6)
 
-                data[da_id] = {
-                    KEY.DISTANCE : dist,
-                    KEY.POPULATION : pop,
-                    KEY.WEIGHT : w
-                }
+                    data[da_id] = {
+                        KEY.DISTANCE : dist,
+                        KEY.POPULATION : pop,
+                        KEY.WEIGHT : w
+                    }
 
-                sum_weight_pop += (float(pop) * w)
+                    sum_weight_pop += (float(pop) * w)
 
-                print "    INTERSECTS: %d (pop. %d, dist %.2f weight: %0.3f)" % (da_id, pop, dist, w)
+                    print "    INTERSECTS: %d (pop. %d, dist %.2f weight: %0.3f)" % (da_id, pop, dist, w)
 
             #demand_dict[stop_id] = data
             # All we need to keep is the sum of the weighted population
@@ -201,6 +205,9 @@ class Runner(object):
 
                 demand = demand_dict.get(stop_id)
                 # print "demand", repr(demand)
+                if demand is None or demand == 0.0:
+                    print "NOT DEMAND FIXME!!!!!!"
+                    continue
 
                 r = service / demand
 
