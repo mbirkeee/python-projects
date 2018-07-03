@@ -2,7 +2,6 @@ import os
 import math
 
 from my_utils import DaCentriods
-# from my_utils import TransitData
 from my_utils import get_dist
 from stop_times import StopTimes
 from stop_times import SERVICE
@@ -84,15 +83,13 @@ class Runner(object):
 
     def __init__(self):
 
-        self._base_path = "../data/sts/csv/2018_06_21/"
-#        self._base_path = "../data/sts/csv/2018_05_04/"
+#        self._base_path = "../data/sts/csv/2018_06_21/"
+        self._base_path = "../data/sts/csv/2018_05_04/"
         self._service_type = SERVICE.MWF
         self._time_of_day = 8 * 60 * 60  # 8 AM
 
-
         self._weight = Weight()
         self._intersect = Intersect()
-        # self._transit_data = TransitData()
         self._stop_times = StopTimes(self._base_path)
 
 
@@ -205,8 +202,11 @@ class Runner(object):
 
                 demand = demand_dict.get(stop_id)
                 # print "demand", repr(demand)
-                if demand is None or demand == 0.0:
-                    print "NOT DEMAND FIXME!!!!!!"
+                if demand is None:
+                    raise ValueError("No demand")
+
+                if demand == 0.0:
+                    print "WARN: Demand is 0!!!", stop_id
                     continue
 
                 r = service / demand
