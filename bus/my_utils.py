@@ -2,6 +2,21 @@ import datetime
 import time
 import simplejson
 import pyproj
+import math
+
+def get_dist(point1, point2):
+
+    if point1 is None or point2 is None: return 0.0
+
+    x1 = point1[0]
+    y1 = point1[1]
+
+    x2 = point2[0]
+    y2 = point2[1]
+
+    if x1 is None or x2 is None: return 0.0
+
+    return math.sqrt(math.pow((x1 - x2), 2) + math.pow((y1 - y2),2))
 
 def seconds_to_string(seconds):
     t = datetime.datetime.fromtimestamp(seconds)
@@ -50,6 +65,115 @@ def string_to_seconds(s):
         pass
 
     raise ValueError("Invalid time string: %s" % s)
+
+
+class DaCentriods(object):
+
+    def __init__(self):
+        self._data_pop_by_da = {}
+        self._data_centriods = {}
+
+        self._myproj = pyproj.Proj("+init=EPSG:32613")
+
+        self.load_stats_can_pop_data()
+        self.make_da_cvs_from_text()
+
+    def load_stats_can_pop_data(self):
+
+        f = open("../data/2016_pop.csv", "r")
+
+        expected_parts = 15
+
+        for line in f:
+            # print "LINE", line.strip()
+            parts = line.split(",")
+            # print len(parts)
+
+            if len(parts) != expected_parts:
+                print "BAD LINE!!!!!", line
+                print len(parts)
+                continue
+
+            try:
+                da_id = int(parts[1].strip('"'))
+                pop = int(parts[12].strip('"'))
+            except Exception as err:
+                print "Failed for line:", line
+                continue
+                # raise ValueError("unexpected number of parts")
+
+            print "DA ID:", da_id, "POP:", pop
+
+            if self._data_pop_by_da.has_key(da_id):
+                raise ValueError("Already have da_id: %s" % da_id)
+
+            self._data_pop_by_da[da_id] = pop
+
+        f.close()
+
+    def make_da_cvs_from_text(self):
+
+        # I think that DA_centriods.txt is a file produced by ArcGIS
+        f = open("../data/DA_centriods.txt", 'r')
+        count = 0
+
+        for line in f:
+            count += 1
+            if count == 1: continue
+
+            parts = line.strip().split(",")
+            # print parts
+
+            try:
+                da_id = int(parts[1].strip())
+                da_fid = int(parts[23].strip())
+                lat = float(parts[24].strip())
+                lon = float(parts[25].strip())
+            except:
+                print "BAD LINE", line
+                continue
+
+            # print da_id, da_fid, lat, lon
+
+            population = self._data_pop_by_da.get(da_id)
+            if population is None:
+                raise ValueError("Failed to get pop for %s" % repr(da_id))
+
+            x, y  = self._myproj(lon, lat)
+
+            self._data_centriods[da_id] = {
+                'x'         : x,
+                'y'         : y,
+                'lat'       : lat,
+                'lon'       : lon,
+                'da_fid'    : da_fid,
+                'pop'       : population
+            }
+
+        f.close()
+
+    def get_list(self):
+        result = [k for k in self._data_centriods.iterkeys()]
+        return result
+
+    def get_centriods(self):
+        return self._data_centriods
+
+    def get_population(self, da_id):
+
+        if not self._data_centriods.has_key(da_id):
+            return None
+
+        data = self._data_centriods.get(da_id)
+        return data.get('pop')
+
+    def get_utm(self, da_id):
+
+        if not self._data_centriods.has_key(da_id):
+            return None
+
+        data = self._data_centriods.get(da_id)
+        return (data.get('x'), data.get('y'))
 
 
 class TransitData(object):
@@ -124,6 +248,21 @@ class TransitData(object):
 
         self._bus_stops = result
 
+    def get_stop_id_list(self):
+        result = [k for k in self._bus_stops.iterkeys()]
+        return result
+
+    def get_stop_utm(self, stop_id):
+        stop_data = self._bus_stops.get(stop_id)
+        if stop_data is None:
+            return None
+        return (stop_data.get('x'), stop_data.get('y'))
+
+    def get_stop_name(self, stop_id):
+        stop_data = self._bus_stops.get(stop_id)
+        if stop_data is None:
+            return None
+        return stop_data.get('name')
 
     def get_stops(self):
         return self._bus_stops

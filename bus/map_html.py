@@ -1,3 +1,5 @@
+from password import GOOGLE_MAPS_KEY_OLD as GOOGLE_MAPS_KEY
+
 TOP = """
 <!DOCTYPE html>
 <html>
@@ -41,10 +43,33 @@ for (var point in circle) {
     fillOpacity: 0.25,
     map: map,
     center: circle[point].center,
-    radius: 20
+    radius: 20,
   });
 }
 """
+
+MARKER = """
+for (var point in marker) {
+  var mark = new google.maps.Marker({
+    position: marker[point].center,
+    map: map,
+    title: marker[point].title,
+    label: marker[point].label,
+  });
+}
+"""
+
+# MARKER1 = """
+# for (var point in marker) {
+#   var marker = new google.maps.Marker({
+#     position: new google.maps.LatLng(marker[point].center),
+#     map: map,
+#     title: marker[point].title,
+#     label: marker[point].label,
+#   });
+# }
+# """
+
 
 CIRCLE_RED_50 = """
 for (var point in circle) {
@@ -91,20 +116,15 @@ for (var point in circle2) {
 }
 """
 
-
-
 BOTTOM = """
       }
     </script>
     <script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBlabwKhgVWHc5Yfr3bUYGSUDJyYTKX5QY&libraries=visualization&callback=initMap">
+    src="https://maps.googleapis.com/maps/api/js?key=%s&libraries=visualization&callback=initMap">
     </script>
   </body>
 </html>
-
-"""
-
-
+""" % GOOGLE_MAPS_KEY
 
 
 ROUTE_TOP = """
@@ -160,7 +180,6 @@ ROUTE_MIDDLE = """
 ROUTE_BOTTOM = """
         };
 
-
         for (var point in trip) {
           var circle = new google.maps.Circle({
             strokeColor: trip[point].color,
@@ -176,9 +195,8 @@ ROUTE_BOTTOM = """
       }
     </script>
     <script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBlabwKhgVWHc5Yfr3bUYGSUDJyYTKX5QY&callback=initMap">
+      src="https://maps.googleapis.com/maps/api/js?key=%s&callback=initMap">
     </script>
   </body>
 </html>
-
-"""
+""" % GOOGLE_MAPS_KEY
