@@ -1,0 +1,595 @@
+import shapefile
+import pyproj
+import csv
+import StringIO
+
+from my_utils import DaCentriods
+
+
+from map_html import TOP as MAP_TOP
+from map_html import BOTTOM as MAP_BOTTOM
+from map_html import POLYGON, POLYLINE
+
+from map_html import CIRCLE1, CIRCLE2
+from map_html import CIRCLE_RED_20
+
+
+class Runner(object):
+
+    def __init__(self):
+
+        self._myproj = pyproj.Proj("+init=EPSG:32613")
+
+        self._data_pop_by_da = {}
+        self._centroids = {}
+        self._test_polygon = []
+
+        self._route_dict = {}
+        self._stop_dict = {}
+        self._route_id_dict = {}
+
+    # def load_stats_can_pop_data(self):
+    #
+    #     f = open("../data/2016_pop.csv", "r")
+    #
+    #     expected_parts = 15
+    #
+    #     for line in f:
+    #         # print "LINE", line.strip()
+    #         parts = line.split(",")
+    #         # print len(parts)
+    #
+    #         if len(parts) != 15:
+    #             print "BAD LINE!!!!!", line
+    #             print len(parts)
+    #             continue
+    #
+    #         try:
+    #             da_id = int(parts[1].strip('"'))
+    #             pop = int(parts[12].strip('"'))
+    #         except Exception as err:
+    #             print "Failed for line:", line
+    #             continue
+    #             # raise ValueError("unexpected number of parts")
+    #
+    #         print "ID:", da_id, "POP:", pop
+    #
+    #         if self._data_pop_by_da.has_key(da_id):
+    #             raise ValueError("Already have da_id: %s" % da_id)
+    #
+    #         self._data_pop_by_da[da_id] = pop
+    #
+    #     f.close()
+
+    # def make_da_cvs_from_text(self):
+    #
+    #     f = open("da_test.txt")
+    #     count = 0
+    #
+    #     f2 = open("da_population.csv", "w")
+    #     f2.write("FID,DAUID,da_feature_id,population\n")
+    #
+    #     for line in f:
+    #         count += 1
+    #         if count == 1: continue
+    #
+    #         parts = line.split(",")
+    #         print parts
+    #
+    #         try:
+    #             da_id = int(parts[1].strip())
+    #             da_fid = int(parts[23].strip())
+    #             lat = float(parts[24].strip())
+    #             lon = float(parts[25].strip())
+    #         except:
+    #             print "BAD LINE", line
+    #             continue
+    #
+    #         print da_id, da_fid, lat, lon
+    #
+    #         population = self._data_pop_by_da.get(da_id)
+    #         if population is None:
+    #             raise ValueError("Failed tpo get pop for %s" % repr(da_id))
+    #
+    #         f2.write("%d,%d,%d,%d\n" % (count-1, da_id, da_fid, population))
+    #         self._centroids[da_id] = {
+    #         #     'x' : x,
+    #         #     'y' : y,
+    #             'lat' : lat,
+    #             'lon' : lon
+    #         }
+    #
+    #     f.close()
+    #     f2.close()
+
+
+    def read_direction_stops(self):
+        sf = shapefile.Reader("../data/shapefiles/brt_lines/brt/direction_stops.dbf")
+        records = sf.records()
+        shapes = sf.shapes()
+
+        print "len(records)", len(records)
+        print "len(shapes)", len(shapes)
+
+        for index, record in enumerate(records):
+            shape = shapes[index]
+            print repr(record)
+
+    def read_directions(self):
+
+        route_id = 0
+
+        sf = shapefile.Reader("../data/shapefiles/brt_lines/brt/directions.dbf")
+        records = sf.records()
+        shapes = sf.shapes()
+
+        print "len(records)", len(records)
+        print "len(shapes)", len(shapes)
+
+        for index, record in enumerate(records):
+            shape = shapes[index]
+            #print repr(record)
+
+            name = record[5]
+            direction = record[2].strip().lower()
+
+            display_name = "%s (%s)" % (name.strip(), direction)
+
+            print "LINE:", display_name
+
+            name_parts = name.split(",")
+            print "name part 0", name_parts[0]
+            print "name part 1", name_parts[1]
+
+
+            if direction == "inbound":
+                dir_code = 0
+            elif direction == "outbound":
+                dir_code = 1
+            elif direction == 'ccw':
+                dir_code = 0
+            elif direction == 'cw':
+                dir_code = 1
+            else:
+                raise ValueError("BAD DIRECTION!!!")
+
+            route_key = "%s-%d" % (name_parts[0].strip().lower(), dir_code)
+
+            if self._route_dict.has_key(route_key):
+                raise ValueError("Already have route key")
+
+            self._route_dict[route_key] = { 'name' : display_name, "id" : route_id}
+            route_id += 1
+            # print repr(shape)
+            # print dir(shape)
+
+            # print "len(shape.points)", len(shape.points)
+
+            # for point in shape.points:
+            #     print point
+
+            #self.plot_brt_route(name, direction, shape.points)
+
+        for key, value in self._route_dict.iteritems():
+            print "KEY: %s VALUE: %s" % (key, value)
+            route_id = value.get('id')
+            self._route_id_dict[route_id] = value
+
+
+        for key, value in self._route_id_dict.iteritems():
+            print "KEY: %s VALUE: %s" % (key, value)
+
+    def plot_brt_route(self, name, direction, points):
+
+        file_name = "temp_data/maps/brt_route_%s_%s.html" % (name, direction)
+        file_name = file_name.replace(",", "")
+        file_name = file_name.replace(" ", "_")
+        file_name = file_name.replace("-", "")
+        file_name = file_name.replace("__", "_")
+        file_name = file_name.replace("__", "_")
+
+        print "making map file", file_name
+
+        f = open(file_name, "w")
+        f.write(MAP_TOP)
+
+        f.write("var polyline = [\n")
+
+        i = 0
+        for point in points:
+            lon = point[0]
+            lat = point[1]
+            f.write("{lat: %f, lng: %f},\n" % (lat, lon))
+            i += 1
+
+        f.write("];\n")
+
+        f.write(POLYLINE)
+        f.write(MAP_BOTTOM)
+        f.close()
+
+    def read_stops(self):
+
+        line_dict = {}
+
+        LINE_NAME_MAP = {
+            "1 BRT" : "1 BRT (Red)",
+            "2 BRT" : "2 BRT (Blue)",
+            "3 BRT" : "3 BRT (Green)",
+        }
+
+        sf = shapefile.Reader("../data/shapefiles/brt_lines/brt/stops.dbf")
+        records = sf.records()
+        shapes = sf.shapes()
+
+        print "len(records)", len(records)
+        print "len(shapes)", len(shapes)
+
+        f = open("temp_data/brt_stops.csv", "w")
+
+        f.write("index,stop_id,stop_name,lat,lng,on_red,on_green,on_blue\n")
+        stop_index = 0
+
+        for index, record in enumerate(records):
+            print repr(record)
+
+            shape = shapes[index]
+
+            # print "len(shape.points)", len(shape.points)
+            # print shape.points
+
+            point = shape.points[0]
+            lat = point[1]
+            lng = point[0]
+            # print lat, lng
+
+            #continue
+
+            stop_id = record[3]
+            stop_name = record[2]
+            lines = record[4]
+
+            print stop_id, stop_name, lines
+            print "LINES", lines
+
+            parts = lines.split(',')
+            print "LINE PARTS:", len(parts)
+
+            if len(parts) == 1:
+                if len(parts[0].strip()) != 0:
+                    raise ValueError("what the??")
+                print "skip stop"
+                continue
+
+            if len(parts) % 2:
+
+                raise ValueError("Odd number of parts!!!")
+
+            line_list = []
+            on_red = False
+            on_green = False
+            on_blue = False
+
+            for i in xrange(len(parts)/2):
+                line = "%s: %s" % (parts[i * 2].strip(), parts[1+ i * 2].strip())
+                print "LINE: %s" % line
+
+                if line.find(" Red ") > 0:
+                    print "ON RED LINE"
+                    on_red = True
+
+                if line.find(" Green ") > 0:
+                    print "ON GREEN LINE"
+                    on_green = True
+
+                if line.find(" Blue ") > 0:
+                    print "ON BLUE LINE"
+                    on_blue = True
+
+                count = line_dict.get(line, 0)
+                count += 1
+                line_dict[line] = count
+                line_list.append(line)
+
+
+            if not on_green and not on_blue and not on_red:
+                continue
+
+            print "TEST123", stop_index, stop_name, stop_id
+
+            f.write("%d,%s,%s,%f,%f,%s,%s,%s\n" % (stop_index, stop_id, stop_name, lat, lng, on_red, on_green, on_blue))
+            stop_index += 1
+
+        f.close()
+
+        x = [(key, value) for key, value in line_dict.iteritems()]
+        x = sorted(x)
+
+        for item in x:
+            print "%s -------> %d" % (item[0], item[1])
+
+
+            # print "line_list", line_list[0]
+            #
+            # for line in line_list[0]:
+            #     if len(line.strip()) == 0: continue
+            #
+            #     print "LINE", line
+
+    def get_route_id_from_key(self, route_key):
+
+        data = self._route_dict.get(route_key)
+        return data.get('id')
+
+    def get_route_name_from_id(self, route_id):
+        data = self._route_id_dict.get(route_id)
+        if data is None:
+            raise ValueError("No route_id: %s" % repr(route_id))
+
+        return data.get('name')
+
+    def read_stops_new(self):
+
+        line_dict = {}
+
+        skipped_stops = 0
+        active_stops = 0
+
+        sf = shapefile.Reader("../data/shapefiles/brt_lines/brt/stops.dbf")
+        records = sf.records()
+        shapes = sf.shapes()
+
+        print "len(records)", len(records)
+        print "len(shapes)", len(shapes)
+
+        for index, record in enumerate(records):
+            # print repr(record)
+
+            shape = shapes[index]
+
+            # print "len(shape.points)", len(shape.points)
+            # print shape.points
+
+            point = shape.points[0]
+            lat = point[1]
+            lng = point[0]
+            # print lat, lng
+
+            stop_id = record[2]
+            stop_name = record[3]
+            lines = record[4]
+
+            # print stop_id, stop_name, lines
+            lines = lines.strip()
+            # print "LINES >>>%s<<<" % lines
+
+            parts = lines.split(',')
+            # print "LINE PARTS:", len(parts)
+
+            stop_data = {
+                'name' : stop_name,
+                'lat' : float(lat),
+                'lng' : float(lng),
+                'routes' : []
+            }
+            stop_routes = []
+
+
+            if self._stop_dict.has_key(stop_id):
+                raise ValueError("already have stop id: %s %d" % (repr(stop_id), index))
+
+            self._stop_dict[stop_id] = stop_data
+
+            if len(parts) == 1:
+                if len(parts[0].strip()) != 0:
+                    raise ValueError("what the??")
+                # print "skip stop"
+                skipped_stops += 1
+                continue
+
+            if len(parts) % 2:
+                raise ValueError("Odd number of parts!!!")
+
+            for i in xrange(len(parts)/2):
+                part1 = parts[i * 2].strip().lower()
+                part2 =  parts[1+ i * 2].strip().lower()
+                # print "   PART 1: %s" % part1
+                # print "   PART 2: %s" % part2
+
+                if part2.find("inbound") > 0:
+                    dir_code = 0
+                    route_key = "%s-%s" % (part1, dir_code)
+                    route_id = self.get_route_id_from_key(route_key)
+                    stop_routes.append(route_id)
+
+                if part2.find("outbound") > 0:
+                    dir_code = 1
+                    route_key = "%s-%s" % (part1, dir_code)
+                    route_id = self.get_route_id_from_key(route_key)
+                    stop_routes.append(route_id)
+
+                if part2.find("(ccw)") > 0:
+                    dir_code = 0
+                    route_key = "%s-%s" % (part1, dir_code)
+                    route_id = self.get_route_id_from_key(route_key)
+                    stop_routes.append(route_id)
+
+                if part2.find("(cw)") > 0:
+                    dir_code = 1
+                    route_key = "%s-%s" % (part1, dir_code)
+                    route_id = self.get_route_id_from_key(route_key)
+                    stop_routes.append(route_id)
+
+            if len(stop_routes) == 0:
+                raise ValueError("Failed to find routes!!!!")
+
+            stop_data = {
+                'name' : stop_name,
+                'lat' : float(lat),
+                'lng' : float(lng),
+                'routes' : stop_routes
+            }
+            self._stop_dict[stop_id] = stop_data
+            active_stops += 1
+
+        for key, value in self._stop_dict.iteritems():
+            print key, value
+            routes = value.get('routes')
+            for route_id in routes:
+                print "  route name", self.get_route_name_from_id(route_id)
+
+        print "stops skipped:", skipped_stops
+        print "stops active:", active_stops
+
+    def read_shapefile(self):
+
+        sf = shapefile.Reader("../data/shapefiles/DA_centriods/Da_CentroidPoints.dbf")
+        records = sf.records()
+        shapes = sf.shapes()
+
+        if len(records) != len(shapes):
+            raise ValueError("len recoreds != len shapes")
+
+        print "len(records)", len(records)
+        print "len(shapes)", len(shapes)
+
+
+        for i in xrange(len(records)):
+            record = records[i]
+            shape = shapes[i]
+
+            print repr(record)
+
+            print "len(shape.points)", len(shape.points)
+            print shape.points
+
+            point = shape.points[0]
+
+            # da_id = int(record[0])
+            # da_fid = int(record[22])
+            # x = point[0]
+            # y = point[1]
+            #
+            # population = self._data_pop_by_da.get(da_id)
+            # if population is None:
+            #     raise ValueError("Failed tpo get pop for %s" % repr(da_id))
+            #
+            # line =  "%d,%d,%d,%f,%f,%d" % (i+1, da_id, da_fid, x, y, population)
+            # f.write("%s\n" % line)
+            #
+            # lon, lat =  self._myproj(x, y, inverse=True)
+            #
+            # self._centroids[da_id] = {
+            #     'x' : x,
+            #     'y' : y,
+            #     'lat' : lat,
+            #     'lon' : lon
+            # }
+
+        print dir(sf)
+
+        # f.close()
+            # if i > 10: break
+
+    def make_example_polygons(self):
+
+        center_lat = 52.125
+        center_lng = -106.650
+
+        center_x, center_y = self._myproj(center_lng, center_lat)
+
+        poly_points = [
+            (-50, 0),
+            (0, 50),
+            (50, 0),
+            (0, -50),
+            (-50, 0)
+        ]
+
+        for i in xrange(len(poly_points)):
+            start_point = poly_points[i]
+
+            start_x = center_x + start_point[0]
+            start_y = center_y + start_point[1]
+
+            print ((start_x, start_y))
+            self._test_polygon.append((start_x, start_y))
+
+    def plot(self):
+        pass
+        # centriods = DaCentriods()
+        # centriod_dict = centriods.get_centriods()
+        #
+        map_name = "data/maps/test_polygon.html"
+
+        f = open(map_name, "w")
+
+        f.write(MAP_TOP)
+        f.write("var polypoints = [\n")
+
+        i = 0
+        for start in self._test_polygon:
+
+            print "ADDING DOT TO PLOT!!!!", repr(start)
+            start_x = start[0]
+            start_y = start[1]
+            lon, lat = self._myproj(start_x, start_y, inverse=True)
+            f.write("{lat: %f, lng: %f},\n" % (lat, lon))
+            i += 1
+
+        f.write("];\n")
+
+        f.write(POLYGON % 0.1)
+
+        f.write("var polypoints = [\n")
+        i = 0
+        for start in self._test_polygon:
+
+            print "ADDING DOT TO PLOT!!!!", repr(start)
+            start_x = start[0] + 100.
+            start_y = start[1] + 100.0
+            lon, lat = self._myproj(start_x, start_y, inverse=True)
+            f.write("{lat: %f, lng: %f},\n" % (lat, lon))
+            i += 1
+
+        f.write("];\n")
+        f.write(POLYGON % 0.3)
+
+
+        f.write("var polypoints = [\n")
+        i = 0
+        for start in self._test_polygon:
+
+            print "ADDING DOT TO PLOT!!!!", repr(start)
+            start_x = start[0] + 200.
+            start_y = start[1] + 200.0
+            lon, lat = self._myproj(start_x, start_y, inverse=True)
+            f.write("{lat: %f, lng: %f},\n" % (lat, lon))
+            i += 1
+
+        f.write("];\n")
+        f.write(POLYGON % 0.5)
+        f.write(MAP_BOTTOM)
+        f.close()
+        print "Wrote MAP file: %s" % map_name
+
+if __name__ == "__main__":
+
+    runner = Runner()
+    #runner.read_stops()
+
+    runner.read_directions()
+    print "--------------------------------------------------------------"
+    runner.read_stops_new()
+
+    # runner.read_direction_stops()
+
+    # runner.make_example_polygons()
+    # runner.plot()
+    # runner.load_stats_can_pop_data()
+    # runner.read_shapefile()
+
+    # runner.make_da_cvs_from_text()
+
+
+
