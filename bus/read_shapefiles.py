@@ -11,7 +11,7 @@ from map_html import BOTTOM as MAP_BOTTOM
 from map_html import POLYGON, POLYLINE
 
 from map_html import CIRCLE1, CIRCLE2
-from map_html import CIRCLE_RED_20
+from map_html import CIRCLE_RED_20, CIRCLE_RED_50
 
 
 class Runner(object):
@@ -158,7 +158,12 @@ class Runner(object):
             if self._route_dict.has_key(route_key):
                 raise ValueError("Already have route key")
 
-            self._route_dict[route_key] = { 'name' : display_name, "id" : route_id}
+            self._route_dict[route_key] = {
+                'name' : display_name,
+                "id" : route_id,
+                "direction" : direction,
+                "points" : shape.points
+            }
             route_id += 1
             # print repr(shape)
             # print dir(shape)
@@ -171,18 +176,31 @@ class Runner(object):
             #self.plot_brt_route(name, direction, shape.points)
 
         for key, value in self._route_dict.iteritems():
-            print "KEY: %s VALUE: %s" % (key, value)
+            # print "KEY: %s VALUE: %s" % (key, value)
+            #print "KEY: %s VALUE:" % (key)
             route_id = value.get('id')
             self._route_id_dict[route_id] = value
+            print value.get('name')
 
+       # for key, value in self._route_id_dict.iteritems():
+       #     print "KEY: %s VALUE: %s" % (key, value)
 
-        for key, value in self._route_id_dict.iteritems():
-            print "KEY: %s VALUE: %s" % (key, value)
+    def plot_brt_routes(self):
+        for value in self._route_dict.itervalues():
+            name = value.get('name')
+            route_id = value.get('id')
+            direction = value.get('direction')
+            points = value.get('points')
 
-    def plot_brt_route(self, name, direction, points):
+            stops = self.get_stops_for_route_id(route_id)
+            self.plot_brt_route(name, direction, points, stops)
 
-        file_name = "temp_data/maps/brt_route_%s_%s.html" % (name, direction)
+    def plot_brt_route(self, name, direction, points, stop_ids):
+
+        file_name = "temp_data/maps/brt_route_%s.html" % (name)
         file_name = file_name.replace(",", "")
+        file_name = file_name.replace("(", "_")
+        file_name = file_name.replace(")", "_")
         file_name = file_name.replace(" ", "_")
         file_name = file_name.replace("-", "")
         file_name = file_name.replace("__", "_")
@@ -203,8 +221,22 @@ class Runner(object):
             i += 1
 
         f.write("];\n")
-
         f.write(POLYLINE)
+
+        f.write("var circle = {")
+        i = 0
+
+
+        for stop_id in stop_ids:
+            print "Adding stop", stop_id
+            lat, lon = self.get_stop_lat_lon(stop_id)
+            f.write("%d: {center:{lat: %f, lng: %f},},\n" % (i, lat, lon))
+            i += 1
+            if i > 10: break
+
+        f.write("};\n")
+        f.write(CIRCLE_RED_50)
+
         f.write(MAP_BOTTOM)
         f.close()
 
@@ -370,7 +402,7 @@ class Runner(object):
                 'name' : stop_name,
                 'lat' : float(lat),
                 'lng' : float(lng),
-                'routes' : []
+                'route_ids' : []
             }
             stop_routes = []
 
@@ -427,19 +459,34 @@ class Runner(object):
                 'name' : stop_name,
                 'lat' : float(lat),
                 'lng' : float(lng),
-                'routes' : stop_routes
+                'route_ids' : stop_routes
             }
             self._stop_dict[stop_id] = stop_data
             active_stops += 1
 
         for key, value in self._stop_dict.iteritems():
             print key, value
-            routes = value.get('routes')
+            routes = value.get('route_ids')
             for route_id in routes:
                 print "  route name", self.get_route_name_from_id(route_id)
 
         print "stops skipped:", skipped_stops
         print "stops active:", active_stops
+
+    def get_stops_for_route_id(self, route_id):
+        result = []
+        for stop_id, value in self._stop_dict.iteritems():
+            routes = value.get("route_ids")
+            if route_id in routes:
+                result.append(stop_id)
+
+        return result
+
+    def get_stop_lat_lon(self, stop_id):
+        value = self._stop_dict.get(stop_id)
+        lat = value.get('lat')
+        lng = value.get('lng')
+        return lat, lng
 
     def read_shapefile(self):
 
@@ -579,8 +626,8 @@ if __name__ == "__main__":
     #runner.read_stops()
 
     runner.read_directions()
-    print "--------------------------------------------------------------"
     runner.read_stops_new()
+  #  runner.plot_brt_routes()
 
     # runner.read_direction_stops()
 

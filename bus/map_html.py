@@ -75,10 +75,10 @@ CIRCLE_RED_50 = """
 for (var point in circle) {
   var circ = new google.maps.Circle({
     strokeColor: '#FF0000',
-    strokeOpacity: 0.25,
+    strokeOpacity: 0.50,
     strokeWeight: 1,
     fillColor: '#FF0000',
-    fillOpacity: 0.25,
+    fillOpacity: 0.50,
     map: map,
     center: circle[point].center,
     radius: 50

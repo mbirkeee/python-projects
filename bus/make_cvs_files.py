@@ -393,6 +393,27 @@ class TempUtils(object):
         for index, item in enumerate(temp):
             print "%d,%s,%s,%s,%s" % (index, item[0], item[1], item[2], item[3])
 
+    def da_pop_july_12(self):
+
+        name = "../data/DaandPostalCodes.csv"
+
+        f = open(name, "r")
+
+        print "index,postal_code,da_id"
+        line_count = 0
+        for line in f:
+            line_count += 1
+            if line_count == 1: continue
+            line = line.strip()
+            # print line
+
+            parts = line.split(",")
+            # print parts[4]
+            # print parts[62]
+
+            print "%d,%s,%s" % (line_count-1, parts[62], parts[4])
+        f.close()
+
     def run_2018_07_08(self):
         """
          0 OBJECTID,
@@ -480,8 +501,9 @@ if __name__ == "__main__":
     # runner.run()
     # runner.run_lines()
     # runner.run_2018_07_08()
-    runner.run_pop_2018_07_08()
+    # runner.run_pop_2018_07_08()
 
+    runner.da_pop_july_12()
     # runner.plot_route()
     # runner.make_stop_csv_file()
 
