@@ -13,6 +13,8 @@ from map_html import POLYGON, POLYLINE
 from map_html import CIRCLE1, CIRCLE2
 from map_html import CIRCLE_RED_20, CIRCLE_RED_50
 
+import settings
+
 
 class Runner(object):
 
@@ -27,6 +29,9 @@ class Runner(object):
         self._route_dict = {}
         self._stop_dict = {}
         self._route_id_dict = {}
+
+        self._shape_base = "../data/shapefiles/brt_lines/brt"
+        # self._shape_base = "../data/shapefiles/brt_lines/existing"
 
     # def load_stats_can_pop_data(self):
     #
@@ -103,8 +108,9 @@ class Runner(object):
     #     f2.close()
 
 
+
     def read_direction_stops(self):
-        sf = shapefile.Reader("../data/shapefiles/brt_lines/brt/direction_stops.dbf")
+        sf = shapefile.Reader("%s/direction_stops.dbf" % self._shape_base, "rb")
         records = sf.records()
         shapes = sf.shapes()
 
@@ -115,11 +121,73 @@ class Runner(object):
             shape = shapes[index]
             print repr(record)
 
+    def read_test(self):
+
+        line_count = 0
+
+        temp_dict = {}
+
+        f = open("%s/test.out" % self._shape_base, 'rb')
+        for line in f:
+            # print line
+            line_count += 1
+
+            if line_count == 2:
+
+                #line.replace("Mall", "")
+
+                parts = line.split()
+                print "PARTS: %d" % len(parts)
+
+
+                part_index = 1
+
+                while True:
+
+                    try:
+                        dir_id = parts[part_index].strip()
+                        stop_id = parts[part_index + 1].strip()
+                        if stop_id == "Market":
+                            part_index += 1
+
+                        dist = parts[part_index + 2].strip()
+
+                    except:
+                        print "Done"
+                        break
+
+                    print "dir_id", dir_id, "stop_id", stop_id, "dist", dist
+                    part_index += 3
+
+
+                    stop_list = temp_dict.get(dir_id, [])
+                    stop_list.append(stop_id)
+                    temp_dict[dir_id] = stop_list
+
+
+                # part_index = 0
+                # for part in parts:
+                #     print "part: %d: >>%s<<" % (part_index, part.strip())
+                #     part_index += 1
+                #     if part_index > 50:
+                #         break
+
+        f.close()
+
+        route_count = 0
+        for key, value in temp_dict.iteritems():
+            print "KEY", key, "VALUE", len(value)
+            route_count += 1
+
+
+        print "route count", route_count
+
     def read_directions(self):
 
         route_id = 0
 
-        sf = shapefile.Reader("../data/shapefiles/brt_lines/brt/directions.dbf")
+        sf = shapefile.Reader("%s/directions.dbf" % self._shape_base)
+
         records = sf.records()
         shapes = sf.shapes()
 
@@ -128,7 +196,9 @@ class Runner(object):
 
         for index, record in enumerate(records):
             shape = shapes[index]
-            #print repr(record)
+
+            print repr(record)
+            # continue
 
             name = record[5]
             direction = record[2].strip().lower()
@@ -139,8 +209,14 @@ class Runner(object):
 
             name_parts = name.split(",")
             print "name part 0", name_parts[0]
-            print "name part 1", name_parts[1]
 
+            try:
+                print "name part 1", name_parts[1]
+            except:
+                pass
+
+            # print "direction", direction
+            # continue
 
             if direction == "inbound":
                 dir_code = 0
@@ -197,7 +273,7 @@ class Runner(object):
 
     def plot_brt_route(self, name, direction, points, stop_ids):
 
-        file_name = "temp_data/maps/brt_route_%s.html" % (name)
+        file_name = "%s/maps/brt_route_%s.html" % (settings.TEMP_DATA_BASE, name)
         file_name = file_name.replace(",", "")
         file_name = file_name.replace("(", "_")
         file_name = file_name.replace(")", "_")
@@ -250,7 +326,7 @@ class Runner(object):
             "3 BRT" : "3 BRT (Green)",
         }
 
-        sf = shapefile.Reader("../data/shapefiles/brt_lines/brt/stops.dbf")
+        sf = shapefile.Reader("%s/stops.dbf" % self._shape_base)
         records = sf.records()
         shapes = sf.shapes()
 
@@ -367,7 +443,7 @@ class Runner(object):
         skipped_stops = 0
         active_stops = 0
 
-        sf = shapefile.Reader("../data/shapefiles/brt_lines/brt/stops.dbf")
+        sf = shapefile.Reader("%s/stops.dbf" % self._shape_base)
         records = sf.records()
         shapes = sf.shapes()
 
@@ -495,11 +571,10 @@ class Runner(object):
         shapes = sf.shapes()
 
         if len(records) != len(shapes):
-            raise ValueError("len recoreds != len shapes")
+            raise ValueError("len records != len shapes")
 
         print "len(records)", len(records)
         print "len(shapes)", len(shapes)
-
 
         for i in xrange(len(records)):
             record = records[i]
@@ -625,9 +700,11 @@ if __name__ == "__main__":
     runner = Runner()
     #runner.read_stops()
 
-    runner.read_directions()
-    runner.read_stops_new()
-  #  runner.plot_brt_routes()
+    # runner.read_directions()
+    # runner.read_stops_new()
+    # runner.plot_brt_routes()
+
+    runner.read_test()
 
     # runner.read_direction_stops()
 
