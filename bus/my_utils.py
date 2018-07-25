@@ -66,6 +66,48 @@ def string_to_seconds(s):
 
     raise ValueError("Invalid time string: %s" % s)
 
+class DaPopulations(object):
+    def __init__(self):
+
+        self._data_pop_by_da = {}
+        self.load_stats_can_pop_data()
+
+    def get_population_for_da_id(self, da_id):
+
+        return int(self._data_pop_by_da[da_id])
+
+    def load_stats_can_pop_data(self):
+
+        f = open("../data/2016_pop.csv", "r")
+
+        expected_parts = 15
+
+        for line in f:
+            # print "LINE", line.strip()
+            parts = line.split(",")
+            # print len(parts)
+
+            if len(parts) != expected_parts:
+                print "BAD LINE!!!!!", line
+                print len(parts)
+                continue
+
+            try:
+                da_id = int(parts[1].strip('"'))
+                pop = int(parts[12].strip('"'))
+            except Exception as err:
+                print "Failed for line:", line
+                continue
+                # raise ValueError("unexpected number of parts")
+
+            print "DA ID:", da_id, "POP:", pop
+
+            if self._data_pop_by_da.has_key(da_id):
+                raise ValueError("Already have da_id: %s" % da_id)
+
+            self._data_pop_by_da[da_id] = pop
+
+        f.close()
 
 class DaCentriods(object):
 

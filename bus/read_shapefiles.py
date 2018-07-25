@@ -28,7 +28,7 @@ class Runner(object):
 
         self._route_dict = {}
         self._stop_dict = {}
-        self._route_id_dict = {}
+#        self._route_id_dict = {}
 
         self._shape_base = "../data/shapefiles/brt_lines/brt"
         # self._shape_base = "../data/shapefiles/brt_lines/existing"
@@ -109,7 +109,7 @@ class Runner(object):
 
 
 
-    def read_direction_stops(self):
+    def read_direction_stops_old(self):
         sf = shapefile.Reader("%s/direction_stops.dbf" % self._shape_base, "rb")
         records = sf.records()
         shapes = sf.shapes()
@@ -121,8 +121,15 @@ class Runner(object):
             shape = shapes[index]
             print repr(record)
 
-    def read_test(self):
+    def read_direction_stops(self):
 
+        """
+        ['1424e21', 'HDR Future Network V3', '4174', 'Superstore',
+        "10 Mainline, Confederation - Centre Mall (Inbound),
+        14 Crosstown, St Paul's (Outbound),
+        3 BRT, Green (Inbound),
+        48 Suburban Connector, 33rd St - Confed (Inbound)"]
+        """
         line_count = 0
 
         temp_dict = {}
@@ -138,7 +145,6 @@ class Runner(object):
 
                 parts = line.split()
                 print "PARTS: %d" % len(parts)
-
 
                 part_index = 1
 
@@ -156,13 +162,16 @@ class Runner(object):
                         print "Done"
                         break
 
-                    print "dir_id", dir_id, "stop_id", stop_id, "dist", dist
+#                    print "dir_id", dir_id, "stop_id", stop_id, "dist", dist
                     part_index += 3
 
 
                     stop_list = temp_dict.get(dir_id, [])
                     stop_list.append(stop_id)
                     temp_dict[dir_id] = stop_list
+
+                    if stop_id == '4174':
+                        print "4174 on route", self.get_route_name_from_id(dir_id)
 
 
                 # part_index = 0
@@ -174,17 +183,23 @@ class Runner(object):
 
         f.close()
 
-        route_count = 0
-        for key, value in temp_dict.iteritems():
-            print "KEY", key, "VALUE", len(value)
-            route_count += 1
+        for route_id, stop_list in temp_dict.iteritems():
+            route_data = self._route_dict.get(route_id)
+            if route_data is None:
+                raise ValueError("failed to get route: %s" % route_id)
+            route_data['stops'] = stop_list
+            self._route_dict[route_id] = route_data
 
+            #print "Name: %s stops: %d" % (route_data.get('name'), len(stop_list))
+        x = [(route_id, route_data) for route_id, route_data in self._route_dict.iteritems()]
+        x = sorted(x)
 
-        print "route count", route_count
+        for item in x:
+            route_data = item[1]
+            print "Name: %s Stops: %d" % (route_data.get('name'), len(route_data.get('stops')))
+        print "number of routes", len(x)
 
     def read_directions(self):
-
-        route_id = 0
 
         sf = shapefile.Reader("%s/directions.dbf" % self._shape_base)
 
@@ -197,50 +212,52 @@ class Runner(object):
         for index, record in enumerate(records):
             shape = shapes[index]
 
-            print repr(record)
+#            print repr(record)
             # continue
 
             name = record[5]
             direction = record[2].strip().lower()
-
             display_name = "%s (%s)" % (name.strip(), direction)
+            route_id = record[1]
 
-            print "LINE:", display_name
+#            print "ROUTE_ID", route_id
+#            print "LINE:", display_name, route_id
 
-            name_parts = name.split(",")
-            print "name part 0", name_parts[0]
 
-            try:
-                print "name part 1", name_parts[1]
-            except:
-                pass
+#            name_parts = name.split(",")
+#            print "name part 0", name_parts[0]
 
-            # print "direction", direction
-            # continue
+            # try:
+            #     print "name part 1", name_parts[1]
+            # except:
+            #     pass
+            #
+            # # print "direction", direction
+            # # continue
+            #
+            # if direction == "inbound":
+            #     dir_code = 0
+            # elif direction == "outbound":
+            #     dir_code = 1
+            # elif direction == 'ccw':
+            #     dir_code = 0
+            # elif direction == 'cw':
+            #     dir_code = 1
+            # else:
+            #     raise ValueError("BAD DIRECTION!!!")
 
-            if direction == "inbound":
-                dir_code = 0
-            elif direction == "outbound":
-                dir_code = 1
-            elif direction == 'ccw':
-                dir_code = 0
-            elif direction == 'cw':
-                dir_code = 1
-            else:
-                raise ValueError("BAD DIRECTION!!!")
+#            route_key = "%s-%d" % (name_parts[0].strip().lower(), dir_code)
 
-            route_key = "%s-%d" % (name_parts[0].strip().lower(), dir_code)
-
-            if self._route_dict.has_key(route_key):
+#            if self._route_dict.has_key(route_key):
+            if self._route_dict.has_key(route_id):
                 raise ValueError("Already have route key")
 
-            self._route_dict[route_key] = {
+            self._route_dict[route_id] = {
                 'name' : display_name,
-                "id" : route_id,
+#                "id" : route_id,
                 "direction" : direction,
                 "points" : shape.points
             }
-            route_id += 1
             # print repr(shape)
             # print dir(shape)
 
@@ -252,10 +269,6 @@ class Runner(object):
             #self.plot_brt_route(name, direction, shape.points)
 
         for key, value in self._route_dict.iteritems():
-            # print "KEY: %s VALUE: %s" % (key, value)
-            #print "KEY: %s VALUE:" % (key)
-            route_id = value.get('id')
-            self._route_id_dict[route_id] = value
             print value.get('name')
 
        # for key, value in self._route_id_dict.iteritems():
@@ -267,8 +280,7 @@ class Runner(object):
             route_id = value.get('id')
             direction = value.get('direction')
             points = value.get('points')
-
-            stops = self.get_stops_for_route_id(route_id)
+            stops = value.get('stops')
             self.plot_brt_route(name, direction, points, stops)
 
     def plot_brt_route(self, name, direction, points, stop_ids):
@@ -316,121 +328,108 @@ class Runner(object):
         f.write(MAP_BOTTOM)
         f.close()
 
-    def read_stops(self):
-
-        line_dict = {}
-
-        LINE_NAME_MAP = {
-            "1 BRT" : "1 BRT (Red)",
-            "2 BRT" : "2 BRT (Blue)",
-            "3 BRT" : "3 BRT (Green)",
-        }
-
-        sf = shapefile.Reader("%s/stops.dbf" % self._shape_base)
-        records = sf.records()
-        shapes = sf.shapes()
-
-        print "len(records)", len(records)
-        print "len(shapes)", len(shapes)
-
-        f = open("temp_data/brt_stops.csv", "w")
-
-        f.write("index,stop_id,stop_name,lat,lng,on_red,on_green,on_blue\n")
-        stop_index = 0
-
-        for index, record in enumerate(records):
-            print repr(record)
-
-            shape = shapes[index]
-
-            # print "len(shape.points)", len(shape.points)
-            # print shape.points
-
-            point = shape.points[0]
-            lat = point[1]
-            lng = point[0]
-            # print lat, lng
-
-            #continue
-
-            stop_id = record[3]
-            stop_name = record[2]
-            lines = record[4]
-
-            print stop_id, stop_name, lines
-            print "LINES", lines
-
-            parts = lines.split(',')
-            print "LINE PARTS:", len(parts)
-
-            if len(parts) == 1:
-                if len(parts[0].strip()) != 0:
-                    raise ValueError("what the??")
-                print "skip stop"
-                continue
-
-            if len(parts) % 2:
-
-                raise ValueError("Odd number of parts!!!")
-
-            line_list = []
-            on_red = False
-            on_green = False
-            on_blue = False
-
-            for i in xrange(len(parts)/2):
-                line = "%s: %s" % (parts[i * 2].strip(), parts[1+ i * 2].strip())
-                print "LINE: %s" % line
-
-                if line.find(" Red ") > 0:
-                    print "ON RED LINE"
-                    on_red = True
-
-                if line.find(" Green ") > 0:
-                    print "ON GREEN LINE"
-                    on_green = True
-
-                if line.find(" Blue ") > 0:
-                    print "ON BLUE LINE"
-                    on_blue = True
-
-                count = line_dict.get(line, 0)
-                count += 1
-                line_dict[line] = count
-                line_list.append(line)
-
-
-            if not on_green and not on_blue and not on_red:
-                continue
-
-            print "TEST123", stop_index, stop_name, stop_id
-
-            f.write("%d,%s,%s,%f,%f,%s,%s,%s\n" % (stop_index, stop_id, stop_name, lat, lng, on_red, on_green, on_blue))
-            stop_index += 1
-
-        f.close()
-
-        x = [(key, value) for key, value in line_dict.iteritems()]
-        x = sorted(x)
-
-        for item in x:
-            print "%s -------> %d" % (item[0], item[1])
-
-
-            # print "line_list", line_list[0]
-            #
-            # for line in line_list[0]:
-            #     if len(line.strip()) == 0: continue
-            #
-            #     print "LINE", line
-
-    def get_route_id_from_key(self, route_key):
-
-        data = self._route_dict.get(route_key)
-        return data.get('id')
+    # def read_stops_old(self):
+    #
+    #     line_dict = {}
+    #
+    #     LINE_NAME_MAP = {
+    #         "1 BRT" : "1 BRT (Red)",
+    #         "2 BRT" : "2 BRT (Blue)",
+    #         "3 BRT" : "3 BRT (Green)",
+    #     }
+    #
+    #     sf = shapefile.Reader("%s/stops.dbf" % self._shape_base)
+    #     records = sf.records()
+    #     shapes = sf.shapes()
+    #
+    #     print "len(records)", len(records)
+    #     print "len(shapes)", len(shapes)
+    #
+    #     f = open("temp_data/brt_stops.csv", "w")
+    #
+    #     f.write("index,stop_id,stop_name,lat,lng,on_red,on_green,on_blue\n")
+    #     stop_index = 0
+    #
+    #     for index, record in enumerate(records):
+    #         print repr(record)
+    #
+    #         shape = shapes[index]
+    #
+    #         # print "len(shape.points)", len(shape.points)
+    #         # print shape.points
+    #
+    #         point = shape.points[0]
+    #         lat = point[1]
+    #         lng = point[0]
+    #         # print lat, lng
+    #
+    #         #continue
+    #
+    #         stop_id = record[3]
+    #         stop_name = record[2]
+    #         lines = record[4]
+    #
+    #         print stop_id, stop_name, lines
+    #         print "LINES", lines
+    #
+    #         parts = lines.split(',')
+    #         print "LINE PARTS:", len(parts)
+    #
+    #         if len(parts) == 1:
+    #             if len(parts[0].strip()) != 0:
+    #                 raise ValueError("what the??")
+    #             print "skip stop"
+    #             continue
+    #
+    #         if len(parts) % 2:
+    #
+    #             raise ValueError("Odd number of parts!!!")
+    #
+    #         line_list = []
+    #         on_red = False
+    #         on_green = False
+    #         on_blue = False
+    #
+    #         for i in xrange(len(parts)/2):
+    #             line = "%s: %s" % (parts[i * 2].strip(), parts[1+ i * 2].strip())
+    #             print "LINE: %s" % line
+    #
+    #             if line.find(" Red ") > 0:
+    #                 print "ON RED LINE"
+    #                 on_red = True
+    #
+    #             if line.find(" Green ") > 0:
+    #                 print "ON GREEN LINE"
+    #                 on_green = True
+    #
+    #             if line.find(" Blue ") > 0:
+    #                 print "ON BLUE LINE"
+    #                 on_blue = True
+    #
+    #             count = line_dict.get(line, 0)
+    #             count += 1
+    #             line_dict[line] = count
+    #             line_list.append(line)
+    #
+    #
+    #         if not on_green and not on_blue and not on_red:
+    #             continue
+    #
+    #         print "TEST123", stop_index, stop_name, stop_id
+    #
+    #         f.write("%d,%s,%s,%f,%f,%s,%s,%s\n" % (stop_index, stop_id, stop_name, lat, lng, on_red, on_green, on_blue))
+    #         stop_index += 1
+    #
+    #     f.close()
+    #
+    #     x = [(key, value) for key, value in line_dict.iteritems()]
+    #     x = sorted(x)
+    #
+    #     for item in x:
+    #         print "%s -------> %d" % (item[0], item[1])
 
     def get_route_name_from_id(self, route_id):
-        data = self._route_id_dict.get(route_id)
+        data = self._route_dict.get(route_id)
         if data is None:
             raise ValueError("No route_id: %s" % repr(route_id))
 
@@ -451,7 +450,8 @@ class Runner(object):
         print "len(shapes)", len(shapes)
 
         for index, record in enumerate(records):
-            # print repr(record)
+            print repr(record)
+#            continue
 
             shape = shapes[index]
 
@@ -478,85 +478,17 @@ class Runner(object):
                 'name' : stop_name,
                 'lat' : float(lat),
                 'lng' : float(lng),
-                'route_ids' : []
             }
-            stop_routes = []
-
 
             if self._stop_dict.has_key(stop_id):
                 raise ValueError("already have stop id: %s %d" % (repr(stop_id), index))
 
             self._stop_dict[stop_id] = stop_data
 
-            if len(parts) == 1:
-                if len(parts[0].strip()) != 0:
-                    raise ValueError("what the??")
-                # print "skip stop"
-                skipped_stops += 1
-                continue
-
-            if len(parts) % 2:
-                raise ValueError("Odd number of parts!!!")
-
-            for i in xrange(len(parts)/2):
-                part1 = parts[i * 2].strip().lower()
-                part2 =  parts[1+ i * 2].strip().lower()
-                # print "   PART 1: %s" % part1
-                # print "   PART 2: %s" % part2
-
-                if part2.find("inbound") > 0:
-                    dir_code = 0
-                    route_key = "%s-%s" % (part1, dir_code)
-                    route_id = self.get_route_id_from_key(route_key)
-                    stop_routes.append(route_id)
-
-                if part2.find("outbound") > 0:
-                    dir_code = 1
-                    route_key = "%s-%s" % (part1, dir_code)
-                    route_id = self.get_route_id_from_key(route_key)
-                    stop_routes.append(route_id)
-
-                if part2.find("(ccw)") > 0:
-                    dir_code = 0
-                    route_key = "%s-%s" % (part1, dir_code)
-                    route_id = self.get_route_id_from_key(route_key)
-                    stop_routes.append(route_id)
-
-                if part2.find("(cw)") > 0:
-                    dir_code = 1
-                    route_key = "%s-%s" % (part1, dir_code)
-                    route_id = self.get_route_id_from_key(route_key)
-                    stop_routes.append(route_id)
-
-            if len(stop_routes) == 0:
-                raise ValueError("Failed to find routes!!!!")
-
-            stop_data = {
-                'name' : stop_name,
-                'lat' : float(lat),
-                'lng' : float(lng),
-                'route_ids' : stop_routes
-            }
-            self._stop_dict[stop_id] = stop_data
-            active_stops += 1
-
-        for key, value in self._stop_dict.iteritems():
-            print key, value
-            routes = value.get('route_ids')
-            for route_id in routes:
-                print "  route name", self.get_route_name_from_id(route_id)
 
         print "stops skipped:", skipped_stops
         print "stops active:", active_stops
 
-    def get_stops_for_route_id(self, route_id):
-        result = []
-        for stop_id, value in self._stop_dict.iteritems():
-            routes = value.get("route_ids")
-            if route_id in routes:
-                result.append(stop_id)
-
-        return result
 
     def get_stop_lat_lon(self, stop_id):
         value = self._stop_dict.get(stop_id)
@@ -697,14 +629,21 @@ class Runner(object):
 
 if __name__ == "__main__":
 
+    """
+    HDR Network: https://platform.remix.com/map/1424e21/line/fbf0675?pat=A&dir=1
+    JANE: https://platform.remix.com/map/7445e73/line/ef79fbc?pat=C&dir=0
+
+    """
     runner = Runner()
     #runner.read_stops()
 
-    # runner.read_directions()
-    # runner.read_stops_new()
-    # runner.plot_brt_routes()
+    runner.read_directions()
+    runner.read_stops_new()
+    runner.read_direction_stops()
 
-    runner.read_test()
+#    runner.plot_brt_routes()
+
+    # runner.read_test()
 
     # runner.read_direction_stops()
 

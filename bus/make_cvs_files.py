@@ -1,4 +1,6 @@
 from my_utils import TransitData
+from my_utils import DaPopulations
+
 from stop_times import StopTimes
 from map_html import TOP as MAP_TOP
 from map_html import BOTTOM as MAP_BOTTOM
@@ -168,6 +170,102 @@ class TempUtils(object):
         for index, item in enumerate(temp):
              print "%d,%s,%s,%s" % (index, item[0], item[1], item[2])
 
+    def test_for_duplicate_postal_codes(self):
+
+        da_pop = DaPopulations()
+
+        f = open('/Users/mikeb/Downloads/Postalcodes_within_DA_Allstoon.csv', 'r')
+
+        postal_code_dict = {}
+        da_dict = {}
+
+        line_count = 0
+        for line in f:
+            line_count += 1
+            if line_count == 1: continue
+
+            print line.strip()
+
+            parts = line.split(',')
+
+            da_id = int(parts[0].strip())
+            postal_code = parts[1].strip()
+
+            count = postal_code_dict.get(postal_code, 0)
+            count += 1
+
+            postal_code_dict[postal_code] = count
+
+            postal_code_list = da_dict.get(da_id, [])
+            postal_code_list.append(postal_code)
+            da_dict[da_id] = postal_code_list
+
+        f.close()
+
+        for k, v in postal_code_dict.iteritems():
+            if v > 1:
+                print "Duplicate:", k, v
+
+        total_da_pop = 0
+        pop_per_da = {}
+        for da_id, postal_code_list in da_dict.iteritems():
+
+            population = da_pop.get_population_for_da_id(da_id)
+            print "DA ID", da_id, population
+            total_da_pop += population
+            total_postal_codes = 0.0
+
+            for postal_code in postal_code_list:
+                overlay = postal_code_dict.get(postal_code)
+                print postal_code, overlay
+
+                total_postal_codes += 1.0 / overlay
+
+            pop_per_postal_code = float(population)/total_postal_codes
+            pop_per_da[da_id] = pop_per_postal_code
+
+        postal_code_pop_dict = {}
+        for da_id, pop_per_postal_code in pop_per_da.iteritems():
+            print da_id, pop_per_postal_code
+
+            postal_code_list = da_dict.get(da_id)
+            for postal_code in postal_code_list:
+                overlay = postal_code_dict.get(postal_code)
+
+                postal_code_population = postal_code_pop_dict.get(postal_code, 0.0)
+                postal_code_population += pop_per_postal_code / float(overlay)
+                postal_code_pop_dict[postal_code] = postal_code_population
+
+
+
+        total_pop = 0
+        temp_for_sort = []
+
+        for postal_code, population in postal_code_pop_dict.iteritems():
+            postal_code_pop = round(population)
+            print postal_code, round(population)
+            total_pop += postal_code_pop
+            temp_for_sort.append((postal_code, int(postal_code_pop)))
+
+        s = sorted(temp_for_sort)
+
+        f = open("../data/postal_code_populations.csv", "w")
+        f.write("index,postal_code,population\n")
+
+        index = 0
+        for item in s:
+            postal_code = item[0]
+            population = item[1]
+            f.write("%s,%s,%d\n" % (index, postal_code, population))
+            index += 1
+
+        f.close()
+        
+        print "total pop (postal)", total_pop
+        print "total pop (da)", total_da_pop
+
+
+
     def run_pop(self):
         """
 
@@ -187,7 +285,7 @@ class TempUtils(object):
             # print "LEN PARTS!!!!", len(parts)
             if len(parts) != 84:
                 print line_count, len(parts)
-                raise ValueError("badd: %d" % len(parts))
+                raise ValueError("bad: %d" % len(parts))
 
             pop = int(parts[81].strip())
             under15 = int(parts[83].strip())
@@ -495,15 +593,18 @@ class TempUtils(object):
 if __name__ == "__main__":
 
     # runner = Runner()
+
     # runner.plot()
 
     runner = TempUtils()
+    runner.test_for_duplicate_postal_codes()
+
     # runner.run()
     # runner.run_lines()
     # runner.run_2018_07_08()
     # runner.run_pop_2018_07_08()
 
-    runner.da_pop_july_12()
+    # runner.da_pop_july_12()
     # runner.plot_route()
     # runner.make_stop_csv_file()
 
