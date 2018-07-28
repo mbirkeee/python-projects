@@ -3,6 +3,14 @@ import time
 import simplejson
 import pyproj
 import math
+import random
+
+from map_html import TOP as MAP_TOP
+from map_html import BOTTOM as MAP_BOTTOM
+from map_html import POLYGON
+
+PROJ = pyproj.Proj("+init=EPSG:32613")
+
 
 def get_dist(point1, point2):
 
@@ -144,6 +152,106 @@ class DaPopulations(object):
 
         f.close()
 
+class DaHeatmap(object):
+
+    def __init__(self):
+        self._data = {}
+        self._max_score = 0.0
+
+    def load_file(self, file_name):
+
+        f = open(file_name, "r")
+
+        count = 0
+        for line in f:
+            count += 1
+            if count == 1: continue
+            # print line.strip()
+
+            parts=line.split(",")
+            da_id = int(parts[1].strip())
+            score = float(parts[2].strip())
+
+            try:
+                score = math.log10(score)
+            except Exception as err:
+                print err
+                score = 0
+
+            if score > self._max_score:
+                self._max_score = score
+
+            # print da_id, score
+            self._data[da_id] = score
+
+        f.close()
+
+        # print repr(self._data)
+
+    def get_da_id_list(self):
+
+        result = [k for k in self._data.iterkeys()]
+        return result
+
+    def get_score_normalized(self, da_id):
+        score = self._data.get(da_id)
+        normalized = score / self._max_score
+        return normalized
+
+
+class DaPolygons(object):
+
+    def __init__(self):
+
+        self._data = {}
+
+        self.load_file("data/DA_polygon_points.csv")
+
+    def load_file(self, file_name):
+
+        f = open(file_name, "r")
+
+        count = 0
+        for line in f:
+            count += 1
+            if count == 1: continue
+            # print line.strip()
+
+            parts=line.split(",")
+            da_id = int(parts[0].strip())
+            point_index = int(parts[1].strip())
+            lat = float(parts[2].strip())
+            lng = float(parts[3].strip())
+
+            print da_id, point_index, lat, lng
+
+            point = Point(lat, lng)
+
+            data = self._data.get(da_id, {})
+            data[point_index] = point
+            self._data[da_id] = data
+
+        f.close()
+
+    def get_da_id_list(self):
+
+        result = [k for k in self._data.iterkeys()]
+        return result
+
+    def get_polygon(self, da_id):
+
+        points_dict = self._data.get(da_id)
+        polygon = Polygon()
+
+        point_index = 0
+        while True:
+            point = points_dict.get(point_index)
+            if point is None: break
+            polygon.add_point(point)
+            point_index += 1
+
+        return polygon
+
 class DaCentriods(object):
 
     def __init__(self):
@@ -157,7 +265,7 @@ class DaCentriods(object):
 
     def load_stats_can_pop_data(self):
 
-        f = open("../data/2016_pop.csv", "r")
+        f = open("data/2016_pop.csv", "r")
 
         expected_parts = 15
 
@@ -457,3 +565,105 @@ class UserGPS(object):
 
     def get_min_time(self):
         return self._min_time
+
+
+class Point(object):
+
+    def __init__(self, x, y):
+
+        if x > 1000.0:
+            # Assume this is UTM (Saskatoon)
+            self._utm_x = x
+            self._utm_y = y
+
+            lng, lat = PROJ(x, y, inverse=True)
+
+            self._lng = lng
+            self._lat = lat
+
+        else:
+            self._lat = x
+            self._lng = y
+
+            utm_x, utm_y = PROJ(self._lng, self._lat)
+
+            self._utm_x = utm_x
+            self._utm_y = utm_y
+
+    def get_lat(self):
+        return self._lat
+
+    def get_lng(self):
+        return self._lng
+
+    def get_lat_lng(self):
+        return (self._lat, self._lng)
+
+    def get_x(self):
+        return self._utm_x
+
+    def get_y(self):
+        return self._utm_y
+
+    def get_utm(self):
+        return (self._utm_x, self._utm_y)
+
+
+class Polygon(object):
+
+    def __init__(self):
+        self._points = []
+        self._attributes = {}
+
+    def add_point(self, point):
+        self._points.append(point)
+
+    def get_points(self):
+        return self._points
+
+    def add_attribute(self, key, value):
+        self._attributes[key] = value
+
+    def get_attribute(self, key):
+        return self._attributes.get(key)
+
+class PlotPolygons(object):
+
+    def __init__(self):
+        print "polygon plotter instantiated"
+
+        self._polygon_list = []
+
+    def add(self, items):
+
+        if not isinstance(items, list):
+            items = [items]
+
+        for item in items:
+            if not isinstance(item, Polygon):
+                raise ValueError("not a Polygon")
+            print "ADD item", item
+            self._polygon_list.append(item)
+
+    def plot(self, file_name):
+        print "plot called", file_name
+
+        f = open(file_name, "w")
+        f.write(MAP_TOP)
+
+        for item in self._polygon_list:
+            f.write("var polypoints = [\n")
+            points = item.get_points()
+
+            for point in points:
+                f.write("{lat: %f, lng: %f},\n" % point.get_lat_lng())
+            f.write("];\n")
+
+            # fill_opacity = float(random.randint(0, 1000)/1000.0)
+
+            fill_opacity = item.get_attribute("fill_opacity")
+            f.write(POLYGON % fill_opacity)
+
+        f.write(MAP_BOTTOM)
+        f.close()
+        print "Wrote MAP file: %s" %file_name

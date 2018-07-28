@@ -330,7 +330,16 @@ class Runner(object):
 
         return result
 
+    def test_filter(self):
+
+        filter = Weight()
+        for d in xrange(200):
+            w = filter.butterworth(d*4 , 250, 1, 6)
+
+            print "Dist: %d weight: %f" % (d * 4, w)
+
 if __name__ == "__main__":
 
     runner = Runner()
+    # runner.test_filter()
     runner.run()

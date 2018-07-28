@@ -1,0 +1,109 @@
+import pyproj
+import random
+
+from my_utils import PlotPolygons
+from my_utils import Polygon
+from my_utils import Point
+from my_utils import DaPolygons
+from my_utils import DaHeatmap
+
+PROJ = pyproj.Proj("+init=EPSG:32613")
+
+
+class Runner(object):
+
+    def __init__(self):
+        pass
+
+    def make_test_polygon(self):
+        """
+        This test method makes a randomly placed diamond shaped polygon
+        """
+
+        center_lat = 52.125
+        center_lng = -106.650
+
+        center_x, center_y = PROJ(center_lng, center_lat)
+
+        random_offset_x = random.randint(-2000, 2000)
+        random_offset_y = random.randint(-2000, 2000)
+
+        center_x += random_offset_x
+        center_y += random_offset_y
+
+        size = 100
+        poly_points = [
+            (-size, 0),
+            (0, size),
+            (size, 0),
+            (0, -size),
+            (-size, 0),
+        ]
+
+        p = Polygon()
+
+        for item in poly_points:
+            x = center_x + item[0]
+            y = center_y + item[1]
+
+            print "test polygon point", x, y
+            p.add_point(Point(x, y))
+
+        return p
+
+    def test_plot(self):
+
+        print "test plot called"
+
+        plotter = PlotPolygons()
+
+        for _ in xrange(10):
+            p = self.make_test_polygon()
+            plotter.add(p)
+
+        plotter.plot("temp/maps/test_polygon.html")
+
+    def test_plot_das(self):
+
+        das = DaPolygons()
+        plotter = PlotPolygons()
+
+        da_id_list = das.get_da_id_list()
+
+        for da_id in da_id_list:
+            print da_id
+            polygon = das.get_polygon(da_id)
+            plotter.add(polygon)
+
+        plotter.plot("temp/maps/test_da_polygons.html")
+
+    def test_plot_heatmap(self):
+
+        das = DaPolygons()
+        plotter = PlotPolygons()
+        heatmap = DaHeatmap()
+        heatmap.load_file("temp/da_score.csv")
+
+        da_id_list = heatmap.get_da_id_list()
+
+        for da_id in da_id_list:
+            print da_id
+            score = heatmap.get_score_normalized(da_id)
+            polygon = das.get_polygon(da_id)
+
+            polygon.add_attribute("fill_opacity", score)
+
+            plotter.add(polygon)
+
+        plotter.plot("temp/maps/test_da_heatmap.html")
+
+
+if __name__ == "__main__":
+
+    runner = Runner()
+#    runner.test_plot()
+#    runner.test_plot_das()
+    runner.test_plot_heatmap()
+
+
+

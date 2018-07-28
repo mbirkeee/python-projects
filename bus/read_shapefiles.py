@@ -496,6 +496,75 @@ class Runner(object):
         lng = value.get('lng')
         return lat, lng
 
+
+    def read_statscan_da_shapefile(self):
+        """
+        Read the DA data from stats canada
+        Clip to Saskatoon
+        Convert to LAT/LNG (so that there is just one conversion)
+        Output as CSV
+        """
+
+        # Both the below projections result in the same lat/lng
+        # for Lambert Conformal Conic data from statscan
+
+        proj1 = pyproj.Proj("+init=EPSG:3347")
+        proj2 = pyproj.Proj("+init=EPSG:3348")
+
+        sf = shapefile.Reader("/Users/michael/Downloads/dissemination_Areas/lda_000a16a_e.dbf")
+
+        records = sf.records()
+        shapes = sf.shapes()
+
+        if len(records) != len(shapes):
+            raise ValueError("len records != len shapes")
+
+        print "len(records)", len(records)
+        print "len(shapes)", len(shapes)
+
+        output_file_name = "DA_polygon_points.csv"
+
+        f = open(output_file_name, "w")
+        f.write("da_id,point_index,lat,lng\n")
+
+        count = 0
+        for i in xrange(len(records)):
+            record = records[i]
+            shape = shapes[i]
+
+            test_str = repr(record)
+            region_id = record[6]
+            if region_id == "4711066":
+
+            # if test_str.find("Saskatoon") > 0:
+                print repr(record)
+                da_id = int(record[0])
+                print "da_id", int(da_id)
+                print repr(shape)
+
+                print "len(shape.points)", len(shape.points)
+                print shape.points
+
+                point_index = 0
+                for point in shape.points:
+                    print point[0], point[1], type(point[0]), type(point[1])
+
+                    lng, lat = proj1(point[0], point[1], inverse=True)
+                    print lat, lng
+                    lng, lat = proj2(point[0], point[1], inverse=True)
+                    print lat, lng
+
+                    f.write("%d,%d,%f,%f\n" % (da_id, point_index, lat, lng))
+                    point_index += 1
+
+                count += 1
+            # if count > 50: break
+
+        print "Saskatoon count", count
+
+
+
+
     def read_shapefile(self):
 
         sf = shapefile.Reader("../data/shapefiles/DA_centriods/Da_CentroidPoints.dbf")
@@ -545,87 +614,8 @@ class Runner(object):
         # f.close()
             # if i > 10: break
 
-    def make_example_polygons(self):
-
-        center_lat = 52.125
-        center_lng = -106.650
-
-        center_x, center_y = self._myproj(center_lng, center_lat)
-
-        poly_points = [
-            (-50, 0),
-            (0, 50),
-            (50, 0),
-            (0, -50),
-            (-50, 0)
-        ]
-
-        for i in xrange(len(poly_points)):
-            start_point = poly_points[i]
-
-            start_x = center_x + start_point[0]
-            start_y = center_y + start_point[1]
-
-            print ((start_x, start_y))
-            self._test_polygon.append((start_x, start_y))
-
-    def plot(self):
-        pass
-        # centriods = DaCentriods()
-        # centriod_dict = centriods.get_centriods()
-        #
-        map_name = "data/maps/test_polygon.html"
-
-        f = open(map_name, "w")
-
-        f.write(MAP_TOP)
-        f.write("var polypoints = [\n")
-
-        i = 0
-        for start in self._test_polygon:
-
-            print "ADDING DOT TO PLOT!!!!", repr(start)
-            start_x = start[0]
-            start_y = start[1]
-            lon, lat = self._myproj(start_x, start_y, inverse=True)
-            f.write("{lat: %f, lng: %f},\n" % (lat, lon))
-            i += 1
-
-        f.write("];\n")
-
-        f.write(POLYGON % 0.1)
-
-        f.write("var polypoints = [\n")
-        i = 0
-        for start in self._test_polygon:
-
-            print "ADDING DOT TO PLOT!!!!", repr(start)
-            start_x = start[0] + 100.
-            start_y = start[1] + 100.0
-            lon, lat = self._myproj(start_x, start_y, inverse=True)
-            f.write("{lat: %f, lng: %f},\n" % (lat, lon))
-            i += 1
-
-        f.write("];\n")
-        f.write(POLYGON % 0.3)
 
 
-        f.write("var polypoints = [\n")
-        i = 0
-        for start in self._test_polygon:
-
-            print "ADDING DOT TO PLOT!!!!", repr(start)
-            start_x = start[0] + 200.
-            start_y = start[1] + 200.0
-            lon, lat = self._myproj(start_x, start_y, inverse=True)
-            f.write("{lat: %f, lng: %f},\n" % (lat, lon))
-            i += 1
-
-        f.write("];\n")
-        f.write(POLYGON % 0.5)
-        f.write(MAP_BOTTOM)
-        f.close()
-        print "Wrote MAP file: %s" % map_name
 
 if __name__ == "__main__":
 
@@ -635,11 +625,12 @@ if __name__ == "__main__":
 
     """
     runner = Runner()
-    #runner.read_stops()
+    runner.read_statscan_da_shapefile()
 
-    runner.read_directions()
-    runner.read_stops_new()
-    runner.read_direction_stops()
+#    runner.read_stops()
+#    runner.read_directions()
+#    runner.read_stops_new()
+#    runner.read_direction_stops()
 
 #    runner.plot_brt_routes()
 
@@ -647,8 +638,6 @@ if __name__ == "__main__":
 
     # runner.read_direction_stops()
 
-    # runner.make_example_polygons()
-    # runner.plot()
     # runner.load_stats_can_pop_data()
     # runner.read_shapefile()
 
