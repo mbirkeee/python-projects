@@ -1,5 +1,6 @@
 from my_utils import TransitData
 from my_utils import DaPopulations
+from my_utils import DaDwellingCounts
 
 from stop_times import StopTimes
 from map_html import TOP as MAP_TOP
@@ -170,9 +171,11 @@ class TempUtils(object):
         for index, item in enumerate(temp):
              print "%d,%s,%s,%s" % (index, item[0], item[1], item[2])
 
-    def test_for_duplicate_postal_codes(self):
+    def make_postal_code_populations(self):
 
         da_pop = DaPopulations()
+        da_dwellings = DaDwellingCounts()
+
 
         f = open('/Users/mikeb/Downloads/Postalcodes_within_DA_Allstoon.csv', 'r')
 
@@ -208,10 +211,21 @@ class TempUtils(object):
 
         total_da_pop = 0
         pop_per_da = {}
+
+        missing_dwelling_list = []
+
+
         for da_id, postal_code_list in da_dict.iteritems():
 
             population = da_pop.get_population_for_da_id(da_id)
-            print "DA ID", da_id, population
+            dwelling_data = da_dwellings.get_for_da_id(da_id)
+
+            if dwelling_data == None:
+                # raise ValueError("did not find dwelling data: %d" % da_id)
+                print "did not find dwelling info for", da_id
+                missing_dwelling_list.append(da_id)
+
+            print "DA ID", da_id, population, dwelling_data
             total_da_pop += population
             total_postal_codes = 0.0
 
@@ -221,14 +235,27 @@ class TempUtils(object):
 
                 total_postal_codes += 1.0 / overlay
 
-            pop_per_postal_code = float(population)/total_postal_codes
-            pop_per_da[da_id] = pop_per_postal_code
+            pop_per_postal_code = float(population)/float(total_postal_codes)
+            dwell_per_postal_code = float(dwelling_data[0])/float(total_postal_codes)
+
+            pop_per_da[da_id] = (pop_per_postal_code, dwell_per_postal_code)
+
+
+        # for da_id in missing_dwelling_list:
+        #     print "missing dwelling info for: %s" % repr(da_id)
+        # raise ValueError("temp done")
 
         postal_code_pop_dict = {}
-        for da_id, pop_per_postal_code in pop_per_da.iteritems():
-            print da_id, pop_per_postal_code
+        postal_code_dwell_dict = {}
+
+        for da_id, item in pop_per_da.iteritems():
+            pop_per_postal_code = item[0]
+            dwell_per_postal_code = item[1]
+
+            print da_id, pop_per_postal_code, dwell_per_postal_code
 
             postal_code_list = da_dict.get(da_id)
+
             for postal_code in postal_code_list:
                 overlay = postal_code_dict.get(postal_code)
 
@@ -236,34 +263,43 @@ class TempUtils(object):
                 postal_code_population += pop_per_postal_code / float(overlay)
                 postal_code_pop_dict[postal_code] = postal_code_population
 
-
+                postal_code_dwell = postal_code_dwell_dict.get(postal_code, 0.0)
+                postal_code_dwell += dwell_per_postal_code / float(overlay)
+                postal_code_dwell_dict[postal_code] = postal_code_dwell
 
         total_pop = 0
         temp_for_sort = []
 
         for postal_code, population in postal_code_pop_dict.iteritems():
             postal_code_pop = round(population)
-            print postal_code, round(population)
+            postal_code_dwell = postal_code_dwell_dict.get(postal_code)
+            print postal_code, round(population), postal_code_dwell
             total_pop += postal_code_pop
-            temp_for_sort.append((postal_code, int(postal_code_pop)))
+            temp_for_sort.append((postal_code, int(postal_code_pop), postal_code_dwell))
 
         s = sorted(temp_for_sort)
 
         f = open("../data/postal_code_populations.csv", "w")
-        f.write("index,postal_code,population\n")
+        f.write("index,postal_code,population,dwellings,dwelling_size\n")
 
         index = 0
         for item in s:
             postal_code = item[0]
             population = item[1]
-            f.write("%s,%s,%d\n" % (index, postal_code, population))
+            dwellings = int(round(item[2]))
+            if dwellings == 0:
+                dwellings = 1
+
+            dwelling_size = float(population)/float(dwellings)
+            f.write("%s,%s,%d,%d,%.1f\n" % (index, postal_code, population, dwellings, dwelling_size))
             index += 1
 
         f.close()
-        
+
         print "total pop (postal)", total_pop
         print "total pop (da)", total_da_pop
 
+        print "DAs in saskatoon", len(da_dict)
 
 
     def run_pop(self):
@@ -589,6 +625,85 @@ class TempUtils(object):
         for index, item in enumerate(temp):
             print "%d,%s,%s,%s,%s" % (index, item[0], item[1], item[3], item[2])
 
+    def make_brt_postal_pop(self):
+        pp = PostalPop()
+
+        line_count = 0
+        f = open('/Users/mikeb/Downloads/brt_stops_postal_800_2017_07_08.csv', 'r')
+
+        f2 = open("../data/BRT_stops_800_2018_07_24.csv", 'w')
+        f2.write("index,postal_code,neigbourhood,stop_id,stop_name,population,dwellings,dwelling_size\n")
+
+        index = 0
+        total_pop = 0
+        total_dwell = 0
+
+        for line in f:
+            line_count += 1
+            if line_count == 1: continue
+
+            # print line.strip()
+
+            parts = line.split(",")
+            postal_code = parts[1].strip()
+            neighbourhood = parts[2].strip()
+            stop_id = int(parts[3].strip())
+            stop_name = parts[4].strip()
+
+            print postal_code, neighbourhood, stop_id, stop_name
+            pop_data = pp.get_for_postal_code(postal_code)
+            print pop_data
+            if pop_data is None:
+                raise ValueError("error")
+
+            pop = pop_data[0]
+            dwell = pop_data[1]
+            dwell_size = pop_data[2]
+            f2.write("%d,%s,%s,%d,%s,%d,%d,%.1f\n" %
+                     (index,postal_code,neighbourhood,stop_id,stop_name,pop,dwell,dwell_size))
+            index += 1
+            total_pop += pop
+            total_dwell += dwell
+        f.close()
+        f2.close()
+
+        print "total_pop", total_pop
+        print "total_dwell", total_dwell
+
+
+
+class PostalPop(object):
+
+    def __init__(self):
+        self._data = {}
+        self.load_file()
+
+    def get_for_postal_code(self, postal_code):
+        return self._data.get(postal_code)
+
+
+    def load_file(self):
+        f = open("../data/postal_code_populations.csv")
+        line_count = 0
+
+        for line in f:
+            line_count += 1
+            if line_count == 1: continue
+            print line
+            parts = line.split(',')
+            postal_code = parts[1].strip()
+            population = int(parts[2].strip())
+            dwellings = int(parts[3].strip())
+            dwelling_size = float(parts[4].strip())
+
+            print postal_code, population, dwellings, dwelling_size
+
+            if self._data.has_key(postal_code):
+                raise ValueError("fixme")
+
+            self._data[postal_code] = (population, dwellings, dwelling_size)
+
+        f.close()
 
 if __name__ == "__main__":
 
@@ -597,8 +712,8 @@ if __name__ == "__main__":
     # runner.plot()
 
     runner = TempUtils()
-    runner.test_for_duplicate_postal_codes()
-
+    runner.make_postal_code_populations()
+    # runner.make_brt_postal_pop()
     # runner.run()
     # runner.run_lines()
     # runner.run_2018_07_08()

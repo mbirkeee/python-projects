@@ -66,6 +66,41 @@ def string_to_seconds(s):
 
     raise ValueError("Invalid time string: %s" % s)
 
+class DaDwellingCounts(object):
+    def __init__(self):
+        self._data = {}
+        self.load_file()
+
+    def load_file(self):
+        f = open('/Users/mikeb/Downloads/DA_dwelling_counts.csv')
+
+        line_count = 0
+        for line in f:
+            line_count += 1
+            if line_count == 1: continue
+
+            try:
+                print line.strip()
+                parts = line.split(",")
+                da_id = int(parts[0])
+                dwelling_count = int(parts[1].strip())
+                dwelling_size = float(parts[2].strip())
+
+                print da_id, dwelling_count, dwelling_size
+
+                if self._data.has_key(da_id):
+                    raise ValueError("already have da_id")
+
+                self._data[da_id] = (dwelling_count, dwelling_size)
+
+            except Exception as err:
+                print "failed to parse line"
+
+        f.close()
+
+    def get_for_da_id(self, da_id):
+        return self._data.get(da_id)
+
 class DaPopulations(object):
     def __init__(self):
 
