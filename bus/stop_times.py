@@ -1,15 +1,12 @@
 import pyproj
-import numpy
-import math
-import time
 import simplejson
 import os
-import sys
 import time
 
 # import my_utils
 # from my_utils import UserGPS
 # from my_utils import TransitData
+from my_utils import Point
 
 LATEST_TIME = (24 * 60 * 60) - 1
 
@@ -55,7 +52,7 @@ class Stops(object):
 
         self._base_path = base_path
         self._data = {}
-        self._myproj = pyproj.Proj("+init=EPSG:32613")
+#        self._myproj = pyproj.Proj("+init=EPSG:32613")
         self.read_file()
 
     def read_file(self):
@@ -91,12 +88,14 @@ class Stops(object):
 
                     print stop_code, lat, lon, name
 
-                    x, y  = self._myproj(lon, lat)
+#                    x, y  = self._myproj(lon, lat)
+
                     stop_data = {
-                        'lat'   : lat,
-                        'lon'   : lon,
-                        'x'     : x,
-                        'y'     : y,
+                        'point' : Point(lat, lon),
+#                        'lat'   : lat,
+#                        'lon'   : lon,
+#                        'x'     : x,
+#                        'y'     : y,
                         'name'  : name
                     }
 
@@ -121,17 +120,25 @@ class Stops(object):
 
         return stop_data.get('name')
 
-    def get_utm(self, stop_id):
-        stop_data = self._data.get(stop_id)
-        if stop_data is None:
-            return None
-        return (stop_data.get('x'), stop_data.get('y'))
+    def get_point(self, stop_id):
 
-    def get_lat_lon(self, stop_id):
         stop_data = self._data.get(stop_id)
         if stop_data is None:
             return None
-        return (stop_data.get('lat'), stop_data.get('lon'))
+
+        return stop_data.get('point')
+
+    # def get_utm(self, stop_id):
+    #     stop_data = self._data.get(stop_id)
+    #     if stop_data is None:
+    #         return None
+    #     return (stop_data.get('x'), stop_data.get('y'))
+    #
+    # def get_lat_lon(self, stop_id):
+    #     stop_data = self._data.get(stop_id)
+    #     if stop_data is None:
+    #         return None
+    #     return (stop_data.get('lat'), stop_data.get('lon'))
 
 
 class TransitShapes(object):
@@ -465,7 +472,6 @@ class StopTimes(object):
 
     def __init__(self, base_path):
 
-
         if base_path.find("2018_05_04") > 0:
             print "this is the JUNE data"
         else:
@@ -493,11 +499,14 @@ class StopTimes(object):
         self.read_file()
 
 
-    def get_stop_lat_lon(self, stop_id):
-        return self.stops.get_lat_lon(stop_id)
+    # def get_stop_lat_lon(self, stop_id):
+    #     return self.stops.get_lat_lon(stop_id)
+    #
+    # def get_stop_utm(self, stop_id):
+    #     return self.stops.get_utm(stop_id)
 
-    def get_stop_utm(self, stop_id):
-        return self.stops.get_utm(stop_id)
+    def get_stop_point(self, stop_id):
+        return self.stops.get_point(stop_id)
 
     def get_stop_name(self, stop_id):
         return self.stops.get_name(stop_id)

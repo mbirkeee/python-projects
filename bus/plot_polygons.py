@@ -78,12 +78,58 @@ class Runner(object):
             plotter.add_polygon(polygon)
 
             pop = das.get_population(da_id)
-            centroid = das.get_centriod(da_id)
+            centroid = das.get_centroid(da_id)
             print pop, centroid
 
             plotter.add_marker(centroid, "%d" % da_id, "%d" % pop)
 
         plotter.plot("temp/maps/test_da_polygons.html")
+
+    def test_plot_da_pop_dens(self):
+
+        das = DaData()
+        plotter = PlotPolygons()
+
+        da_id_list = das.get_da_id_list()
+
+        max_pop_density = 0.0
+        total_area = 0
+        total_pop = 0
+        for da_id in da_id_list:
+            polygon = das.get_polygon(da_id)
+
+            pop = das.get_population(da_id)
+            total_pop += pop
+            area = polygon.get_area()
+            total_area += area
+            pop_density = 1000 * 1000 * pop / area
+            if pop_density > max_pop_density:
+                max_pop_density = pop_density
+
+        for da_id in da_id_list:
+            polygon = das.get_polygon(da_id)
+
+            pop = das.get_population(da_id)
+            area = polygon.get_area()
+            pop_density = 1000 * 1000 * pop / area
+            opacity = pop_density / max_pop_density
+            print da_id, pop, area, "density", pop_density
+
+            polygon.add_attribute("fill_opacity", opacity)
+
+            plotter.add_polygon(polygon)
+
+            # pop = das.get_population(da_id)
+            # centroid = das.get_centroid(da_id)
+            # print pop, centroid
+            #
+            # plotter.add_marker(centroid, "%d" % da_id, "%d" % pop)
+
+        plotter.plot("temp/maps/da_pop_density.html")
+        total_area = total_area / (1000.0 * 1000.0)
+        print "total_pop", total_pop
+        print "total_area", total_area
+        print "total_density", total_pop/total_area
 
     def test_plot_heatmap(self):
 
@@ -96,8 +142,10 @@ class Runner(object):
 
         for da_id in da_id_list:
             print da_id
+
             score = heatmap.get_score_normalized(da_id)
             polygon = das.get_polygon(da_id)
+
             polygon.add_attribute("fill_opacity", score)
             plotter.add_polygon(polygon)
 
@@ -108,8 +156,8 @@ if __name__ == "__main__":
 
     runner = Runner()
 #    runner.test_plot_random()
-    runner.test_plot_das()
-#    runner.test_plot_heatmap()
+#    runner.test_plot_das()
+    runner.test_plot_da_pop_dens()
 
 
 

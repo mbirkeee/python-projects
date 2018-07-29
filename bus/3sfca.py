@@ -1,8 +1,9 @@
 import os
 import math
 
-from my_utils import DaCentriods
+from my_utils import DaData
 from my_utils import get_dist
+from my_utils import get_point_dist
 from stop_times import StopTimes
 from stop_times import SERVICE
 from stop_times import KEY
@@ -12,7 +13,7 @@ class Intersect(object):
     def __init__(self):
         self._data = {}
 
-        self.da_centroids = DaCentriods()
+        self.da_centroids = DaData()
 
     def load(self, file_name, expected_parts=None, stop_index=None, da_index=None):
 
@@ -59,11 +60,11 @@ class Intersect(object):
     def get_da_pop(self, da_id):
         return self.da_centroids.get_population(da_id)
 
-    def get_da_utm(self, da_id):
-        return self.da_centroids.get_utm(da_id)
+    def get_da_centroid(self, da_id):
+        return self.da_centroids.get_centroid(da_id)
 
     def get_da_list(self):
-        return self.da_centroids.get_list()
+        return self.da_centroids.get_da_id_list()
 
 
 class Weight(object):
@@ -83,8 +84,8 @@ class Runner(object):
 
     def __init__(self):
 
-#        self._base_path = "../data/sts/csv/2018_06_21/"
-        self._base_path = "../data/sts/csv/2018_05_04/"
+        self._base_path = "../data/sts/csv/2018_06_21/"
+#        self._base_path = "../data/sts/csv/2018_05_04/"
         self._service_type = SERVICE.MWF
         self._time_of_day = 8 * 60 * 60  # 8 AM
 
@@ -130,11 +131,10 @@ class Runner(object):
                 for da_id in intersecting_das:
                     pop = self._intersect.get_da_pop(da_id)
 
-                    stop_utm = self._stop_times.get_stop_utm(stop_id)
-                    # print stop_utm
-                    da_utm = self._intersect.get_da_utm(da_id)
-                    # print da_utm
-                    dist = get_dist(stop_utm, da_utm)
+                    stop_point = self._stop_times.get_stop_point(stop_id)
+                    da_centroid = self._intersect.get_da_centroid(da_id)
+
+                    dist = get_point_dist(stop_point, da_centroid)
                     # print dist
 
                     w = self._weight.butterworth(dist, 250, 1, 6)
@@ -152,7 +152,6 @@ class Runner(object):
             #demand_dict[stop_id] = data
             # All we need to keep is the sum of the weighted population
             demand_dict[stop_id] = sum_weight_pop
-
 
         da_list = self._intersect.get_da_list()
 
@@ -310,18 +309,14 @@ class Runner(object):
         result = {}
 
         for da_id in da_ids:
-            # print "consider da: %s" % repr(da_id)
-            da_utm = self._intersect.get_da_utm(da_id)
-            # print "utm position: %s" % repr(da_utm)
 
+            da_centroid = self._intersect.get_da_centroid(da_id)
             stop_list = []
 
             # Loop through all stops, finding those within a 400m circular buffer
             for stop_id in stop_ids:
-                stop_utm = self._stop_times.get_stop_utm(stop_id)
-
-                # print da_utm
-                dist = get_dist(stop_utm, da_utm)
+                stop_point = self._stop_times.get_stop_point(stop_id)
+                dist = get_point_dist(stop_point, da_centroid)
                 if dist < radius:
                     # print "Stop %d dist %f" % (stop_id, dist)
                     stop_list.append((stop_id, dist))

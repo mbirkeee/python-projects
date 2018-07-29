@@ -4,6 +4,7 @@ import simplejson
 import pyproj
 import math
 import random
+import numpy as np
 
 from map_html import TOP as MAP_TOP
 from map_html import BOTTOM as MAP_BOTTOM
@@ -12,6 +13,18 @@ from map_html import MARKER
 
 PROJ = pyproj.Proj("+init=EPSG:32613")
 
+def get_point_dist(point1, point2):
+    if point1 is None or point2 is None: return 0.0
+
+    x1 = point1.get_x()
+    y1 = point1.get_y()
+
+    x2 = point2.get_x()
+    y2 = point2.get_y()
+
+    if x1 is None or x2 is None: return 0.0
+
+    return math.sqrt(math.pow((x1 - x2), 2) + math.pow((y1 - y2),2))
 
 def get_dist(point1, point2):
 
@@ -258,8 +271,10 @@ class DaData(object):
         data = self._data.get(da_id)
         return data.get('pop')
 
-    def get_centriod(self, da_id):
+    def get_centroid(self, da_id):
         data = self._data.get(da_id)
+        if data is None:
+            raise ValueError("No data for da_id: %s" % repr(da_id))
         return data.get('centroid')
 
     def load_file_centroids(self, file_name):
@@ -664,6 +679,16 @@ class Polygon(object):
     def get_attribute(self, key):
         return self._attributes.get(key)
 
+    def compute_area(self, x, y):
+        return 0.5 * np.abs(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)))
+
+    def get_area(self):
+
+        x = [point.get_x() for point in self._points]
+        y = [point.get_y() for point in self._points]
+
+        return self.compute_area(x, y)
+
 class PlotPolygons(object):
 
     def __init__(self):
@@ -683,7 +708,7 @@ class PlotPolygons(object):
         for item in items:
             if not isinstance(item, Polygon):
                 raise ValueError("not a Polygon")
-            print "ADD item", item
+            #print "ADD item", item
             self._polygon_list.append(item)
 
     def plot(self, file_name):
