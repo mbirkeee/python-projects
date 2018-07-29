@@ -52,7 +52,6 @@ class Stops(object):
 
         self._base_path = base_path
         self._data = {}
-#        self._myproj = pyproj.Proj("+init=EPSG:32613")
         self.read_file()
 
     def read_file(self):
@@ -84,18 +83,12 @@ class Stops(object):
                     stop_code = int(parts[1].strip())
                     name = parts[6].strip()
                     lat = float(parts[2].strip())
-                    lon = float(parts[3].strip())
+                    lng = float(parts[3].strip())
 
-                    print stop_code, lat, lon, name
-
-#                    x, y  = self._myproj(lon, lat)
+                    print stop_code, lat, lng, name
 
                     stop_data = {
-                        'point' : Point(lat, lon),
-#                        'lat'   : lat,
-#                        'lon'   : lon,
-#                        'x'     : x,
-#                        'y'     : y,
+                        'point' : Point(lat, lng),
                         'name'  : name
                     }
 
@@ -127,18 +120,6 @@ class Stops(object):
             return None
 
         return stop_data.get('point')
-
-    # def get_utm(self, stop_id):
-    #     stop_data = self._data.get(stop_id)
-    #     if stop_data is None:
-    #         return None
-    #     return (stop_data.get('x'), stop_data.get('y'))
-    #
-    # def get_lat_lon(self, stop_id):
-    #     stop_data = self._data.get(stop_id)
-    #     if stop_data is None:
-    #         return None
-    #     return (stop_data.get('lat'), stop_data.get('lon'))
 
 
 class TransitShapes(object):
@@ -201,11 +182,11 @@ class TransitShapes(object):
 
                 shape_id = int(parts[0].strip())
                 lat = float(parts[1].strip())
-                lon = float(parts[2].strip())
+                lng = float(parts[2].strip())
                 seq = int(parts[3].strip())
 
                 points = self._data.get(shape_id, [])
-                points.append((seq, lat, lon))
+                points.append((seq, lat, lng))
                 self._data[shape_id] = points
 
             # raise ValueError("temp stop")
@@ -268,10 +249,10 @@ class TransitRoutes(object):
                 print "read route ID", route_id
 
 
-                if self._june_data:
-                    if route_id > 10080:
-                        self._duplicates[route_id] = (short_name, long_name)
-                        continue
+#                if self._june_data:
+#                    if route_id > 10080:
+#                        self._duplicates[route_id] = (short_name, long_name)
+#                        continue
 
                 if self._data.has_key(route_id):
                     raise ValueError("THIS IS A DUP!!!")
@@ -300,7 +281,6 @@ class TransitRoutes(object):
 
             print "number of routes:", len(self._data)
             print "number of duplicates:", len(self._duplicates)
-
             print "%s: read %d lines" % (file_name, line_count)
 
         finally:
@@ -308,7 +288,24 @@ class TransitRoutes(object):
                 print "closing file"
                 f.close()
 
-        #raise ValueError("temp stop")
+        # ----- TEST -----
+        route_id_list = self.get_route_ids()
+        s = []
+        for route_id in route_id_list:
+            name = self.get_route_name_from_id(route_id)
+            s.append((name, route_id))
+
+        s = sorted(s)
+        for i, item in enumerate(s):
+            print "%d ID: %s NAME: %s" % (i+1, item[1], item[0])
+
+        # ---- END TEST -----
+
+        # raise ValueError("temp stop")
+
+    def get_route_ids(self):
+        result = [k for k in self._data.iterkeys()]
+        return result
 
     def get_primary_route_id(self, route_id):
         primary_id = self._duplicates.get(route_id)
@@ -480,11 +477,9 @@ class StopTimes(object):
         self.trips = TransitTrips(base_path)
         self.routes = TransitRoutes(base_path)
         self.shapes = TransitShapes(base_path)
-
         self.stops = Stops(base_path)
 
         self._data = {}
-
         self._route_id_dict = {}
 
         self._base_path = base_path
@@ -498,12 +493,6 @@ class StopTimes(object):
 
         self.read_file()
 
-
-    # def get_stop_lat_lon(self, stop_id):
-    #     return self.stops.get_lat_lon(stop_id)
-    #
-    # def get_stop_utm(self, stop_id):
-    #     return self.stops.get_utm(stop_id)
 
     def get_stop_point(self, stop_id):
         return self.stops.get_point(stop_id)
@@ -527,6 +516,8 @@ class StopTimes(object):
         stop_ids = [key for key in self._data.iterkeys()]
         return stop_ids
 
+    def get_route_ids(self):
+        return self.routes.get_route_ids()
 
     def get_stop_route_departures(self, stop_id, route_id, direction, service_type):
         departures = self.get_stop_departures(stop_id, service_type)
@@ -599,10 +590,6 @@ class StopTimes(object):
                     wait_sec = interval
 
         return wait_sec
-
-        return 1000
-
-
 
     def get_stop_departures(self, stop_id, service_type, start_time=0, stop_time=LATEST_TIME):
 
@@ -780,70 +767,7 @@ class StopTimes(object):
                 f.close()
 
 
-# def test_fetch():
-#
-#     import urllib
-#     import urllib2
-#
-#     base = "http://opendata-saskatoon.cloudapp.net:8080/v1/SaskatoonOpenDataCatalogueBeta"
-#
-#
-#     # This seems to work to get data for just one stop
-# #    url = "TransitStopTimes?$filter=%s&format=json" % urllib.quote("stop_id eq '3094'")
-#
-#     table = "TransitStopTimes"
-#
-#     # Get stops from 3000 to 4000
-# #    url = "TransitStops?$filter=%s&format=json" % urllib.quote("stop_id ge '3000' and stop_id lt '4000'")
-#
-#
-#     next_partition_key = None
-#     next_row_key = None
-#     index = 0
-#
-#     while True:
-#
-#         if next_partition_key is None:
-#             url = "%s/%s?format=json" % (base, table)
-#         else:
-#             url = "%s/%s?NextPartitionKey=%s&NextRowKey=%s&format=json" % \
-#                   (base, table, next_partition_key, next_row_key)
-#
-#         print url
-#     # raise ValueError("DONE")
-#     #url = 'http://opendata-saskatoon.cloudapp.net/DataBrowser/DownloadCsv?container=SaskatoonOpenDataCatalogueBeta&entitySet=TransitStops'
-#
-#
-#         response = urllib2.urlopen(url)
-#     # print "Response:", response, repr(response)
-#
-#         json = response.read()
-#
-#         response.close()
-#
-#         d = simplejson.loads(json)
-#         stuff = d.get('d')
-#         print "READ %d items" % len(stuff)
-#
-#         info = response.info()
-#         next_partition_key = info.get('x-ms-continuation-NextPartitionKey')
-#         next_row_key = info.get('x-ms-continuation-NextRowKey')
-#
-#         print "next_partition", next_partition_key
-#         print "next_row", next_row_key
-#
-#         f = open("transit_stops_%d.json" % index, "w")
-#         f.write(json)
-#         f.close()
-#
-#         index += 1
-#         if next_partition_key is None:
-#             break
-#
-#         time.sleep(1)
-#
-#     print "Done"
-#     #next_row_key = info.getHeader('x-ms-continuation-NextRowKey')
+
 
 
 

@@ -83,7 +83,7 @@ class Runner(object):
 
             plotter.add_marker(centroid, "%d" % da_id, "%d" % pop)
 
-        plotter.plot("temp/maps/test_da_polygons.html")
+        plotter.plot("temp/maps/da_polygons_with_markers.html")
 
     def test_plot_da_pop_dens(self):
 
@@ -156,8 +156,9 @@ if __name__ == "__main__":
 
     runner = Runner()
 #    runner.test_plot_random()
-#    runner.test_plot_das()
-    runner.test_plot_da_pop_dens()
+    runner.test_plot_das()
+#    runner.test_plot_heatmap()
+#    runner.test_plot_da_pop_dens()
 
 
 
