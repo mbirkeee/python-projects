@@ -8,6 +8,7 @@ import random
 from map_html import TOP as MAP_TOP
 from map_html import BOTTOM as MAP_BOTTOM
 from map_html import POLYGON
+from map_html import MARKER
 
 PROJ = pyproj.Proj("+init=EPSG:32613")
 
@@ -199,13 +200,14 @@ class DaHeatmap(object):
         return normalized
 
 
-class DaPolygons(object):
+class DaData(object):
 
     def __init__(self):
 
         self._data = {}
 
         self.load_file("data/DA_polygon_points.csv")
+        self.load_file_centroids("data/DA_centroids.csv")
 
     def load_file(self, file_name):
 
@@ -252,7 +254,39 @@ class DaPolygons(object):
 
         return polygon
 
-class DaCentriods(object):
+    def get_population(self, da_id):
+        data = self._data.get(da_id)
+        return data.get('pop')
+
+    def get_centriod(self, da_id):
+        data = self._data.get(da_id)
+        return data.get('centroid')
+
+    def load_file_centroids(self, file_name):
+
+        f = open(file_name, "r")
+
+        count = 0
+        for line in f:
+            count += 1
+            if count == 1: continue
+
+            parts=line.split(",")
+            da_id = int(parts[1].strip())
+            lat = float(parts[2].strip())
+            lng = float(parts[3].strip())
+            pop = int(parts[4].strip())
+
+            centriod = Point(lat, lng)
+
+            data = self._data.get(da_id, {})
+            data['centroid'] = centriod
+            data['pop'] = pop
+            self._data[da_id] = data
+
+        f.close()
+
+class DaCentroidsOld(object):
 
     def __init__(self):
         self._data_pop_by_da = {}
@@ -359,6 +393,9 @@ class DaCentriods(object):
 
         data = self._data_centriods.get(da_id)
         return (data.get('x'), data.get('y'))
+
+    def get_data(self, da_id):
+        return self._data_centriods.get(da_id)
 
 
 class TransitData(object):
@@ -633,8 +670,12 @@ class PlotPolygons(object):
         print "polygon plotter instantiated"
 
         self._polygon_list = []
+        self._marker_list = []
 
-    def add(self, items):
+    def add_marker(self, point, title, label):
+        self._marker_list.append((point, title, label))
+
+    def add_polygon(self, items):
 
         if not isinstance(items, list):
             items = [items]
@@ -663,6 +704,22 @@ class PlotPolygons(object):
 
             fill_opacity = item.get_attribute("fill_opacity")
             f.write(POLYGON % fill_opacity)
+
+        if len(self._marker_list) > 0:
+
+            f.write("var marker = {\n")
+            i = 0
+            for item in self._marker_list:
+                point = item[0]
+                title = item[1]
+                label = item[2]
+                lat = point.get_lat()
+                lng = point.get_lng()
+                f.write("%d:{center:{lat:%f,lng:%f},title:'%s',label:'%s',},\n" % (i, lat, lng, title, label))
+                i += 1
+
+            f.write("};\n")
+            f.write(MARKER)
 
         f.write(MAP_BOTTOM)
         f.close()

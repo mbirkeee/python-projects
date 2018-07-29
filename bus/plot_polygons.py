@@ -4,7 +4,7 @@ import random
 from my_utils import PlotPolygons
 from my_utils import Polygon
 from my_utils import Point
-from my_utils import DaPolygons
+from my_utils import DaData
 from my_utils import DaHeatmap
 
 PROJ = pyproj.Proj("+init=EPSG:32613")
@@ -51,7 +51,7 @@ class Runner(object):
 
         return p
 
-    def test_plot(self):
+    def test_plot_random(self):
 
         print "test plot called"
 
@@ -59,13 +59,13 @@ class Runner(object):
 
         for _ in xrange(10):
             p = self.make_test_polygon()
-            plotter.add(p)
+            plotter.add_polygon(p)
 
         plotter.plot("temp/maps/test_polygon.html")
 
     def test_plot_das(self):
 
-        das = DaPolygons()
+        das = DaData()
         plotter = PlotPolygons()
 
         da_id_list = das.get_da_id_list()
@@ -73,13 +73,21 @@ class Runner(object):
         for da_id in da_id_list:
             print da_id
             polygon = das.get_polygon(da_id)
-            plotter.add(polygon)
+            polygon.add_attribute("fill_opacity", 0.1)
+
+            plotter.add_polygon(polygon)
+
+            pop = das.get_population(da_id)
+            centroid = das.get_centriod(da_id)
+            print pop, centroid
+
+            plotter.add_marker(centroid, "%d" % da_id, "%d" % pop)
 
         plotter.plot("temp/maps/test_da_polygons.html")
 
     def test_plot_heatmap(self):
 
-        das = DaPolygons()
+        das = DaData()
         plotter = PlotPolygons()
         heatmap = DaHeatmap()
         heatmap.load_file("temp/da_score.csv")
@@ -90,10 +98,8 @@ class Runner(object):
             print da_id
             score = heatmap.get_score_normalized(da_id)
             polygon = das.get_polygon(da_id)
-
             polygon.add_attribute("fill_opacity", score)
-
-            plotter.add(polygon)
+            plotter.add_polygon(polygon)
 
         plotter.plot("temp/maps/test_da_heatmap.html")
 
@@ -101,9 +107,9 @@ class Runner(object):
 if __name__ == "__main__":
 
     runner = Runner()
-#    runner.test_plot()
-#    runner.test_plot_das()
-    runner.test_plot_heatmap()
+#    runner.test_plot_random()
+    runner.test_plot_das()
+#    runner.test_plot_heatmap()
 
 
 

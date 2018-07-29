@@ -1,6 +1,8 @@
 from my_utils import TransitData
 from my_utils import DaPopulations
 from my_utils import DaDwellingCounts
+from my_utils import DaCentriodsOld
+from my_utils import DaData
 
 from stop_times import StopTimes
 from map_html import TOP as MAP_TOP
@@ -8,6 +10,48 @@ from map_html import BOTTOM as MAP_BOTTOM
 from map_html import CIRCLE1, CIRCLE2
 from map_html import CIRCLE_RED_20
 from map_html import MARKER
+
+
+class MakeDaCentroids(object):
+    """
+    A temporary class to make a CSV file of DA centriods and populations.
+    Want the centroid position and populations combined into a single CSV file that a
+    new DaCentroid class can load
+    """
+    def __init__(self):
+        print "instantiated"
+
+
+    def run(self):
+
+        dap = DaData()
+        da_id_list = dap.get_da_id_list()
+
+        da_centroids = DaCentriodsOld()
+
+        # Use the da_id_list returned by DaPolygons because
+        # a) that is the "definative list anb
+        # b) ensure we have pop and position for all
+
+
+        f = open("data/DA_centroids.csv", "w")
+        f.write("index,da_id,lat,lng,pop\n")
+
+        index = 1
+        for da_id in da_id_list:
+            print "da_id", da_id
+            pop = da_centroids.get_population(da_id)
+            if pop is None:
+                raise ValueError("missing population")
+            print pop
+            data = da_centroids.get_data(da_id)
+            print repr(data)
+            lat = data.get('lat')
+            lng = data.get('lon')
+
+            f.write("%d,%d,%f,%f,%d\n" % (index, da_id, lat, lng, pop))
+
+        f.close()
 
 class Runner(object):
 
@@ -707,12 +751,17 @@ class PostalPop(object):
 
 if __name__ == "__main__":
 
+    runner = MakeDaCentroids()
+    runner.run()
+
+
+
     # runner = Runner()
 
     # runner.plot()
 
-    runner = TempUtils()
-    runner.make_postal_code_populations()
+#     runner = TempUtils()
+#    runner.make_postal_code_populations()
     # runner.make_brt_postal_pop()
     # runner.run()
     # runner.run_lines()
