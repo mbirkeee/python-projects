@@ -2,7 +2,6 @@ import os
 import math
 
 from my_utils import DaData
-from my_utils import get_dist
 from my_utils import get_point_dist
 from stop_times import StopTimes
 from stop_times import SERVICE
@@ -84,8 +83,8 @@ class Runner(object):
 
     def __init__(self):
 
-        self._base_path = "../data/sts/csv/2018_06_21/"
-#        self._base_path = "../data/sts/csv/2018_05_04/"
+#        self._base_path = "../data/sts/csv/2018_06_21/"
+        self._base_path = "../data/sts/csv/2018_05_04/"
         self._service_type = SERVICE.MWF
         self._time_of_day = 8 * 60 * 60  # 8 AM
 
@@ -93,6 +92,49 @@ class Runner(object):
         self._intersect = Intersect()
         self._stop_times = StopTimes(self._base_path)
 
+
+    def test_departures(self):
+        print "called"
+
+        route_id_list = self._stop_times.get_route_ids()
+        print "route count", len(route_id_list)
+        stop_id_list = self._stop_times.get_stop_ids()
+        print "stop list", len(stop_id_list)
+
+        counts = {}
+        test2 = {}
+
+        for route_id in route_id_list:
+            count = 0
+            print "Route:", self._stop_times.get_route_name_from_id(route_id)
+
+            for stop_id in stop_id_list:
+                departures = self._stop_times.get_stop_route_departures(stop_id,route_id,0,SERVICE.MWF)
+                # print departures
+                count += len(departures)
+
+#                if len(departures) > 0 and route_id in [10026, 10101]:
+#                if len(departures) > 0 and route_id in [10073, 10148]:
+                if len(departures) > 0 and route_id in [10152, 10077]:
+                    data = test2.get(route_id, {})
+                    data[stop_id] = len(departures)
+                    test2[route_id] = data
+
+            counts[route_id] = count
+
+        s = []
+        for k, v in counts.iteritems():
+            s.append((self._stop_times.get_route_name_from_id(k), v, k))
+
+        s = sorted(s)
+
+        for item in s:
+            print item[2], item[0], item[1]
+
+        for route_id, data in test2.iteritems():
+            print "Route ID", route_id
+            for stop_id, departures in data.iteritems():
+                print "  stop: %d departs: %d" % (stop_id, departures)
 
     def run(self):
         """
@@ -103,13 +145,9 @@ class Runner(object):
         # (to determine which DAs intersect with the bus stops)
         self._intersect.load("../data/DA_intersect_stop_circle_june.csv", expected_parts=32, stop_index=5, da_index=10)
 
-        # file_name = os.path.join(self._base_path, "my-TransitStops.csv")
-        # self._transit_data.load_stops_from_csv(file_name)
-
-        # stop_ids = self._transit_data.get_stop_id_list()
-
         stop_ids = self._stop_times.get_stop_ids()
 
+        # Demand at each stop is the first step in the 3sfca
         demand_dict = {}
 
         # loop through all the stops.
@@ -149,6 +187,7 @@ class Runner(object):
 
                     print "    INTERSECTS: %d (pop. %d, dist %.2f weight: %0.3f)" % (da_id, pop, dist, w)
 
+            print "    TOTAL SUM_WEIGHT_POP", sum_weight_pop
             #demand_dict[stop_id] = data
             # All we need to keep is the sum of the weighted population
             demand_dict[stop_id] = sum_weight_pop
@@ -157,7 +196,36 @@ class Runner(object):
 
         stop_dict = self.get_stops_for_da(da_list, stop_ids, mode="circular", radius=400)
 
+
+        # TEST TEST TEST -----------------------
+
+        # test_data = stop_dict.get(47110453)
+        # for item in test_data:
+        #     print item
+        #
+        #     stop_id = item[0]
+        #     print "demand", demand_dict.get(stop_id)
+        #
+        # raise ValueError("temp_stop")
+
+        # END TEST END TEST
+
         departure_dict = self.make_departure_dict(stop_dict)
+
+
+        # TEST TEST TEST
+        test_data = departure_dict.get(47110453)
+        print repr(test_data)
+
+        for k, v in test_data.iteritems():
+            print "KEY", k
+            print "VALUE", v
+            route_id = v.get(KEY.ROUTE_ID)
+            route_name = self._stop_times.get_route_name_from_id(route_id)
+            print "ROUTE NAME", route_name
+
+        raise ValueError("temp stop")
+        # END TEST
 
         scores = self.compute_da_scores(demand_dict, departure_dict)
 
@@ -336,5 +404,7 @@ class Runner(object):
 if __name__ == "__main__":
 
     runner = Runner()
+    # runner.run()
+
     # runner.test_filter()
-    runner.run()
+    runner.test_departures()
