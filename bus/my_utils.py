@@ -5,6 +5,7 @@ import pyproj
 import math
 import random
 import numpy as np
+import ogr
 
 from map_html import TOP as MAP_TOP
 from map_html import BOTTOM as MAP_BOTTOM
@@ -688,6 +689,27 @@ class Polygon(object):
         y = [point.get_y() for point in self._points]
 
         return self.compute_area(x, y)
+
+    def get_org_poly(self):
+
+        # Create ring
+        ring = ogr.Geometry(ogr.wkbLinearRing)
+
+        start_point = None
+
+        for point in self._points:
+            if start_point is None:
+                start_point = point
+
+            ring.AddPoint(point.get_x(), point.get_y())
+        ring.AddPoint(start_point.get_x(), start_point.get_y())
+
+        # Create polygon
+        poly = ogr.Geometry(ogr.wkbPolygon)
+        poly.AddGeometry(ring)
+
+        return poly
+
 
 class PlotPolygons(object):
 

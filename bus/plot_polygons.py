@@ -1,5 +1,7 @@
 import pyproj
 import random
+import math
+import ogr
 
 from my_utils import PlotPolygons
 from my_utils import Polygon
@@ -9,6 +11,7 @@ from my_utils import DaHeatmap
 
 PROJ = pyproj.Proj("+init=EPSG:32613")
 
+print "import finished"
 
 class Runner(object):
 
@@ -51,15 +54,89 @@ class Runner(object):
 
         return p
 
+
+    def make_test_poly_2(self):
+
+        center_lat = 52.125
+        center_lng = -106.650
+
+        p = Polygon()
+
+        center_x, center_y = PROJ(center_lng, center_lat)
+
+        center_x += random.randint(-1000, 1000)
+        center_y += random.randint(-1000, 1000)
+
+        start_angle = random.randint(0, 20)
+
+        count = 0
+        for a in xrange(360/20):
+            r = math.radians(start_angle + a*20)
+
+            if count % 2:
+                z = 1000
+            else:
+                z = 400
+
+            x = z * math.cos(r)
+            y = z * math.sin(r)
+
+            x = x + center_x
+            y = y + center_y
+
+            count += 1
+
+            p.add_point(Point(x, y))
+
+        p.add_attribute('fill_opacity', 0.1)
+
+        return p
+
     def test_plot_random(self):
 
         print "test plot called"
 
         plotter = PlotPolygons()
 
-        for _ in xrange(10):
-            p = self.make_test_polygon()
+        poly = []
+        for i in xrange(2):
+            # p = self.make_test_polygon()
+            p = self.make_test_poly_2()
             plotter.add_polygon(p)
+
+            poly.append(p.get_org_poly())
+
+        intersection = poly[0].Intersection(poly[1])
+        print repr(intersection)
+
+
+        if intersection is not None:
+            print type(intersection)
+            print intersection.ExportToWkt()
+
+            for i in range(0, intersection.GetGeometryCount()):
+                g = intersection.GetGeometryRef(i)
+                print "%i). %s" %(i, g.ExportToWkt())
+
+                print type(g)
+                print dir(g)
+
+                print g.GetGeometryName()
+                feature_count = g.GetGeometryCount()
+                print "feature_count", feature_count
+                if feature_count == 1:
+                    gg = g.GetGeometryRef(0)
+                    point_count = gg.GetPointCount()
+                    if point_count > 0:
+                        p = Polygon()
+                        for j in xrange(point_count):
+                            # GetPoint returns a tuple not a Geometry
+                            pt = gg.GetPoint(j)
+                            print "%i). POINT (%d %d)" %(j, pt[0], pt[1])
+                            p.add_point(Point(pt[0], pt[1]))
+
+                        p.add_attribute("fill_opacity", 1.0)
+                        plotter.add_polygon(p)
 
         plotter.plot("temp/maps/test_polygon.html")
 
@@ -83,7 +160,7 @@ class Runner(object):
 
             plotter.add_marker(centroid, "%d" % da_id, "%d" % pop)
 
-        plotter.plot("temp/maps/test_da_polygons.html")
+        plotter.plot("temp/maps/da_polygons_markers.html")
 
     def test_plot_da_pop_dens(self):
 
@@ -155,9 +232,10 @@ class Runner(object):
 if __name__ == "__main__":
 
     runner = Runner()
-#    runner.test_plot_random()
+    runner.test_plot_random()
+
 #    runner.test_plot_das()
-    runner.test_plot_da_pop_dens()
+#    runner.test_plot_da_pop_dens()
 
 
 
