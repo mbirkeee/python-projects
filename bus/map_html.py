@@ -119,10 +119,10 @@ for (var point in circle2) {
 POLYGON = """
 var my_polygon = new google.maps.Polygon({
   paths: polypoints,
-  strokeColor: '#FF0000',
+  strokeColor: '#202020',
   strokeOpacity: 0.8,
-  strokeWeight: 2,
-  fillColor: '#FF0000',
+  strokeWeight: 1,
+  fillColor: '%s',
   fillOpacity: %f
 });
 my_polygon.setMap(map);

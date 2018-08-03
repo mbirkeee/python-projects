@@ -8,6 +8,8 @@ from my_utils import Polygon
 from my_utils import Point
 from my_utils import DaData
 from my_utils import DaHeatmap
+from stops import Stops
+from intersect import Intersect
 
 PROJ = pyproj.Proj("+init=EPSG:32613")
 
@@ -93,9 +95,9 @@ class Runner(object):
         return p
 
     def test_plot_random(self):
-
-        print "test plot called"
-
+        """
+        Test intersection by plotting random stars
+        """
         plotter = PlotPolygons()
 
         poly = []
@@ -103,42 +105,15 @@ class Runner(object):
             # p = self.make_test_polygon()
             p = self.make_test_poly_2()
             plotter.add_polygon(p)
+            poly.append(p)
 
-            poly.append(p.get_org_poly())
+        intersection = poly[0].intersect(poly[1])
 
-        intersection = poly[0].Intersection(poly[1])
-        print repr(intersection)
+        for p in intersection:
+            p.add_attribute("fill_opacity", 1.0)
+            plotter.add_polygon(p)
 
-
-        if intersection is not None:
-            print type(intersection)
-            print intersection.ExportToWkt()
-
-            for i in range(0, intersection.GetGeometryCount()):
-                g = intersection.GetGeometryRef(i)
-                print "%i). %s" %(i, g.ExportToWkt())
-
-                print type(g)
-                print dir(g)
-
-                print g.GetGeometryName()
-                feature_count = g.GetGeometryCount()
-                print "feature_count", feature_count
-                if feature_count == 1:
-                    gg = g.GetGeometryRef(0)
-                    point_count = gg.GetPointCount()
-                    if point_count > 0:
-                        p = Polygon()
-                        for j in xrange(point_count):
-                            # GetPoint returns a tuple not a Geometry
-                            pt = gg.GetPoint(j)
-                            print "%i). POINT (%d %d)" %(j, pt[0], pt[1])
-                            p.add_point(Point(pt[0], pt[1]))
-
-                        p.add_attribute("fill_opacity", 1.0)
-                        plotter.add_polygon(p)
-
-        plotter.plot("temp/maps/test_polygon.html")
+        plotter.plot("temp/maps/test_random_intersect.html")
 
     def test_plot_das(self):
 
@@ -209,34 +184,128 @@ class Runner(object):
         print "total_area", total_area
         print "total_density", total_pop/total_area
 
-    def test_plot_heatmap(self):
+    def test_plot_heatmap(self, file_name_in, file_name_out):
 
         das = DaData()
         plotter = PlotPolygons()
         heatmap = DaHeatmap()
-        heatmap.load_file("temp/da_score.csv")
+        heatmap.load_file("temp/%s" % file_name_in)
 
         da_id_list = heatmap.get_da_id_list()
 
         for da_id in da_id_list:
-            print da_id
-
             score = heatmap.get_score_normalized(da_id)
             polygon = das.get_polygon(da_id)
-
             polygon.add_attribute("fill_opacity", score)
+            polygon.add_attribute("fill_color", "#00ff00")
             plotter.add_polygon(polygon)
 
-        plotter.plot("temp/maps/test_da_heatmap.html")
+        plotter.plot("temp/maps/%s" % file_name_out)
 
+    def plot_heatmap_change(self):
+        das = DaData()
+        plotter = PlotPolygons()
+
+        heatmap_june = DaHeatmap()
+        heatmap_july = DaHeatmap()
+
+        heatmap_june.load_file("temp/da_score_june.csv")
+        heatmap_july.load_file("temp/da_score_july.csv")
+
+        da_id_list = heatmap_june.get_da_id_list()
+
+        for da_id in da_id_list:
+            # score_june = heatmap_june.get_score_normalized(da_id)
+            # score_july = heatmap_july.get_score_normalized(da_id)
+
+            score_june = heatmap_june.get_score(da_id)
+            score_july = heatmap_july.get_score(da_id)
+
+            if score_june == 0:
+                change = 0
+            else:
+                change = 100.0 * (score_july - score_june) / score_june
+            print da_id, score_june, score_july, change
+
+            color = None
+            if change > 0:
+                color = '#0000ff'
+            elif change < 0:
+                color = '#ff0000'
+
+            if color is not None:
+                opacity = abs(change)/100.0
+
+                polygon = das.get_polygon(da_id)
+                polygon.add_attribute("fill_opacity", opacity)
+                polygon.add_attribute("fill_color", color)
+                plotter.add_polygon(polygon)
+
+        plotter.plot("temp/maps/heatmap_change_june_july.html")
+
+    def plot_stop_buffers(self):
+
+        stop = Stops( "../data/sts/csv/2018_05_04/")
+        stop.make_square_buffers(800)
+
+        plotter = PlotPolygons()
+
+        stop_ids = stop.get_ids()
+        for stop_id in stop_ids:
+            p = stop.get_buffer(stop_id)
+            p.add_attribute("fill_opacity", 0.1)
+            p.add_attribute("fill_color", "#ff0000")
+
+            plotter.add_polygon(p)
+
+        plotter.plot("temp/maps/stop_buffers.html")
+
+    def plot_stop_da_intersections(self):
+        stop = Stops( "../data/sts/csv/2018_05_04/")
+        # stop.make_square_buffers(800)
+        stop.make_round_buffer(400)
+        group1 = {}
+        stop_id_list = stop.get_ids()
+        for stop_id in stop_id_list:
+            group1[stop_id] = stop.get_buffer(stop_id)
+
+        group2 = {}
+        das = DaData()
+        da_id_list = das.get_da_id_list()
+        for da_id in da_id_list:
+            group2[da_id] = das.get_polygon(da_id)
+
+        intersect = Intersect()
+
+        intersect.process(group1, group2)
+
+        polygons = intersect.get_intersections_for_group1_id(10004)
+
+        plotter = PlotPolygons()
+
+        for p in polygons:
+            p.add_attribute("fill_opacity", 0.1)
+            p.add_attribute("fill_color", "#ff0000")
+
+            plotter.add_polygon(p)
+
+        plotter.plot("temp/maps/stop_da_intersect_3004.html")
 
 if __name__ == "__main__":
 
     runner = Runner()
-    runner.test_plot_random()
+#    runner.test_plot_random()
 
 #    runner.test_plot_das()
-#    runner.test_plot_heatmap()
+#    runner.test_plot_heatmap('da_score_june.csv', 'heatmap_june.html')
+#    runner.test_plot_heatmap('da_score_july.csv', 'heatmap_july.html')
+
+#    runner.plot_heatmap_change()
+#    runner.plot_stop_buffers()
+
+    runner.plot_stop_da_intersections()
+
+
 #    runner.test_plot_da_pop_dens()
 
 

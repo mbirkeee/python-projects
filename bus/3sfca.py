@@ -3,15 +3,17 @@ import math
 
 from my_utils import DaData
 from my_utils import get_point_dist
+from stops import Stops
 from stop_times import StopTimes
 from stop_times import SERVICE
 from stop_times import KEY
+from route_id_names import ROUTE_IDS_05_04
+from route_id_names import ROUTE_IDS_06_21
 
 class Intersect(object):
 
     def __init__(self):
         self._data = {}
-
         self.da_centroids = DaData()
 
     def load(self, file_name, expected_parts=None, stop_index=None, da_index=None):
@@ -78,19 +80,33 @@ class Weight(object):
         result = 1.0 / math.sqrt(1.0 + e * rp)
         return result
 
+class Runner2(object):
+
+    def __init__(self):
+        self._base_path = "../data/sts/csv/2018_05_04/"
+
+    def run(self):
+
+        stop_mgr = Stops(self._base_path)
+
+        stop_ids = stop_mgr.get_ids()
+        for stop_id in stop_ids:
+            print stop_id
+
+        stop_mgr.make_square_buffers()
 
 class Runner(object):
 
     def __init__(self):
 
-#        self._base_path = "../data/sts/csv/2018_06_21/"
+#        self._base_path = "../data/sts/csv/2018_06_21/
         self._base_path = "../data/sts/csv/2018_05_04/"
         self._service_type = SERVICE.MWF
         self._time_of_day = 8 * 60 * 60  # 8 AM
 
+        self._stop_times = StopTimes(self._base_path)
         self._weight = Weight()
         self._intersect = Intersect()
-        self._stop_times = StopTimes(self._base_path)
 
 
     def test_departures(self):
@@ -135,6 +151,8 @@ class Runner(object):
             print "Route ID", route_id
             for stop_id, departures in data.iteritems():
                 print "  stop: %d departs: %d" % (stop_id, departures)
+
+
 
     def run(self):
         """
@@ -213,19 +231,19 @@ class Runner(object):
         departure_dict = self.make_departure_dict(stop_dict)
 
 
-        # TEST TEST TEST
-        test_data = departure_dict.get(47110453)
-        print repr(test_data)
-
-        for k, v in test_data.iteritems():
-            print "KEY", k
-            print "VALUE", v
-            route_id = v.get(KEY.ROUTE_ID)
-            route_name = self._stop_times.get_route_name_from_id(route_id)
-            print "ROUTE NAME", route_name
-
-        raise ValueError("temp stop")
-        # END TEST
+        # # TEST TEST TEST
+        # test_data = departure_dict.get(47110453)
+        # print repr(test_data)
+        #
+        # for k, v in test_data.iteritems():
+        #     print "KEY", k
+        #     print "VALUE", v
+        #     route_id = v.get(KEY.ROUTE_ID)
+        #     route_name = self._stop_times.get_route_name_from_id(route_id)
+        #     print "ROUTE NAME", route_name
+        #
+        # raise ValueError("temp stop")
+        # # END TEST
 
         scores = self.compute_da_scores(demand_dict, departure_dict)
 
@@ -233,15 +251,21 @@ class Runner(object):
         f.write("FID,DAUID,score\n")
 
         index = 1
+        max_score = 0
         for da_id, score in scores.iteritems():
             print "DAUID: %d score: %f" % (da_id, score)
             f.write("%d,%d,%f\n" % (index, da_id, score))
             index += 1
+            if score > max_score:
+                max_score = score
         f.close()
 
-        print "done!!"
+        print "done. max_score", max_score
 
     def compute_da_scores(self, demand_dict, departure_dict):
+
+        #mode = 'est_wait_sec'
+        mode = 'daily_departures'
 
         result = {}
         for da_id, da_data in departure_dict.iteritems():
@@ -251,16 +275,21 @@ class Runner(object):
 
             # Step one, for each departure (service) we must compute a demand score
             for k, v in da_data.iteritems():
-                est_wait_sec = v.get(KEY.EST_WAIT_SEC)
 
-                if est_wait_sec is None:
-                    # Do not consider this departure
-                    continue
+                if mode == 'est_wait_sec':
+                    est_wait_sec = v.get(KEY.EST_WAIT_SEC)
+                    if est_wait_sec is None:
+                        # Do not consider this departure
+                        continue
 
-                service = (3600.0 - float(est_wait_sec)) / 3600.0
-                if service < 0:
-                    print "no service"
-                    continue
+                    service = (3600.0 - float(est_wait_sec)) / 3600.0
+                    if service < 0:
+                        print "no service"
+                        continue
+                elif mode == 'daily_departures':
+                    service = v.get(KEY.DAILY_DEPARTURES)
+                else:
+                    raise ValueError("invalid mode")
 
                 stop_id = v.get(KEY.STOP_ID)
                 dist = v.get(KEY.DISTANCE)
@@ -352,6 +381,8 @@ class Runner(object):
                 estimated_wait_sec = self._stop_times.get_estimated_wait(stop_id, route_id, direction, self._service_type, self._time_of_day)
 
                 v[KEY.EST_WAIT_SEC] = estimated_wait_sec
+                v[KEY.DAILY_DEPARTURES] = len(departure_list)
+
                 data2[k] = v
                 print "K: %s Route: %s - Stop: %s (%d) dist: %.2f (departs: %d) wait: %s"  % \
                       (repr(k), route_name, stop_name, stop_id, stop_dist, len(departure_list), estimated_wait_sec)
@@ -403,8 +434,11 @@ class Runner(object):
 
 if __name__ == "__main__":
 
-    runner = Runner()
+    # runner = Runner()
     # runner.run()
 
+    runner = Runner2()
+    runner.run()
+
     # runner.test_filter()
-    runner.test_departures()
+    # runner.test_departures()

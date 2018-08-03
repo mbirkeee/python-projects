@@ -6,7 +6,10 @@ import time
 # import my_utils
 # from my_utils import UserGPS
 # from my_utils import TransitData
-from my_utils import Point
+
+from stops import Stops
+from route_id_names import ROUTE_IDS_05_04
+from route_id_names import ROUTE_IDS_06_21
 
 LATEST_TIME = (24 * 60 * 60) - 1
 
@@ -27,7 +30,8 @@ class KEY(object):
     EST_WAIT_SEC    = 'est_wait_sec'
     DISTANCE        = 'dist'
     POPULATION      = 'pop'
-    WEIGHT          = 'weight'
+    WEIGHT              = 'weight'
+    DAILY_DEPARTURES    = 'daily_departures'
 
 def timestr_to_int(input):
 
@@ -46,81 +50,84 @@ def int_to_timestr(input):
     return "%02d:%02d:%02d" % (hours, minutes, seconds)
 
 
-class Stops(object):
-
-    def __init__(self, base_path):
-
-        self._base_path = base_path
-        self._data = {}
-        self.read_file()
-
-    def read_file(self):
-        """
-        0 stop_id,
-        1 stop_code,
-        2 stop_lat,
-        3 stop_lon,
-        4 location_type,
-        5 wheelchair_boarding,
-        6 name
-        """
-
-        file_name = os.path.join(self._base_path, "my-TransitStops.csv")
-
-        result = {}
-        line_count = 0
-        f = None
-
-        try:
-            f = open(file_name, 'r')
-
-            for line in f:
-                line_count += 1
-                if line_count == 1: continue
-
-                try:
-                    parts = line.split(",")
-                    stop_code = int(parts[1].strip())
-                    name = parts[6].strip()
-                    lat = float(parts[2].strip())
-                    lng = float(parts[3].strip())
-
-                    print stop_code, lat, lng, name
-
-                    stop_data = {
-                        'point' : Point(lat, lng),
-                        'name'  : name
-                    }
-
-                    result[stop_code] = stop_data
-
-                except Exception as err:
-                    print "Exception processing line: %s" % repr(err)
-                    print "line: %s" % line
-
-
-        finally:
-            if f: f.close()
-
-        self._data = result
-
-    def get_name(self, stop_id):
-        # print "Getting STOP name for stop id", stop_id
-
-        stop_data = self._data.get(stop_id)
-        if stop_data is None:
-            return None
-
-        return stop_data.get('name')
-
-    def get_point(self, stop_id):
-
-        stop_data = self._data.get(stop_id)
-        if stop_data is None:
-            return None
-
-        return stop_data.get('point')
-
+# class Stops(object):
+#
+#     def __init__(self, base_path):
+#
+#         self._base_path = base_path
+#         self._data = {}
+#         self.read_file()
+#
+#     def read_file(self):
+#         """
+#         0 stop_id,
+#         1 stop_code,
+#         2 stop_lat,
+#         3 stop_lon,
+#         4 location_type,
+#         5 wheelchair_boarding,
+#         6 name
+#         """
+#
+#         file_name = os.path.join(self._base_path, "my-TransitStops.csv")
+#
+#         result = {}
+#         line_count = 0
+#         f = None
+#
+#         try:
+#             f = open(file_name, 'r')
+#
+#             for line in f:
+#                 line_count += 1
+#                 if line_count == 1: continue
+#
+#                 try:
+#                     parts = line.split(",")
+#                     stop_code = int(parts[1].strip())
+#                     name = parts[6].strip()
+#                     lat = float(parts[2].strip())
+#                     lng = float(parts[3].strip())
+#
+#                     print stop_code, lat, lng, name
+#
+#                     stop_data = {
+#                         'point' : Point(lat, lng),
+#                         'name'  : name
+#                     }
+#
+#                     result[stop_code] = stop_data
+#
+#                 except Exception as err:
+#                     print "Exception processing line: %s" % repr(err)
+#                     print "line: %s" % line
+#
+#
+#         finally:
+#             if f: f.close()
+#
+#         self._data = result
+#
+#     def get_name(self, stop_id):
+#         # print "Getting STOP name for stop id", stop_id
+#
+#         stop_data = self._data.get(stop_id)
+#         if stop_data is None:
+#             return None
+#
+#         return stop_data.get('name')
+#
+#     def get_point(self, stop_id):
+#
+#         stop_data = self._data.get(stop_id)
+#         if stop_data is None:
+#             return None
+#
+#         return stop_data.get('point')
+#
+#     def get_ids(self):
+#         result = [stop_id for stop_id in self._data.iterkeys()]
+#         return result
 
 class TransitShapes(object):
 
@@ -145,10 +152,10 @@ class TransitShapes(object):
         for shape_id, points in self._data.iteritems():
             result[shape_id] = sorted(points)
 
-        for shape_id, points in result.iteritems():
-            # print "shape_id", shape_id
-            for item in points:
-                print item
+#        for shape_id, points in result.iteritems():
+#            # print "shape_id", shape_id
+#            for item in points:
+#                print item
 
             #print "shape_id", shape_id, "points", points
 
@@ -199,16 +206,15 @@ class TransitRoutes(object):
 
     def __init__(self, base_path):
 
-        self._june_data = False
         if base_path.find("2018_05_04") > 0:
             print "this is the JUNE data"
-            self._june_data = True
+            self._include_route_dict = ROUTE_IDS_05_04
         else:
             print "this is the JULY data"
+            self._include_route_dict = ROUTE_IDS_06_21
 
         self._base_path = base_path
         self._data = {}
-        self._duplicates = {}
         self.read_file()
 
     def read_file(self):
@@ -219,7 +225,6 @@ class TransitRoutes(object):
         3 text_color,
         4 name_short,
         5 name_long
-
         """
         file_name = os.path.join(self._base_path, "my-TransitRoutes.csv")
 
@@ -248,39 +253,16 @@ class TransitRoutes(object):
 
                 print "read route ID", route_id
 
-
-#                if self._june_data:
-#                    if route_id > 10080:
-#                        self._duplicates[route_id] = (short_name, long_name)
-#                        continue
+                if not self._include_route_dict.has_key(route_id):
+                    print "SKIPPING ROUTE", route_id
+                    continue
 
                 if self._data.has_key(route_id):
                     raise ValueError("THIS IS A DUP!!!")
 
                 self._data[route_id] = (short_name, long_name)
 
-                #duplicate_route_id = self.find_duplicate_route(short_name, long_name)
-
-#            for key, value in self._data.iteritems():
-#                print "route id: %d data: %s" % (key, repr(value))
-
-            temp = {}
-            for route_id, value in self._duplicates.iteritems():
-                short_name = value[0]
-                long_name = value[1]
-                duplicate_route_id = self.find_duplicate_route(short_name, long_name)
-                if duplicate_route_id is None:
-                    raise ValueError("no duplicate for %d" % route_id)
-                    # continue
-
-                temp[route_id] = duplicate_route_id
-
-            self._duplicates = temp
-#            for route_id, value in self._duplicates.iteritems():
-#                print "duplicate for route id: %d --> %s" % (route_id, repr(value))
-
             print "number of routes:", len(self._data)
-            print "number of duplicates:", len(self._duplicates)
             print "%s: read %d lines" % (file_name, line_count)
 
         finally:
@@ -298,32 +280,30 @@ class TransitRoutes(object):
         s = sorted(s)
         for i, item in enumerate(s):
             print "%d ID: %s NAME: %s" % (i+1, item[1], item[0])
-
         # ---- END TEST -----
 
-        # raise ValueError("temp stop")
 
     def get_route_ids(self):
         result = [k for k in self._data.iterkeys()]
         return result
 
-    def get_primary_route_id(self, route_id):
-        primary_id = self._duplicates.get(route_id)
-        return primary_id
-
-    def find_duplicate_route(self, short_name, long_name):
-
-        duplicate_route_id = None
-        for route_id, data in self._data.iteritems():
-            # print "compare %s %s to %s" % (short_name, long_name, data)
-            if short_name == data[0] and long_name == data[1]:
-                duplicate_route_id = route_id
-                break
-
-        # if duplicate_route_id is not None:
-        #     print "Found the match!!!"
-
-        return duplicate_route_id
+    # def get_primary_route_id(self, route_id):
+    #     primary_id = self._duplicates.get(route_id)
+    #     return primary_id
+    #
+    # def find_duplicate_route(self, short_name, long_name):
+    #
+    #     duplicate_route_id = None
+    #     for route_id, data in self._data.iteritems():
+    #         # print "compare %s %s to %s" % (short_name, long_name, data)
+    #         if short_name == data[0] and long_name == data[1]:
+    #             duplicate_route_id = route_id
+    #             break
+    #
+    #     # if duplicate_route_id is not None:
+    #     #     print "Found the match!!!"
+    #
+    #     return duplicate_route_id
 
     def get_route_name_from_id(self, route_id):
         data = self._data.get(route_id)
@@ -340,6 +320,14 @@ class TransitRoutes(object):
 class TransitTrips(object):
 
     def __init__(self, base_path):
+
+        if base_path.find("2018_05_04") > 0:
+            print "this is the JUNE data"
+            self._include_route_dict = ROUTE_IDS_05_04
+        else:
+            print "this is the JULY data"
+            self._include_route_dict = ROUTE_IDS_06_21
+
         self._base_path = base_path
         self._data = {}
         self._route_id_to_shape_id = {}
@@ -392,6 +380,11 @@ class TransitTrips(object):
                 parts = line.split(",")
 
                 route_id = int(parts[1].strip())
+
+                if not self._include_route_dict.has_key(route_id):
+                    print "SKIPPING TRIP"
+                    continue
+
                 service_type = self.make_service_type_from_google_data(parts[4].strip())
                 trip_id = int(parts[0].strip())
                 shape_id = int(parts[3].strip())
@@ -469,13 +462,8 @@ class StopTimes(object):
 
     def __init__(self, base_path):
 
-        if base_path.find("2018_05_04") > 0:
-            print "this is the JUNE data"
-        else:
-            print "this is the JULY data"
-
-        self.trips = TransitTrips(base_path)
         self.routes = TransitRoutes(base_path)
+        self.trips = TransitTrips(base_path)
         self.shapes = TransitShapes(base_path)
         self.stops = Stops(base_path)
 
@@ -483,10 +471,6 @@ class StopTimes(object):
         self._route_id_dict = {}
 
         self._base_path = base_path
-
-        self._count_duplicate = 0
-        self._count_primary = 0
-
         self._count_duplicate_keys_total = 0
 
         self._key_counts = {}
@@ -668,6 +652,14 @@ class StopTimes(object):
                 parts = line.split(",")
 
                 trip_id = int(parts[1].strip())
+
+                route_id = self.trips.get_route_id(trip_id)
+                if route_id is None:
+                    print "SKIP STOP TIME"
+                    continue
+
+
+
                 depart_time_str = parts[3].strip()
 
                 try:
@@ -687,30 +679,30 @@ class StopTimes(object):
                 # print "LINE", line, trip_id, stop_id
 
                 stop_data = self._data.get(stop_id, {})
-
-                route_id = self.trips.get_route_id(trip_id)
                 service_type = self.trips.get_service_type(trip_id)
                 headsign = self.trips.get_headsign(trip_id)
                 direction = self.trips.get_direction(trip_id)
                 route_name = self.get_route_name_from_id(route_id)
 
-                primary_route_id = self.routes.get_primary_route_id(route_id)
-                if primary_route_id is None:
-                    # This is a primary route
-                    self._count_primary += 1
-                else:
-                    # This is a duplicate route
-                    self._count_duplicate +=1
-
-                if primary_route_id is not None:
-                    # Do not include duplicate routes in result
-                    continue
+                # primary_route_id = self.routes.get_primary_route_id(route_id)
+                # if primary_route_id is None:
+                #     # This is a primary route
+                #     self._count_primary += 1
+                # else:
+                #     # This is a duplicate route
+                #     self._count_duplicate +=1
+                #
+                # if primary_route_id is not None:
+                #     # Do not include duplicate routes in result
+                #     continue
 
                 # print depart_time, service_type, route_id, direction
                 key = "%d-%d-%d-%d" % (depart_time, service_type, route_id, direction)
 
                 if stop_data.has_key(key):
-                    # print "Already have key", key, depart_time_str, stop_id
+                    print "Already have key", key, depart_time_str, stop_id
+
+                    # raise ValueError("duplicate key")
                     x = self._key_counts.get(key, 0)
                     x += 1
                     self._key_counts[key] = x
@@ -729,12 +721,12 @@ class StopTimes(object):
                     print "failed to get service_id for trip_id", trip_id
 
                 stop_data[key] = {
-                        KEY.TRIP_ID: trip_id,
-                        KEY.DEPART_TIME : depart_time,
-                        KEY.SERVICE_TYPE : service_type,
-                        KEY.ROUTE_ID : route_id,
-                        KEY.HEADSIGN : headsign,
-                        KEY.DIRECTION : direction
+                        KEY.TRIP_ID         : trip_id,
+                        KEY.DEPART_TIME     : depart_time,
+                        KEY.SERVICE_TYPE    : service_type,
+                        KEY.ROUTE_ID        : route_id,
+                        KEY.HEADSIGN        : headsign,
+                        KEY.DIRECTION       : direction
                 }
                 self._data[stop_id] = stop_data
 
@@ -742,8 +734,6 @@ class StopTimes(object):
             read_time = time.time() - start_time
             print "file: %s read time: %.2f sec" % (file_name, read_time)
 
-            print "primary count", self._count_primary
-            print "duplicate count", self._count_duplicate
             print "duplicate_key count", self._count_duplicate_keys_total
 
             # for route_id, count in self._route_id_dict.iteritems():
@@ -765,10 +755,6 @@ class StopTimes(object):
             if f:
                 print "closing file"
                 f.close()
-
-
-
-
 
 
 def test_read():

@@ -171,7 +171,7 @@ class DaHeatmap(object):
 
     def __init__(self):
         self._data = {}
-        self._max_score = 0.0
+        self._max_score = 50
 
     def load_file(self, file_name):
 
@@ -188,7 +188,8 @@ class DaHeatmap(object):
             score = float(parts[2].strip())
 
             try:
-                score = math.log10(score)
+                # score = math.log10(score)
+                score = score
             except Exception as err:
                 print err
                 score = 0
@@ -212,6 +213,9 @@ class DaHeatmap(object):
         score = self._data.get(da_id)
         normalized = score / self._max_score
         return normalized
+
+    def get_score(self, da_id):
+        return self._data.get(da_id)
 
 
 class DaData(object):
@@ -239,7 +243,7 @@ class DaData(object):
             lat = float(parts[2].strip())
             lng = float(parts[3].strip())
 
-            print da_id, point_index, lat, lng
+            # print da_id, point_index, lat, lng
 
             point = Point(lat, lng)
 
@@ -248,6 +252,8 @@ class DaData(object):
             self._data[da_id] = data
 
         f.close()
+        print "loaded %d points from %s" % (count, file_name)
+
 
     def get_da_id_list(self):
 
@@ -301,6 +307,8 @@ class DaData(object):
             self._data[da_id] = data
 
         f.close()
+
+        print "loaded %d centroids from %s" % (count, file_name)
 
 class DaCentroidsOld(object):
 
@@ -667,6 +675,10 @@ class Polygon(object):
     def __init__(self):
         self._points = []
         self._attributes = {}
+        self._area = None
+        self._org_poly = None
+        self._depth_count = 0
+        self._temp_intersect = []
 
     def add_point(self, point):
         self._points.append(point)
@@ -677,38 +689,126 @@ class Polygon(object):
     def add_attribute(self, key, value):
         self._attributes[key] = value
 
-    def get_attribute(self, key):
-        return self._attributes.get(key)
+    def get_attribute(self, key, default=None):
+        return self._attributes.get(key, default)
 
     def compute_area(self, x, y):
         return 0.5 * np.abs(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)))
 
     def get_area(self):
 
-        x = [point.get_x() for point in self._points]
-        y = [point.get_y() for point in self._points]
+        if self._area is None:
 
-        return self.compute_area(x, y)
+            x = [point.get_x() for point in self._points]
+            y = [point.get_y() for point in self._points]
+            self._area = self.compute_area(x, y)
+
+        return self._area
 
     def get_org_poly(self):
 
-        # Create ring
-        ring = ogr.Geometry(ogr.wkbLinearRing)
+        if self._org_poly is None:
 
-        start_point = None
+            # Create ring
+            ring = ogr.Geometry(ogr.wkbLinearRing)
 
-        for point in self._points:
-            if start_point is None:
-                start_point = point
+            start_point = None
 
-            ring.AddPoint(point.get_x(), point.get_y())
-        ring.AddPoint(start_point.get_x(), start_point.get_y())
+            for point in self._points:
+                if start_point is None:
+                    start_point = point
 
-        # Create polygon
-        poly = ogr.Geometry(ogr.wkbPolygon)
-        poly.AddGeometry(ring)
+                ring.AddPoint(point.get_x(), point.get_y())
 
-        return poly
+            # My polygons do not repeat the start point as the end point... but org ones do
+            ring.AddPoint(start_point.get_x(), start_point.get_y())
+
+            # Create polygon
+            poly = ogr.Geometry(ogr.wkbPolygon)
+            poly.AddGeometry(ring)
+
+            self._org_poly = poly
+
+        return self._org_poly
+
+    def intersect(self, polygon):
+
+        org_poly_1 = self.get_org_poly()
+        org_poly_2 = polygon.get_org_poly()
+
+        intersection = org_poly_1.Intersection(org_poly_2)
+
+        # print "==================================="
+
+        self._depth_count = 0
+        self._temp_intersect = []
+
+        # try:
+        #     self._process_intersection(intersection)
+        # except Exception as err:
+        #     print "ERROR:", repr(err)
+
+        self._process_intersection(intersection)
+        # print "-----------------------------------"
+        #return intersection
+        return self._temp_intersect
+
+    def _process_intersection(self, intersection):
+        """
+        Recursive function to find polygons in the resulting intersection
+        """
+        if intersection is None:
+            # print "intersection is none"
+            return
+
+        self._depth_count += 1
+        # print "DEPTH COUNT", self._depth_count
+
+        geometry_count = intersection.GetGeometryCount()
+        name = intersection.GetGeometryName()
+
+        # print "count", geometry_count, "name", name
+
+        if name == 'POLYGON':
+            if geometry_count != 1:
+                raise ValueError("what the????")
+            # print "found a POLYGON"
+            thing = intersection.GetGeometryRef(0)
+            point_count = thing.GetPointCount()
+            # print "point count", point_count, thing.GetGeometryName()
+
+            if point_count == 0:
+                raise ValueError("point count is 0")
+                # print "ERROR!!!!! point ccount is 0!!!!"
+            else:
+                p = Polygon()
+                for j in xrange(point_count):
+                    # GetPoint returns a tuple not a Geometry
+                    pt = thing.GetPoint(j)
+                    # print "%i). POINT (%d %d)" %(j, pt[0], pt[1])
+                    p.add_point(Point(pt[0], pt[1]))
+                self._temp_intersect.append(p)
+
+        elif name == 'MULTIPOLYGON':
+            # print "found a MULTIPOLYGON"
+            for i in xrange(geometry_count):
+                feature = intersection.GetGeometryRef(i)
+                self._process_intersection(feature)
+
+            # feature_count = intersection.GetGeometryCount()
+        elif name == 'GEOMETRYCOLLECTION':
+            pass
+            # print "HOW TO HANDLE GEOMETRY COLLECTION?????"
+        else:
+            raise ValueError("cant handle name: %s" % name)
+
+        self._depth_count -= 1
+        return
+
+        # print "intersection type:", type(intersection)
+        # print "ExportTowkt:", repr(intersection.ExportToWkt())
+        # print "intersection.GetGeometryCount()", intersection.GetGeometryCount()
+        # print "intersection.GetGeometryName()", intersection.GetGeometryName()
 
 
 class PlotPolygons(object):
@@ -749,8 +849,9 @@ class PlotPolygons(object):
 
             # fill_opacity = float(random.randint(0, 1000)/1000.0)
 
-            fill_opacity = item.get_attribute("fill_opacity")
-            f.write(POLYGON % fill_opacity)
+            fill_opacity = item.get_attribute("fill_opacity", default=0.1)
+            fill_color = item.get_attribute("fill_color", default="#ff0000")
+            f.write(POLYGON % (fill_color, fill_opacity))
 
         if len(self._marker_list) > 0:
 
