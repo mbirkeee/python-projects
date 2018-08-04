@@ -5,11 +5,11 @@ class Intersect(object):
         self.group1_data = {}
         self.group2_data = {}
 
-    def process(self, group1, group2):
+    def process(self, group1, group2, limit=None):
 
         temp_count = 0
         for group1_id, polygon_1 in group1.iteritems():
-            print "finding intersections for group1 id:", group1_id, polygon_1.get_area()
+            print "finding intersections for group1 id:", group1_id
             for group2_id, polygon_2 in group2.iteritems():
                 # print "    compare to group2 id:", group2_id, polygon_2.get_area()
                 # Do these polygons intersect?
@@ -34,8 +34,9 @@ class Intersect(object):
 
             temp_count += 1
 
-            # if temp_count == 10:
-            #    break
+            if limit and temp_count >= limit:
+                print "terminate early at limit", limit
+                break
 
         print "len(group1)", len(group1)
         print "len(group2)", len(group2)
@@ -61,4 +62,11 @@ class Intersect(object):
             for p in polygons:
                 result.append((p, group1_id))
         return result
+
+    def get_group1_ids(self):
+        return [id for id in self.group1_data.iterkeys()]
+
+    def get_group2_ids(self):
+        return [id for id in self.group2_data.iterkeys()]
+
 

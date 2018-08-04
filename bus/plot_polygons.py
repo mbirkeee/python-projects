@@ -1,11 +1,12 @@
 import pyproj
 import random
 import math
-import ogr
 
 from my_utils import PlotPolygons
-from my_utils import Polygon
-from my_utils import Point
+
+from geometry import Polygon
+from geometry import Point
+
 from my_utils import DaData
 from my_utils import DaHeatmap
 from stops import Stops
@@ -282,10 +283,150 @@ class Runner(object):
 
         plotter.plot("temp/maps/stop_buffers.html")
 
+    def plot_test_raster(self):
+        stop = Stops( "../data/sts/csv/2018_05_04/")
+        #stop.make_square_buffers(800)
+        stop.make_round_buffer(400)
+        group1 = {}
+        stop_id_list = stop.get_ids()
+        for stop_id in stop_id_list:
+            group1[stop_id] = stop.get_buffer(stop_id)
+
+        group2 = {}
+        das = DaData()
+        da_id_list = das.get_da_id_list()
+        for da_id in da_id_list:
+            group2[da_id] = das.get_polygon(da_id)
+
+        intersect = Intersect()
+
+        intersect.process(group2, group1, limit=2000)
+
+        stop_polygons = intersect.get_intersections_for_group1_id(47110144)
+        plotter = PlotPolygons()
+
+        for item in stop_polygons:
+            p = item[0]
+            p.add_attribute("fillOpacity", 0.1)
+            p.add_attribute("fillColor", "#ff0000")
+            plotter.add_polygon(p)
+
+        for item in stop_polygons:
+            p = item[0]
+            centroid = p.get_centroid()
+            da_id = item[1]
+            msg = "stop_%d" % da_id
+            plotter.add_marker(centroid, msg, "")
+
+        da_p = das.get_polygon(47110144)
+        print "da area", da_p.get_area()
+
+        raster_size = 100
+
+        raster_points = da_p.get_raster(raster_size)
+        raster_polygons = []
+        for point in raster_points:
+            # print "adding raster point", repr(point)
+            plotter.add_dot(point)
+
+            p = point.get_square_buffer(raster_size)
+            p.add_attribute("fillOpacity", 0.1)
+            p.add_attribute("fillColor", "#0000ff")
+            p.add_attribute("strokeWeight", 1)
+            p.add_attribute("strokeColor", "#202020")
+            p.add_attribute("strokeOpacity", 0.1)
+
+            plotter.add_polygon(p)
+            raster_polygons.append(p)
+
+        plotter.plot("temp/maps/test_raster_47110144.html")
+
+        # ===================================================================
+        # Loop through all the raster polygons and compute score
+        # This is the number of stop polygons it touches
+        result = []
+        max_score = 0
+
+        da_ids = intersect.get_group1_ids()
+
+        # Make a data dict for all DAs in the list
+        data = {}
+        for da_id in da_ids:
+            da_p = das.get_polygon(da_id)
+            raster_points = da_p.get_raster(raster_size)
+            raster_polygons = []
+            for point in raster_points:
+                p = point.get_square_buffer(raster_size)
+                raster_polygons.append(p)
+
+            stop_polygons = intersect.get_intersections_for_group1_id(da_id)
+
+            keep_rasters = []
+            for p in raster_polygons:
+                # Figure out which stop polygons intersect this raster polygon
+                score = 0
+                max_score_da = 0
+
+                for item in stop_polygons:
+                    stop_p = item[0]
+                    if p.intersects(stop_p):
+                        score += 1
+
+                # if score == 0: continue
+                try:
+                    score = math.log10(score)
+                except:
+                    score = 0
+
+                if score > max_score_da:
+                    max_score_da = score
+
+                keep_rasters.append((p, score))
+
+            data[da_id] = {
+                'rasters' : keep_rasters,
+                'da_p' : da_p
+            }
+
+            if max_score_da > max_score:
+                max_score = max_score_da
+
+        # Now loop through DAs
+        plotter = PlotPolygons()
+
+        for k, v in data.iteritems():
+            rasters = v.get('rasters')
+            da_p = v.get('da_p')
+            # for item in rasters:
+            #     p = item[0]
+            #     score = item[1]
+            #     if score == 0: continue
+            # 
+            #     opacity = 0.8 * score / max_score
+            #
+            #     intersection = p.intersect(da_p)
+            #     for i_p in intersection:
+            #         i_p.add_attribute("fillOpacity", opacity)
+            #         i_p.add_attribute("fillColor", "#0000ff")
+            #         i_p.add_attribute("strokeWeight", 1)
+            #         i_p.add_attribute("strokeColor", "#202020")
+            #         i_p.add_attribute("strokeOpacity", 0.1)
+            #
+            #         plotter.add_polygon(i_p)
+
+            da_p.add_attribute("fillOpacity", 0.1)
+            da_p.add_attribute("fillColor", "#ff0000")
+            da_p.add_attribute("strokeWeight", 2)
+            plotter.add_polygon(da_p)
+
+        plotter.plot("temp/maps/test_raster_score.html")
+
+
+
     def plot_stop_da_intersections(self):
         stop = Stops( "../data/sts/csv/2018_05_04/")
-        # stop.make_square_buffers(800)
-        stop.make_round_buffer(400)
+        stop.make_square_buffers(800)
+        #stop.make_round_buffer(400)
         group1 = {}
         stop_id_list = stop.get_ids()
         for stop_id in stop_id_list:
@@ -332,7 +473,7 @@ class Runner(object):
             p = item[0]
             p.add_attribute("fillOpacity", 0.1)
             p.add_attribute("fillColor", "#ff0000")
-            p.add_attribute("strokeWeight", 1)
+            p.add_attribute("strokeWeight", 0)
             stop_id = item[1]
             msg = "stop_%d" % stop_id
             centroid = p.get_centroid()
@@ -355,7 +496,8 @@ if __name__ == "__main__":
 #    runner.plot_heatmap_change()
 #    runner.plot_stop_buffers()
 
-    runner.plot_stop_da_intersections()
+#    runner.plot_stop_da_intersections()
+    runner.plot_test_raster()
 
 
 #    runner.test_plot_da_pop_dens()

@@ -48,6 +48,21 @@ for (var point in circle) {
 }
 """
 
+CIRCLE_RED_5 = """
+for (var point in circle) {
+  var circ = new google.maps.Circle({
+    strokeColor: '#FF0000',
+    strokeOpacity: 0.25,
+    strokeWeight: 1,
+    fillColor: '#FF0000',
+    fillOpacity: 0.5,
+    map: map,
+    center: circle[point].center,
+    radius: 5,
+  });
+}
+"""
+
 MARKER = """
 for (var point in marker) {
   var mark = new google.maps.Marker({
@@ -119,8 +134,8 @@ for (var point in circle2) {
 POLYGON = """
 var my_polygon = new google.maps.Polygon({
   paths: polypoints,
-  strokeColor: '#202020',
-  strokeOpacity: 0.8,
+  strokeColor: '%s',
+  strokeOpacity: %f,
   strokeWeight: %d,
   fillColor: '%s',
   fillOpacity: %f

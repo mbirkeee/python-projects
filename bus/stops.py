@@ -1,10 +1,8 @@
 import os
 import math
 
-from my_utils import Point
-from my_utils import Polygon
-
-
+from geometry import Point
+from geometry import Polygon
 
 class Stops(object):
 
