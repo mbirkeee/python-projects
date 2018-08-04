@@ -121,7 +121,7 @@ var my_polygon = new google.maps.Polygon({
   paths: polypoints,
   strokeColor: '#202020',
   strokeOpacity: 0.8,
-  strokeWeight: 1,
+  strokeWeight: %d,
   fillColor: '%s',
   fillOpacity: %f
 });

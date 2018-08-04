@@ -115,6 +115,27 @@ class Runner(object):
 
         plotter.plot("temp/maps/test_random_intersect.html")
 
+    def test_plot_random2(self):
+        """
+        Test intersection by plotting random stars
+        """
+        plotter = PlotPolygons()
+
+        poly = []
+        for i in xrange(4):
+            # p = self.make_test_polygon()
+            p = self.make_test_poly_2()
+            plotter.add_polygon(p)
+            poly.append(p)
+
+        # intersection = poly[0].intersect(poly[1])
+
+        # for p in intersection:
+        #     p.add_attribute("fill_opacity", 1.0)
+        #     plotter.add_polygon(p)
+
+        plotter.plot("temp/maps/test_random_2.html")
+
     def test_plot_das(self):
 
         das = DaData()
@@ -246,14 +267,15 @@ class Runner(object):
     def plot_stop_buffers(self):
 
         stop = Stops( "../data/sts/csv/2018_05_04/")
-        stop.make_square_buffers(800)
+        # stop.make_square_buffers(800)
+        stop.make_round_buffer(400)
 
         plotter = PlotPolygons()
 
         stop_ids = stop.get_ids()
         for stop_id in stop_ids:
             p = stop.get_buffer(stop_id)
-            p.add_attribute("fill_opacity", 0.1)
+            p.add_attribute("fill_opacity", 0.05)
             p.add_attribute("fill_color", "#ff0000")
 
             plotter.add_polygon(p)
@@ -280,22 +302,52 @@ class Runner(object):
         intersect.process(group1, group2)
 
         polygons = intersect.get_intersections_for_group1_id(10004)
-
         plotter = PlotPolygons()
 
-        for p in polygons:
-            p.add_attribute("fill_opacity", 0.1)
-            p.add_attribute("fill_color", "#ff0000")
-
+        for item in polygons:
+            p = item[0]
+            p.add_attribute("fillOpacity", 0.1)
+            p.add_attribute("fillColor", "#ff0000")
             plotter.add_polygon(p)
+
+        for item in polygons:
+            p = item[0]
+            centroid = p.get_centroid()
+            da_id = item[1]
+            msg = "da_%d" % da_id
+            plotter.add_marker(centroid, msg, "")
 
         plotter.plot("temp/maps/stop_da_intersect_3004.html")
 
+        polygons = intersect.get_intersections_for_group2_id(47110114)
+        plotter = PlotPolygons()
+
+        for item in polygons:
+            p = item[0]
+            p.add_attribute("fillOpacity", 0.1)
+            p.add_attribute("fillColor", "#ff0000")
+            plotter.add_polygon(p)
+
+        for item in polygons:
+            p = item[0]
+            p.add_attribute("fillOpacity", 0.1)
+            p.add_attribute("fillColor", "#ff0000")
+            p.add_attribute("strokeWeight", 1)
+            stop_id = item[1]
+            msg = "stop_%d" % stop_id
+            centroid = p.get_centroid()
+            plotter.add_marker(centroid, msg, "")
+
+        plotter.plot("temp/maps/da_stop_intersect_47110114.html")
+
+
+
 if __name__ == "__main__":
+
 
     runner = Runner()
 #    runner.test_plot_random()
-
+#    runner.test_plot_random2()
 #    runner.test_plot_das()
 #    runner.test_plot_heatmap('da_score_june.csv', 'heatmap_june.html')
 #    runner.test_plot_heatmap('da_score_july.csv', 'heatmap_july.html')

@@ -676,6 +676,7 @@ class Polygon(object):
         self._points = []
         self._attributes = {}
         self._area = None
+        self._centroid = None
         self._org_poly = None
         self._depth_count = 0
         self._temp_intersect = []
@@ -731,6 +732,8 @@ class Polygon(object):
 
         return self._org_poly
 
+
+
     def intersect(self, polygon):
 
         org_poly_1 = self.get_org_poly()
@@ -738,6 +741,8 @@ class Polygon(object):
 
         intersection = org_poly_1.Intersection(org_poly_2)
 
+        print dir(org_poly_1)
+        raise ValueError("temp stop")
         # print "==================================="
 
         self._depth_count = 0
@@ -752,6 +757,21 @@ class Polygon(object):
         # print "-----------------------------------"
         #return intersection
         return self._temp_intersect
+
+    def get_centroid(self):
+
+        if self._centroid is None:
+            org_poly = self.get_org_poly()
+            org_point = org_poly.Centroid()
+
+            point_count = org_point.GetPointCount()
+            if point_count != 1:
+                raise ValueError("unexpected point count: %d" % point_count)
+
+            pt = org_point.GetPoint(0)
+            self._centroid = Point(pt[0], pt[1])
+
+        return self._centroid
 
     def _process_intersection(self, intersection):
         """
@@ -849,9 +869,10 @@ class PlotPolygons(object):
 
             # fill_opacity = float(random.randint(0, 1000)/1000.0)
 
-            fill_opacity = item.get_attribute("fill_opacity", default=0.1)
-            fill_color = item.get_attribute("fill_color", default="#ff0000")
-            f.write(POLYGON % (fill_color, fill_opacity))
+            fill_opacity = item.get_attribute("fillOpacity", default=0.1)
+            fill_color = item.get_attribute("fillColor", default="#ff0000")
+            stroke_weight = item.get_attribute("strokeWeight", default=1)
+            f.write(POLYGON % (stroke_weight, fill_color, fill_opacity))
 
         if len(self._marker_list) > 0:
 
