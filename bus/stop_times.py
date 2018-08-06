@@ -7,7 +7,8 @@ import time
 # from my_utils import UserGPS
 # from my_utils import TransitData
 
-from stops import Stops
+from transit_routes import TransitRoutes
+from stops import TransitStops
 from route_id_names import ROUTE_IDS_05_04
 from route_id_names import ROUTE_IDS_06_21
 
@@ -49,85 +50,6 @@ def int_to_timestr(input):
     seconds = remain - minutes * 60
     return "%02d:%02d:%02d" % (hours, minutes, seconds)
 
-
-# class Stops(object):
-#
-#     def __init__(self, base_path):
-#
-#         self._base_path = base_path
-#         self._data = {}
-#         self.read_file()
-#
-#     def read_file(self):
-#         """
-#         0 stop_id,
-#         1 stop_code,
-#         2 stop_lat,
-#         3 stop_lon,
-#         4 location_type,
-#         5 wheelchair_boarding,
-#         6 name
-#         """
-#
-#         file_name = os.path.join(self._base_path, "my-TransitStops.csv")
-#
-#         result = {}
-#         line_count = 0
-#         f = None
-#
-#         try:
-#             f = open(file_name, 'r')
-#
-#             for line in f:
-#                 line_count += 1
-#                 if line_count == 1: continue
-#
-#                 try:
-#                     parts = line.split(",")
-#                     stop_code = int(parts[1].strip())
-#                     name = parts[6].strip()
-#                     lat = float(parts[2].strip())
-#                     lng = float(parts[3].strip())
-#
-#                     print stop_code, lat, lng, name
-#
-#                     stop_data = {
-#                         'point' : Point(lat, lng),
-#                         'name'  : name
-#                     }
-#
-#                     result[stop_code] = stop_data
-#
-#                 except Exception as err:
-#                     print "Exception processing line: %s" % repr(err)
-#                     print "line: %s" % line
-#
-#
-#         finally:
-#             if f: f.close()
-#
-#         self._data = result
-#
-#     def get_name(self, stop_id):
-#         # print "Getting STOP name for stop id", stop_id
-#
-#         stop_data = self._data.get(stop_id)
-#         if stop_data is None:
-#             return None
-#
-#         return stop_data.get('name')
-#
-#     def get_point(self, stop_id):
-#
-#         stop_data = self._data.get(stop_id)
-#         if stop_data is None:
-#             return None
-#
-#         return stop_data.get('point')
-#
-#     def get_ids(self):
-#         result = [stop_id for stop_id in self._data.iterkeys()]
-#         return result
 
 class TransitShapes(object):
 
@@ -201,124 +123,6 @@ class TransitShapes(object):
         finally:
             if f:
                 f.close()
-
-class TransitRoutes(object):
-
-    def __init__(self, base_path):
-
-        if base_path.find("2018_05_04") > 0:
-            print "this is the JUNE data"
-            self._include_route_dict = ROUTE_IDS_05_04
-        else:
-            print "this is the JULY data"
-            self._include_route_dict = ROUTE_IDS_06_21
-
-        self._base_path = base_path
-        self._data = {}
-        self._deprecated = {}
-        self.read_file()
-
-    def read_file(self):
-        """
-        0 route_id,
-        1 route_type,
-        2 route_color,
-        3 text_color,
-        4 name_short,
-        5 name_long
-        """
-        file_name = os.path.join(self._base_path, "my-TransitRoutes.csv")
-
-        line_count = 0
-        f = None
-
-        try:
-            f = open(file_name, 'r')
-
-            for line in f:
-                line_count += 1
-                if line_count == 1: continue
-
-                line = line.strip()
-                parts = line.split(",")
-
-                route_id = int(parts[0].strip())
-                short_name = parts[4].strip()
-                long_name = parts[5].strip()
-
-                # I am not sure what the route type is
-                route_type = int(parts[1].strip())
-
-                if route_type != 3:
-                    raise ValueError("route type not 3")
-
-                print "read route ID", route_id
-
-                if not self._include_route_dict.has_key(route_id):
-                    print "SKIPPING ROUTE", route_id
-                    self._deprecated[route_id] = (short_name, long_name)
-                    continue
-
-
-                if self._data.has_key(route_id):
-                    raise ValueError("THIS IS A DUP!!!")
-
-                self._data[route_id] = (short_name, long_name)
-
-            print "number of routes:", len(self._data)
-            print "%s: read %d lines" % (file_name, line_count)
-
-        finally:
-            if f:
-                print "closing file"
-                f.close()
-
-        # ----- TEST -----
-        route_id_list = self.get_route_ids()
-        s = []
-        for route_id in route_id_list:
-            name = self.get_route_name_from_id(route_id)
-            s.append((name, route_id))
-
-        s = sorted(s)
-        for i, item in enumerate(s):
-            print "%d ID: %s NAME: %s" % (i+1, item[1], item[0])
-        # ---- END TEST -----
-
-
-    def get_route_ids(self):
-        result = [k for k in self._data.iterkeys()]
-        return result
-
-    # def get_primary_route_id(self, route_id):
-    #     primary_id = self._duplicates.get(route_id)
-    #     return primary_id
-    #
-    # def find_duplicate_route(self, short_name, long_name):
-    #
-    #     duplicate_route_id = None
-    #     for route_id, data in self._data.iteritems():
-    #         # print "compare %s %s to %s" % (short_name, long_name, data)
-    #         if short_name == data[0] and long_name == data[1]:
-    #             duplicate_route_id = route_id
-    #             break
-    #
-    #     # if duplicate_route_id is not None:
-    #     #     print "Found the match!!!"
-    #
-    #     return duplicate_route_id
-
-    def get_route_name_from_id(self, route_id):
-        data = self._data.get(route_id)
-        if data is None:
-            return "Unknown: %s" % repr(route_id)
-        return data[1]
-
-    def get_route_number_from_id(self, route_id):
-        data = self._data.get(route_id)
-        if data is None:
-            return "Unknown: %s" % repr(route_id)
-        return data[0]
 
 class TransitTrips(object):
 
@@ -471,7 +275,7 @@ class StopTimes(object):
 
         if stops is None:
             print "Instantiate new Stops class"
-            self.stops = Stops(base_path)
+            self.stops = TransitStops(base_path)
         else:
             # Stops already allocated
             print "Use existing Stops class"

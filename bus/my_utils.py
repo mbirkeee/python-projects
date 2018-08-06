@@ -10,24 +10,42 @@ from geometry import Point
 from map_html import TOP as MAP_TOP
 from map_html import BOTTOM as MAP_BOTTOM
 from map_html import POLYGON
+from map_html import POLYLINE
 from map_html import MARKER
 from map_html import CIRCLE_RED_20
 from map_html import CIRCLE_RED_5
 
 PROJ = pyproj.Proj("+init=EPSG:32613")
 
-def get_point_dist(point1, point2):
-    if point1 is None or point2 is None: return 0.0
 
-    x1 = point1.get_x()
-    y1 = point1.get_y()
+def is_brt(base):
+    if base.find('BRT'):
+        return True
+    return False
 
-    x2 = point2.get_x()
-    y2 = point2.get_y()
+def base_path_from_date(date):
+    if date.find('jul') >= 0:
+        base = "../data/sts/csv/2018_08_05/"
+    elif date.find('jun') >= 0:
+        base = "../data/sts/csv/2018_05_04/"
+    else:
+        base = "../data/sts/cvs/BRT/"
 
-    if x1 is None or x2 is None: return 0.0
+    return base
 
-    return math.sqrt(math.pow((x1 - x2), 2) + math.pow((y1 - y2),2))
+# Should be obsolete, points have distance method
+# def get_point_dist(point1, point2):
+#     if point1 is None or point2 is None: return 0.0
+#
+#     x1 = point1.get_x()
+#     y1 = point1.get_y()
+#
+#     x2 = point2.get_x()
+#     y2 = point2.get_y()
+#
+#     if x1 is None or x2 is None: return 0.0
+#
+#     return math.sqrt(math.pow((x1 - x2), 2) + math.pow((y1 - y2),2))
 
 def get_dist(point1, point2):
 
@@ -780,23 +798,23 @@ class UserGPS(object):
         return self._min_time
 
 
-
-
-
-class PlotPolygons(object):
+class Plotter(object):
 
     def __init__(self):
-        print "polygon plotter instantiated"
 
         self._polygon_list = []
         self._marker_list = []
         self._dot_list = []
+        self._polyline_list = []
 
     def add_dot(self, point):
         self._dot_list.append(point)
 
     def add_marker(self, point, title, label):
         self._marker_list.append((point, title, label))
+
+    def add_polyline(self, polyline):
+        self._polyline_list.append(polyline)
 
     def add_polygon(self, items):
 
@@ -815,23 +833,32 @@ class PlotPolygons(object):
         f = open(file_name, "w")
         f.write(MAP_TOP)
 
-        for item in self._polygon_list:
-            f.write("var polypoints = [\n")
-            points = item.get_points()
+        if len(self._polyline_list):
+            for item in self._polyline_list:
+                f.write("var polyline = [\n")
+                for point in item:
+                    f.write("{lat: %f, lng: %f},\n" % point.get_lat_lng())
+                f.write("];\n")
+                f.write(POLYLINE)
 
-            for point in points:
-                f.write("{lat: %f, lng: %f},\n" % point.get_lat_lng())
-            f.write("];\n")
+        if len(self._polygon_list):
+            for item in self._polygon_list:
+                f.write("var polypoints = [\n")
+                points = item.get_points()
 
-            # fill_opacity = float(random.randint(0, 1000)/1000.0)
+                for point in points:
+                    f.write("{lat: %f, lng: %f},\n" % point.get_lat_lng())
+                f.write("];\n")
 
-            stroke_color = item.get_attribute("strokeColor", default="#202020")
-            stroke_opacity = item.get_attribute("strokeOpacity", default=0.5)
-            stroke_weight = item.get_attribute("strokeWeight", default=1)
-            fill_color = item.get_attribute("fillColor", default="#ff0000")
-            fill_opacity = item.get_attribute("fillOpacity", default=0.1)
+                # fill_opacity = float(random.randint(0, 1000)/1000.0)
 
-            f.write(POLYGON % (stroke_color, stroke_opacity, stroke_weight, fill_color, fill_opacity))
+                stroke_color = item.get_attribute("strokeColor", default="#202020")
+                stroke_opacity = item.get_attribute("strokeOpacity", default=0.5)
+                stroke_weight = item.get_attribute("strokeWeight", default=1)
+                fill_color = item.get_attribute("fillColor", default="#ff0000")
+                fill_opacity = item.get_attribute("fillOpacity", default=0.1)
+
+                f.write(POLYGON % (stroke_color, stroke_opacity, stroke_weight, fill_color, fill_opacity))
 
         if len(self._marker_list) > 0:
 
@@ -862,6 +889,8 @@ class PlotPolygons(object):
 
             f.write("};\n")
             f.write(CIRCLE_RED_5)
+
+
 
         f.write(MAP_BOTTOM)
         f.close()

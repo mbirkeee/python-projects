@@ -31,7 +31,7 @@ TOP = """
           center: {lat: 52.125, lng: -106.65},
           mapTypeId: 'terrain'
         });
-
+/*
       google.maps.event.addListener(map, 'mousemove', function (event) {
               displayCoordinates(event.latLng);
           });
@@ -43,6 +43,7 @@ TOP = """
           lng = lng.toFixed(6);
           console.log("Latitude: " + lat + "  Longitude: " + lng);
       }
+*/
 """
 
 CIRCLE_RED_20 = """
@@ -222,7 +223,6 @@ ROUTE_MIDDLE = """
 """
 
 POLYLINE = """
-
         var flightPath = new google.maps.Polyline({
           path: polyline,
           geodesic: true,
@@ -230,7 +230,6 @@ POLYLINE = """
           strokeOpacity: 1.0,
           strokeWeight: 2
         });
-
         flightPath.setMap(map);
 """
 

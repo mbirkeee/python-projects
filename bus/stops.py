@@ -5,7 +5,7 @@ from my_utils import Weight
 from geometry import Point
 from geometry import Polygon
 
-class Stops(object):
+class TransitStops(object):
 
     def __init__(self, base_path):
 

@@ -2,7 +2,7 @@ import pyproj
 import random
 import math
 
-from my_utils import PlotPolygons
+from my_utils import Plotter
 
 from geometry import Polygon
 from geometry import Point
@@ -10,7 +10,7 @@ from geometry import Point
 from my_utils import DaData
 from my_utils import DaHeatmap
 from my_utils import Weight
-from stops import Stops
+from stops import TransitStops
 from intersect import Intersect
 from score import Score
 
@@ -102,7 +102,7 @@ class Runner(object):
         """
         Test intersection by plotting random stars
         """
-        plotter = PlotPolygons()
+        plotter = Plotter()
 
         poly = []
         for i in xrange(2):
@@ -123,7 +123,7 @@ class Runner(object):
         """
         Test intersection by plotting random stars
         """
-        plotter = PlotPolygons()
+        plotter = Plotter()
 
         poly = []
         for i in xrange(4):
@@ -144,7 +144,7 @@ class Runner(object):
 
         das = DaData()
 
-        plotter = PlotPolygons()
+        plotter = Plotter()
 
         da_id_list = das.get_da_id_list()
 
@@ -177,7 +177,7 @@ class Runner(object):
     def test_plot_da_pop_dens(self):
 
         das = DaData()
-        plotter = PlotPolygons()
+        plotter = Plotter()
 
         da_id_list = das.get_da_id_list()
 
@@ -222,7 +222,7 @@ class Runner(object):
     def test_plot_heatmap(self, file_name_in, file_name_out):
 
         das = DaData()
-        plotter = PlotPolygons()
+        plotter = Plotter()
         heatmap = DaHeatmap()
         heatmap.load_file("temp/%s" % file_name_in)
 
@@ -239,7 +239,7 @@ class Runner(object):
 
     def plot_heatmap_change(self):
         das = DaData()
-        plotter = PlotPolygons()
+        plotter = Plotter()
 
         heatmap_june = DaHeatmap()
         heatmap_july = DaHeatmap()
@@ -280,11 +280,11 @@ class Runner(object):
 
     def plot_stop_buffers(self):
 
-        stop = Stops( "../data/sts/csv/2018_05_04/")
+        stop = TransitStops( "../data/sts/csv/2018_05_04/")
         # stop.make_square_buffers(800)
         stop.make_round_buffer(400)
 
-        plotter = PlotPolygons()
+        plotter = Plotter()
 
         stop_ids = stop.get_ids()
         for stop_id in stop_ids:
@@ -318,7 +318,7 @@ class Runner(object):
         # base_path = "../data/sts/csv/2018_06_21/"
         base_path = "../data/sts/csv/2018_08_05/"
 
-        stop = Stops(base_path)
+        stop = TransitStops(base_path)
 
         xx = stop.get_name(3432)
         print xx
@@ -334,7 +334,7 @@ class Runner(object):
         stop_polygons = intersect.get_intersections(group=1, id=da_id_list[0])
 
         # -------------------------------------------------------------------------------------
-        plotter = PlotPolygons()
+        plotter = Plotter()
         for item in stop_polygons:
             p = item[0]
             p.add_attribute("fillOpacity", 0.1)
@@ -424,7 +424,7 @@ class Runner(object):
             }
 
         # Now loop through DAs
-        plotter = PlotPolygons()
+        plotter = Plotter()
 
         score_list = sorted(score_list)
         score_list.reverse()
@@ -473,7 +473,7 @@ class Runner(object):
         plotter.plot("temp/maps/test_raster_score.html")
 
         # Now loop through DAs
-        plotter = PlotPolygons()
+        plotter = Plotter()
 
         for k, v in data.iteritems():
             da_p = v.get('da_p')
@@ -518,7 +518,7 @@ class Runner(object):
         f.close()
 
     def plot_stop_da_intersections(self):
-        stop = Stops( "../data/sts/csv/2018_05_04/")
+        stop = TransitStops( "../data/sts/csv/2018_05_04/")
         stop.make_square_buffers(800)
         #stop.make_round_buffer(400)
         group1 = {}
@@ -537,7 +537,7 @@ class Runner(object):
         intersect.process(group1, group2)
 
         polygons = intersect.get_intersections_for_group1_id(10004)
-        plotter = PlotPolygons()
+        plotter = Plotter()
 
         for item in polygons:
             p = item[0]
@@ -555,7 +555,7 @@ class Runner(object):
         plotter.plot("temp/maps/stop_da_intersect_3004.html")
 
         polygons = intersect.get_intersections_for_group2_id(47110114)
-        plotter = PlotPolygons()
+        plotter = Plotter()
 
         for item in polygons:
             p = item[0]

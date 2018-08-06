@@ -2,7 +2,7 @@ import pyproj
 import random
 import numpy as np
 
-from my_utils import PlotPolygons
+from my_utils import Plotter
 from my_utils import Polygon
 from my_utils import Point
 from my_utils import DaData

@@ -3,7 +3,7 @@ import math
 
 from my_utils import DaData
 from my_utils import get_point_dist
-from stops import Stops
+from stops import TransitStops
 from stop_times import StopTimes
 from stop_times import SERVICE
 from stop_times import KEY
@@ -87,7 +87,7 @@ class Runner2(object):
 
     def run(self):
 
-        stop_mgr = Stops(self._base_path)
+        stop_mgr = TransitStops(self._base_path)
 
         stop_ids = stop_mgr.get_ids()
         for stop_id in stop_ids:

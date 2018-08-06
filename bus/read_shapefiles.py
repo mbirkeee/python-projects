@@ -3,15 +3,15 @@ import pyproj
 import csv
 import StringIO
 
-from my_utils import DaCentriods
-
-
 from map_html import TOP as MAP_TOP
 from map_html import BOTTOM as MAP_BOTTOM
 from map_html import POLYGON, POLYLINE
 
 from map_html import CIRCLE1, CIRCLE2
 from map_html import CIRCLE_RED_20, CIRCLE_RED_50
+
+from my_utils import Plotter
+from geometry import Point
 
 import settings
 
@@ -134,7 +134,8 @@ class Runner(object):
 
         temp_dict = {}
 
-        f = open("%s/test.out" % self._shape_base, 'rb')
+        # f = open("%s/test.out" % self._shape_base, 'rb')
+        f = open("%s/direction_stops.dbf" % self._shape_base, 'rb')
         for line in f:
             # print line
             line_count += 1
@@ -269,7 +270,7 @@ class Runner(object):
             #self.plot_brt_route(name, direction, shape.points)
 
         for key, value in self._route_dict.iteritems():
-            print value.get('name')
+            print "this is the name...", value.get('name')
 
        # for key, value in self._route_id_dict.iteritems():
        #     print "KEY: %s VALUE: %s" % (key, value)
@@ -282,6 +283,23 @@ class Runner(object):
             points = value.get('points')
             stops = value.get('stops')
             self.plot_brt_route(name, direction, points, stops)
+
+
+    def plot_brt_all(self):
+
+        plotter = Plotter()
+
+        for k, v in self._route_dict.iteritems():
+            points = v.get('points')
+            print repr(points)
+            polyline = []
+
+            for point in points:
+                polyline.append(Point(point[1], point[0]))
+
+            plotter.add_polyline(polyline)
+
+        plotter.plot("temp/maps/test_brt_all.html")
 
     def plot_brt_route(self, name, direction, points, stop_ids):
 
@@ -316,7 +334,7 @@ class Runner(object):
 
 
         for stop_id in stop_ids:
-            print "Adding stop", stop_id
+            # print "Adding stop", stop_id
             lat, lon = self.get_stop_lat_lon(stop_id)
             f.write("%d: {center:{lat: %f, lng: %f},},\n" % (i, lat, lon))
             i += 1
@@ -435,7 +453,7 @@ class Runner(object):
 
         return data.get('name')
 
-    def read_stops_new(self):
+    def read_stops(self):
 
         line_dict = {}
 
@@ -625,14 +643,15 @@ if __name__ == "__main__":
 
     """
     runner = Runner()
-    runner.read_statscan_da_shapefile()
+#    runner.read_statscan_da_shapefile()
 
-#    runner.read_stops()
-#    runner.read_directions()
-#    runner.read_stops_new()
-#    runner.read_direction_stops()
+    runner.read_stops()
+    runner.read_directions()
+    # runner.read_stops_new()
+    runner.read_direction_stops()
 
 #    runner.plot_brt_routes()
+    runner.plot_brt_all()
 
     # runner.read_test()
 
