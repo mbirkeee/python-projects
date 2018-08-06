@@ -15,97 +15,97 @@ excluded as well
 
 ROUTE_IDS_06_21 = {
 #    10089 : "8th Street / City Centre",
-    10164 : "8th Street / City Centre",
+    10164 : "8th Street / City Centre",             # Route 8
 #    10120 : "Aden Bowman",
-    10160 : "Airport / City Centre",
-    10201 : "Arbor Creek / City Centre",
+    10160 : "Airport / City Centre",                # Route 11
+    10201 : "Arbor Creek / City Centre",            # Route 45
 #    10115 : "Bedford Feehan & Royal",
 #    10124 : "Bishop Murray",
 #    10154 : "Briarwood / Centre Mall",
-    10229 : "Briarwood / Centre Mall",
+    10229 : "Briarwood / Centre Mall",              # Route 84
 #    10087 : "Broadway / Market Mall",
-    10162 : "Broadway / Market Mall",
+    10162 : "Broadway / Market Mall",               # Route 6
 #    10153 : "Centre Mall / Stonebridge",
-    10228 : "Centre Mall / Stonebridge",
-    10233 : "City Centre",
+    10228 : "Centre Mall / Stonebridge",            # Route 83
+    10233 : "City Centre",                          # Route 4
 #    10147 : "City Centre / Blairmore",
 #    10102 : "City Centre / Centre Mall",
-    10177 : "City Centre / Centre Mall",
+    10177 : "City Centre / Centre Mall",            # Route 19
 #    10098 : "City Centre / Civic Op Centre",
-    10173 : "City Centre / Civic Op Centre",
+    10173 : "City Centre / Civic Op Centre",        # Route 15
 #    10146 : "City Centre / Confederation",
 #    10082 : "City Centre / Exhibition",
-    10157 : "City Centre / Exhibition",
+    10157 : "City Centre / Exhibition",             # Route 1
 #    10149 : "City Centre / Hampton Village",
 #    10084 : "City Centre / Hudson Bay Park",
-    10159 : "City Centre / Hudson Bay Park",
+    10159 : "City Centre / Hudson Bay Park",        # Route 3
 #    10150 : "City Centre / Kensington",
 #    10148 : "City Centre / Montgomery",
 #    10086 : "City Centre/ McCormack",
-    10161 : "City Centre/ McCormack",
+    10161 : "City Centre/ McCormack",               # Route 5
 #    10100 : "College Park / University",
-    10175 : "College Park / University",
-    10180 : "Confederation / City Centre",
+    10175 : "College Park / University",            # Route 18
+    10180 : "Confederation / City Centre",          # Route 22
 #    10121 : "Cross & Murray",
 #    10113 : "Cross Murray & Bowman",
 #    10151 : "Cumberland / Centre Mall",
-    10226 : "Cumberland / Centre Mall",
+    10226 : "Cumberland / Centre Mall",             # Route 81
 #    10088 : "Dundonald / City Centre",
-    10163 : "Dundonald / City Centre",
+    10163 : "Dundonald / City Centre",              # Route 7
 #    10125 : "Evergreen / City Centre",
-    10232 : "Evergreen / City Centre",
+    10232 : "Evergreen / City Centre",              # Route 43
     10313 : "Field House / City Centre",
     10314 : "Field House / City Centre",
-    10234 : "Forest Grove / University",
+    10234 : "Forest Grove / University",            # Route 26
 #    10118 : "Holy Cross",
 #    10126 : "Kenderdine / City Centre",
 #    10101 : "Kenderdine DT Express",
 #    10140 : "Lakeridge/ University",
-    10215 : "Lakeridge/ University",
+    10215 : "Lakeridge/ University",                # Route 55
 #    10127 : "Lakeview / University",
-    10202 : "Lakeview / University",
+    10202 : "Lakeview / University",                # Route 50
 #    10096 : "Lawson Heights / Broadway",
-    10171 : "Lawson Heights / Broadway",
+    10171 : "Lawson Heights / Broadway",            # Route 13
 #    10108 : "Lawson Heights / City Centre",
-    10183 : "Lawson Heights / City Centre",
+    10183 : "Lawson Heights / City Centre",         # Route 30
 #    10152 : "Main Street / Centre Mall",
-    10227 : "Main Street / Centre Mall",
+    10227 : "Main Street / Centre Mall",            # Route 82
 #    10083 : "Meadowgreen / City Centre",
 #    10091 : "Meadowgreen / City Centre",
-    10158 : "Meadowgreen / City Centre",
-    10166 : "Meadowgreen / City Centre",
+    10158 : "Meadowgreen / City Centre",            # Route 2
+    10166 : "Meadowgreen / City Centre",            # Route 10
 #    10097 : "North Industrial / City Centre",
-    10172 : "North Industrial / City Centre",
+    10172 : "North Industrial / City Centre",       # Route 14
 #    10117 : "Oskayak & Nutana",
 #    10095 : "River Heights / Airport",
-    10170 : "River Heights / City Centre",
+    10170 : "River Heights / City Centre",          # Route 12
 #    10090 : "Riversdale / City Centre",
-    10165 : "Riversdale / City Centre",
+    10165 : "Riversdale / City Centre",             # Route 9
 #    10155 : "Rosewood / Centre Mall",
-    10230 : "Rosewood / Centre Mall",
+    10230 : "Rosewood / Centre Mall",               # Route 86
 #    10106 : "Sasktel  Centre",
-    10181 : "Sasktel  Centre",
+    10181 : "Sasktel  Centre",                      # Route 25
 #    10134 : "Sasktel Centre / North Ind",
     10209 : "Sasktel Centre / North Ind",
-    10235 : "Silverspring / University",
+    10235 : "Silverspring / University",            # Route 27
 #    10122 : "Silverwood / City Centre",
-    10197 : "Silverwood / City Centre",
+    10197 : "Silverwood / City Centre",             # Route 35
 #    10103 : "South Industrial / City Centre",
-    10178 : "South Industrial / City Centre",
+    10178 : "South Industrial / City Centre",       # Route 20
 #    10123 : "St Joseph",
 #    10099 : "Stonebridge / University",
-    10174 : "Stonebridge / University",
+    10174 : "Stonebridge / University",             # Route 17
 #    10104 : "University",
-    10179 : "University",
+    10179 : "University",                           # Route 21
 #    10105 : "University / Confederation",
-    10221 : "University / Confederation",
-    10224 : "University / Hampton Village",
-    10225 : "University / Kensington",
-    10223 : "University / Montgomery",
+    10221 : "University / Confederation",           # Route 60
+    10224 : "University / Hampton Village",         # Route 63
+    10225 : "University / Kensington",              # Route 65
+    10223 : "University / Montgomery",              # Route 62
 #    10092 : "University Direct 1",
 #    10093 : "University Direct 2",
-    10222 : "University/ Blairmore",
-    10236 : "Willowgrove / City Centre",
+    10222 : "University/ Blairmore",                # Route 61
+    10236 : "Willowgrove / City Centre",            # Route 44
 #    10094 : "Willowgrove DT Express",
 #    10085 : "Willowgrove Sq / Mayfair",
 #    10107 : "Willowgrove Sq/Silverspring",

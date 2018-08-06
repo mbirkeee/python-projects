@@ -9,10 +9,13 @@ from geometry import Point
 
 from my_utils import DaData
 from my_utils import DaHeatmap
+from my_utils import Weight
 from stops import Stops
 from intersect import Intersect
+from score import Score
 
 PROJ = pyproj.Proj("+init=EPSG:32613")
+DECAY = Weight()
 
 print "import finished"
 
@@ -140,23 +143,34 @@ class Runner(object):
     def test_plot_das(self):
 
         das = DaData()
+
         plotter = PlotPolygons()
 
         da_id_list = das.get_da_id_list()
 
         for da_id in da_id_list:
-            print da_id
             polygon = das.get_polygon(da_id)
             polygon.add_attribute("fill_opacity", 0.1)
-
             plotter.add_polygon(polygon)
 
             pop = das.get_population(da_id)
             centroid = das.get_centroid(da_id)
-            print pop, centroid
-
             plotter.add_marker(centroid, "%d" % da_id, "%d" % pop)
 
+        clipping = das.get_clipping_polygons()
+
+        for p in clipping:
+            p.add_attribute("fillColor", "#0000ff")
+            p.add_attribute("fillOpacity", 0.1)
+            plotter.add_polygon(p)
+
+        clipped = das.get_clipped_polygons()
+
+        for p in clipped:
+            p.add_attribute("fillColor", "#00ff00")
+            p.add_attribute("fillOpacity", 0.5)
+            plotter.add_polygon(p)
+            print "clipped area", p.get_area()
 
         plotter.plot("temp/maps/da_polygons_with_markers.html")
 
@@ -172,10 +186,10 @@ class Runner(object):
         total_pop = 0
         for da_id in da_id_list:
             polygon = das.get_polygon(da_id)
-
+            area = das.get_area(da_id)
             pop = das.get_population(da_id)
+
             total_pop += pop
-            area = polygon.get_area()
             total_area += area
             pop_density = 1000 * 1000 * pop / area
             if pop_density > max_pop_density:
@@ -183,9 +197,8 @@ class Runner(object):
 
         for da_id in da_id_list:
             polygon = das.get_polygon(da_id)
-
+            area = das.get_area(da_id)
             pop = das.get_population(da_id)
-            area = polygon.get_area()
             pop_density = 1000 * 1000 * pop / area
             opacity = pop_density / max_pop_density
             print da_id, pop, area, "density", pop_density
@@ -284,27 +297,44 @@ class Runner(object):
         plotter.plot("temp/maps/stop_buffers.html")
 
     def plot_test_raster(self):
-        stop = Stops( "../data/sts/csv/2018_05_04/")
-        #stop.make_square_buffers(800)
-        stop.make_round_buffer(400)
-        group1 = {}
-        stop_id_list = stop.get_ids()
-        for stop_id in stop_id_list:
-            group1[stop_id] = stop.get_buffer(stop_id)
 
-        group2 = {}
         das = DaData()
-        da_id_list = das.get_da_id_list()
-        for da_id in da_id_list:
-            group2[da_id] = das.get_polygon(da_id)
 
-        intersect = Intersect()
+        if True:
+            group1 = das.get_polygons()
+            da_id_list = das.get_da_id_list()
+        else:
+            da_id_list = [
+                47110049,
+                47110045,
+                47110046,
+            ]
 
-        intersect.process(group2, group1, limit=2000)
+            group1 = {}
+            for da_id in da_id_list:
+                group1[da_id] = das.get_polygon(da_id)
 
-        stop_polygons = intersect.get_intersections_for_group1_id(47110144)
+        # base_path = "../data/sts/csv/2018_05_04/"
+        # base_path = "../data/sts/csv/2018_06_21/"
+        base_path = "../data/sts/csv/2018_08_05/"
+
+        stop = Stops(base_path)
+
+        xx = stop.get_name(3432)
+        print xx
+        # raise ValueError("temp stop")
+
+
+        # stop.make_square_buffers(600)
+        stop.make_round_buffer(400)
+        group2 = stop.get_buffer_polygons()
+
+        intersect = Intersect(group1, group2, limit=2000)
+        stop.compute_demand(intersect, das)
+        stop_polygons = intersect.get_intersections(group=1, id=da_id_list[0])
+
+        # -------------------------------------------------------------------------------------
         plotter = PlotPolygons()
-
         for item in stop_polygons:
             p = item[0]
             p.add_attribute("fillOpacity", 0.1)
@@ -318,9 +348,7 @@ class Runner(object):
             msg = "stop_%d" % da_id
             plotter.add_marker(centroid, msg, "")
 
-        da_p = das.get_polygon(47110144)
-        print "da area", da_p.get_area()
-
+        da_p = das.get_polygon(da_id_list[0])
         raster_size = 100
 
         raster_points = da_p.get_raster(raster_size)
@@ -339,13 +367,16 @@ class Runner(object):
             plotter.add_polygon(p)
             raster_polygons.append(p)
 
-        plotter.plot("temp/maps/test_raster_47110144.html")
+        plotter.plot("temp/maps/test_raster_%d.html" % da_id_list[0])
 
         # ===================================================================
         # Loop through all the raster polygons and compute score
         # This is the number of stop polygons it touches
-        result = []
-        max_score = 0
+
+        judge = Score(base_path, stops=stop)
+
+        score_list = []
+        log_score_list = []
 
         da_ids = intersect.get_group1_ids()
 
@@ -359,69 +390,132 @@ class Runner(object):
                 p = point.get_square_buffer(raster_size)
                 raster_polygons.append(p)
 
-            stop_polygons = intersect.get_intersections_for_group1_id(da_id)
+            stop_polygons = intersect.get_intersections(group=1, id=da_id)
 
+            print "Got %d stop polygons %d raster polygons for DA %d" % \
+                  (len(stop_polygons), len(raster_polygons), da_id)
             keep_rasters = []
+
             for p in raster_polygons:
                 # Figure out which stop polygons intersect this raster polygon
-                score = 0
-                max_score_da = 0
+                score = judge.get_score(p, stop_polygons)
 
-                for item in stop_polygons:
-                    stop_p = item[0]
-                    if p.intersects(stop_p):
-                        score += 1
+                if score == 0: continue
 
-                # if score == 0: continue
+                score_list.append(score)
+                # if score > 200:
+                #     print "CAPPING SCORE"
+                #     score = 200
+
+                # score += 1
                 try:
-                    score = math.log10(score)
+                    score_log = math.log10(score)
+                    score_log = math.sqrt(score)
                 except:
-                    score = 0
+                    score_log = 0
 
-                if score > max_score_da:
-                    max_score_da = score
+                log_score_list.append(score_log)
 
-                keep_rasters.append((p, score))
+                keep_rasters.append((p, score, score_log))
 
             data[da_id] = {
                 'rasters' : keep_rasters,
                 'da_p' : da_p
             }
 
-            if max_score_da > max_score:
-                max_score = max_score_da
+        # Now loop through DAs
+        plotter = PlotPolygons()
+
+        score_list = sorted(score_list)
+        score_list.reverse()
+
+        log_score_list = sorted(log_score_list)
+        log_score_list.reverse()
+
+        # This caps the top score
+        max_score = score_list[50]
+        max_score_log = log_score_list[10]
+
+        # These are the DAs
+        for k, v in data.iteritems():
+            da_p = v.get('da_p')
+            da_p.add_attribute("fillOpacity", 0)
+            da_p.add_attribute("fillColor", "#ffffff")
+            da_p.add_attribute("strokeWeight", 2)
+            plotter.add_polygon(da_p)
+
+        for k, v in data.iteritems():
+            rasters = v.get('rasters')
+            da_p = v.get('da_p')
+            for item in rasters:
+                p = item[0]
+                score = item[1]
+
+                if score == 0: continue
+
+                if score > max_score:
+                    color = "#ff0000"
+                    score = max_score
+                else:
+                    color = "#0000ff"
+
+                opacity = 0.9 * score / (max_score)
+
+                intersection = p.intersect(da_p)
+                for i_p in intersection:
+                    i_p.add_attribute("fillOpacity", opacity)
+                    i_p.add_attribute("fillColor", color)
+                    i_p.add_attribute("strokeWeight", 1)
+                    i_p.add_attribute("strokeColor", "#202020")
+                    i_p.add_attribute("strokeOpacity", 0.1)
+                    plotter.add_polygon(i_p)
+
+        plotter.plot("temp/maps/test_raster_score.html")
 
         # Now loop through DAs
         plotter = PlotPolygons()
 
         for k, v in data.iteritems():
-            rasters = v.get('rasters')
             da_p = v.get('da_p')
-            # for item in rasters:
-            #     p = item[0]
-            #     score = item[1]
-            #     if score == 0: continue
-            # 
-            #     opacity = 0.8 * score / max_score
-            #
-            #     intersection = p.intersect(da_p)
-            #     for i_p in intersection:
-            #         i_p.add_attribute("fillOpacity", opacity)
-            #         i_p.add_attribute("fillColor", "#0000ff")
-            #         i_p.add_attribute("strokeWeight", 1)
-            #         i_p.add_attribute("strokeColor", "#202020")
-            #         i_p.add_attribute("strokeOpacity", 0.1)
-            #
-            #         plotter.add_polygon(i_p)
-
-            da_p.add_attribute("fillOpacity", 0.1)
-            da_p.add_attribute("fillColor", "#ff0000")
+            da_p.add_attribute("fillOpacity", 0)
+            da_p.add_attribute("fillColor", "#ffffff")
             da_p.add_attribute("strokeWeight", 2)
             plotter.add_polygon(da_p)
 
-        plotter.plot("temp/maps/test_raster_score.html")
+        for k, v in data.iteritems():
+            rasters = v.get('rasters')
+            da_p = v.get('da_p')
+            for item in rasters:
+                p = item[0]
+                score = item[2]
 
+                if score == 0: continue
 
+                if score > max_score_log:
+                    color = "#ff0000"
+                    score = max_score_log
+                else:
+                    color = "#0000ff"
+
+                opacity = 0.9 * score / (max_score_log)
+
+                intersection = p.intersect(da_p)
+                for i_p in intersection:
+                    i_p.add_attribute("fillOpacity", opacity)
+                    i_p.add_attribute("fillColor", color)
+                    i_p.add_attribute("strokeWeight", 1)
+                    i_p.add_attribute("strokeColor", "#202020")
+                    i_p.add_attribute("strokeOpacity", 0.1)
+                    plotter.add_polygon(i_p)
+
+        plotter.plot("temp/maps/test_raster_score_log.html")
+
+        s = sorted(score_list)
+        s.reverse()
+        f = open("scores.txt", "w")
+        for i, score in enumerate(s):
+            f.write("%d - %f\n" % (i, score))
+        f.close()
 
     def plot_stop_da_intersections(self):
         stop = Stops( "../data/sts/csv/2018_05_04/")
@@ -489,7 +583,9 @@ if __name__ == "__main__":
     runner = Runner()
 #    runner.test_plot_random()
 #    runner.test_plot_random2()
-#    runner.test_plot_das()
+
+    runner.test_plot_das()
+
 #    runner.test_plot_heatmap('da_score_june.csv', 'heatmap_june.html')
 #    runner.test_plot_heatmap('da_score_july.csv', 'heatmap_july.html')
 
@@ -497,6 +593,7 @@ if __name__ == "__main__":
 #    runner.plot_stop_buffers()
 
 #    runner.plot_stop_da_intersections()
+
     runner.plot_test_raster()
 
 

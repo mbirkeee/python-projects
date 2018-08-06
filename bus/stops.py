@@ -1,6 +1,7 @@
 import os
 import math
 
+from my_utils import Weight
 from geometry import Point
 from geometry import Polygon
 
@@ -11,6 +12,7 @@ class Stops(object):
         self._base_path = base_path
         self._data = {}
         self.read_file()
+        self._weight = Weight()
 
     def read_file(self):
         """
@@ -105,7 +107,7 @@ class Stops(object):
     def make_round_buffer(self, size):
 
         for stop_id, stop_data in self._data.iteritems():
-            print "Making buffer for stop_id: %d" % stop_id
+            print "Making round buffer for stop_id: %d" % stop_id
             point = stop_data.get('point')
             # print repr(point)
             x = point.get_x()
@@ -129,7 +131,7 @@ class Stops(object):
         ]
 
         for stop_id, stop_data in self._data.iteritems():
-            print "Making buffer for stop_id: %d" % stop_id
+            # print "Making buffer for stop_id: %d" % stop_id
             point = stop_data.get('point')
             # print repr(point)
             p = Polygon()
@@ -137,3 +139,49 @@ class Stops(object):
                 p.add_point(Point(point.get_x() + corner[0], point.get_y() + corner[1]))
 
             stop_data['buffer'] = p
+
+    def get_buffer_polygons(self):
+        result = {}
+        for stop_id, stop_data in self._data.iteritems():
+            result[stop_id] = stop_data.get('buffer')
+        return result
+
+    def get_demand(self, stop_id):
+        stop_data = self._data.get(stop_id)
+        return stop_data.get('demand')
+
+    def compute_demand(self, intersect, das):
+
+        for stop_id, stop_data in self._data.iteritems():
+            # print "compute demand for stop id", stop_id
+
+            stop_point = self.get_point(stop_id)
+            demand = 0
+
+            # group1: da_ids, group2: stop_ids
+            intersecting_das = intersect.get_intersections(group=2, id=stop_id)
+            for item in intersecting_das:
+                p = item[0]
+                da_id = item[1]
+                da_area = das.get_area(da_id)
+                intersect_area = p.get_area()
+                area_factor = intersect_area / da_area
+                population = das.get_population(da_id)
+                intersect_centroid = p.get_centroid()
+                intersect_distance = stop_point.get_distance(intersect_centroid)
+                intersect_population = population * area_factor
+                butterworth = self._weight.butterworth(intersect_distance)
+
+                # print "  intersects %s" % da_id
+                # print "    da area:             ", da_area
+                # print "    intersect area:      ", intersect_area
+                # print "    area factor:         ", area_factor
+                # print "    population           ", population
+                # print "    intersect population ", intersect_population
+                # print "    distance             ", intersect_distance
+                # print "    butterworth          ", butterworth
+
+                demand += butterworth * intersect_population
+
+            stop_data['demand'] = demand
+            print "Demand for stop %d: %f" % (stop_id, demand)

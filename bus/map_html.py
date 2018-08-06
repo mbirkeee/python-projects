@@ -31,6 +31,18 @@ TOP = """
           center: {lat: 52.125, lng: -106.65},
           mapTypeId: 'terrain'
         });
+
+      google.maps.event.addListener(map, 'mousemove', function (event) {
+              displayCoordinates(event.latLng);
+          });
+
+      function displayCoordinates(pnt) {
+          var lat = pnt.lat();
+          lat = lat.toFixed(6);
+          var lng = pnt.lng();
+          lng = lng.toFixed(6);
+          console.log("Latitude: " + lat + "  Longitude: " + lng);
+      }
 """
 
 CIRCLE_RED_20 = """
@@ -141,11 +153,16 @@ var my_polygon = new google.maps.Polygon({
   fillOpacity: %f
 });
 my_polygon.setMap(map);
+
+google.maps.event.addListener(my_polygon, 'mousemove', function (event) {
+              displayCoordinates(event.latLng);
+          });
+
 """
 
 
 BOTTOM = """
-      }
+    }
     </script>
     <script async defer
     src="https://maps.googleapis.com/maps/api/js?key=%s&libraries=visualization&callback=initMap">

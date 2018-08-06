@@ -133,12 +133,12 @@ class TransitShapes(object):
 
     def __init__(self, base_path):
 
-        self._june_data = False
-        if base_path.find("2018_05_04") > 0:
-            print "this is the JUNE data"
-            self._june_data = True
-        else:
-            print "this is the JULY data"
+        # self._june_data = False
+        # if base_path.find("2018_05_04") > 0:
+        #     print "this is the JUNE data"
+        #     self._june_data = True
+        # else:
+        #     print "this is the JULY data"
 
         self._base_path = base_path
         self._data = {}
@@ -215,6 +215,7 @@ class TransitRoutes(object):
 
         self._base_path = base_path
         self._data = {}
+        self._deprecated = {}
         self.read_file()
 
     def read_file(self):
@@ -255,7 +256,9 @@ class TransitRoutes(object):
 
                 if not self._include_route_dict.has_key(route_id):
                     print "SKIPPING ROUTE", route_id
+                    self._deprecated[route_id] = (short_name, long_name)
                     continue
+
 
                 if self._data.has_key(route_id):
                     raise ValueError("THIS IS A DUP!!!")
@@ -325,7 +328,7 @@ class TransitTrips(object):
             print "this is the JUNE data"
             self._include_route_dict = ROUTE_IDS_05_04
         else:
-            print "this is the JULY data"
+            print "this is the JULY/AUG data"
             self._include_route_dict = ROUTE_IDS_06_21
 
         self._base_path = base_path
@@ -460,12 +463,19 @@ class TransitTrips(object):
 
 class StopTimes(object):
 
-    def __init__(self, base_path):
+    def __init__(self, base_path, stops=None):
 
         self.routes = TransitRoutes(base_path)
         self.trips = TransitTrips(base_path)
         self.shapes = TransitShapes(base_path)
-        self.stops = Stops(base_path)
+
+        if stops is None:
+            print "Instantiate new Stops class"
+            self.stops = Stops(base_path)
+        else:
+            # Stops already allocated
+            print "Use existing Stops class"
+            self.stops = stops
 
         self._data = {}
         self._route_id_dict = {}
@@ -476,6 +486,13 @@ class StopTimes(object):
         self._key_counts = {}
 
         self.read_file()
+
+
+        # keys = [k for k in self._data.iterkeys()]
+        # keys = sorted(keys)
+        # keys.reverse()
+        # for k in keys:
+        #     print k
 
 
     def get_stop_point(self, stop_id):
@@ -579,7 +596,7 @@ class StopTimes(object):
 
         stops = self._data.get(stop_id)
         if stops is None:
-            print "Failed to find departure data for stop: %s" % repr(stop_id)
+            print "Failed to find departure data for stop: %s (%s)" % (repr(stop_id), self.stops.get_name(stop_id))
             return []
 
         result = []
@@ -651,29 +668,33 @@ class StopTimes(object):
                 line = line.strip()
                 parts = line.split(",")
 
-                trip_id = int(parts[1].strip())
-
-                route_id = self.trips.get_route_id(trip_id)
-                if route_id is None:
-                    print "SKIP STOP TIME"
-                    continue
-
-
-
-                depart_time_str = parts[3].strip()
-
                 try:
                     stop_id = self.make_stop_id_from_google(parts[0].strip())
                 except:
                     print "Failed to get stop id from: %s" % repr(parts[0].strip())
                     stop_id = None
 
-                depart_time = timestr_to_int(depart_time_str)
-                #print "%s -> %d -> %s" % (depart_time_str, depart_time, int_to_timestr(depart_time))
+                if stop_id is None:
+                    raise ValueError("error!!!")
+
+                # if stop_id == 3432:
+                #     raise ValueError("Got stop id 3432")
 
                 if stop_id is None:
                     print "no stop ID"
                     continue
+
+                trip_id = int(parts[1].strip())
+                route_id = self.trips.get_route_id(trip_id)
+                if route_id is None:
+                    if stop_id == 3432:
+                        print "No route for stop %d trip %d" % (stop_id, trip_id)
+                        print line
+                        # raise ValueError("stop me")
+                    continue
+
+                depart_time_str = parts[3].strip()
+                depart_time = timestr_to_int(depart_time_str)
 
                 # print stop_id, trip_ip, depart_time
                 # print "LINE", line, trip_id, stop_id

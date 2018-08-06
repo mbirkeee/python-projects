@@ -1,5 +1,5 @@
 import pyproj
-import numpy as np
+import math
 import ogr
 
 
@@ -62,6 +62,16 @@ class Point(object):
 
         return p
 
+    def get_distance(self, point, method='crow'):
+
+        x1 = self.get_x()
+        y1 = self.get_y()
+        x2 = point.get_x()
+        y2 = point.get_y()
+
+        return math.sqrt(math.pow((x1 - x2), 2) + math.pow((y1 - y2), 2))
+
+
 class Polygon(object):
 
     def __init__(self):
@@ -72,6 +82,12 @@ class Polygon(object):
         self._ogr_poly = None
         self._depth_count = 0
         self._temp_intersect = []
+
+    def set_area(self, area):
+        """
+        To be used only to override area (e.g., DA polygons)
+        """
+        self._area = area
 
     def add_point(self, point):
         self._points.append(point)
@@ -89,7 +105,6 @@ class Polygon(object):
     #     return 0.5 * np.abs(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)))
 
     def get_area(self):
-
         if self._area is None:
 
             # x = [point.get_x() for point in self._points]

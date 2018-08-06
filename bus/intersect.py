@@ -1,11 +1,25 @@
+
 class Intersect(object):
 
-    def __init__(self):
+    def __init__(self, group1, group2, limit=None):
 
         self.group1_data = {}
         self.group2_data = {}
 
+        self.group1 = group1
+        self.group2 = group2
+
+        self.process(group1, group2, limit=limit)
+
     def process(self, group1, group2, limit=None):
+
+        # if limit is None or limit >= 2000:
+        #     # print repr([k for k in group1.iterkeys()])
+        #     print "start"
+        #     a = hashlib.md5(repr(sorted([k for k in group1.iterkeys()]))).hexdigest()
+        #     b = hashlib.md5(repr(sorted([k for k in group2.iterkeys()]))).hexdigest()
+        #     c = hashlib.md5(a+b).hexdigest()
+        #     print c
 
         temp_count = 0
         for group1_id, polygon_1 in group1.iteritems():
@@ -38,8 +52,16 @@ class Intersect(object):
                 print "terminate early at limit", limit
                 break
 
+
+
         print "len(group1)", len(group1)
         print "len(group2)", len(group2)
+
+    def get_intersections(self, group=1, id=None):
+        if group == 1:
+            return self.get_intersections_for_group1_id(id)
+        else:
+            return self.get_intersections_for_group2_id(id)
 
     def get_intersections_for_group1_id(self, group1_id):
 
@@ -53,8 +75,6 @@ class Intersect(object):
 
     def get_intersections_for_group2_id(self, group2_id):
 
-        for k, v in self.group2_data.iteritems():
-            print k, type(k), len(v)
         result = []
         data = self.group2_data.get(group2_id, {})
 
