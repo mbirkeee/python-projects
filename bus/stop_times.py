@@ -8,9 +8,10 @@ import time
 # from my_utils import TransitData
 
 from transit_routes import TransitRoutes
-from stops import TransitStops
-from route_id_names import ROUTE_IDS_05_04
-from route_id_names import ROUTE_IDS_06_21
+from transit_trips import TransitTrips
+
+from transit_stops import TransitStops
+
 
 LATEST_TIME = (24 * 60 * 60) - 1
 
@@ -51,219 +52,151 @@ def int_to_timestr(input):
     return "%02d:%02d:%02d" % (hours, minutes, seconds)
 
 
-class TransitShapes(object):
+#
+# class TransitTrips(object):
+#
+#     def __init__(self, base_path):
+#
+#         if base_path.find("2018_05_04") > 0:
+#             print "this is the JUNE data"
+#             self._include_route_dict = ROUTE_IDS_05_04
+#         else:
+#             print "this is the JULY/AUG data"
+#             self._include_route_dict = ROUTE_IDS_06_21
+#
+#         self._base_path = base_path
+#         self._data = {}
+#         self._route_id_to_shape_id = {}
+#
+#         self.read_file()
+#
+#     def make_service_type_from_google_data(self, input):
+#
+#         try:
+#             service_type = int(input[0])
+#
+#             if service_type not in [SERVICE.MWF, SERVICE.SAT, SERVICE.SUN]:
+#                 raise ValueError("Invalid service type")
+#
+#         except Exception as err:
+#             print "%s: Error getting service type from: %s" % (repr(err), repr(input))
+#             service_type = SERVICE.UNKNOWN
+#
+#         return service_type
+#
+#
+#     def read_file(self):
+#
+#         """
+#         0 trip_id,
+#         1 route_id,
+#         2 block_id,
+#         3 shape_id,
+#         4 service_id,
+#         5 direction,
+#         6 bikes,
+#         7 wheelchairs,
+#         8 headsign
+#         """
+#
+#         file_name = os.path.join(self._base_path, "my-TransitTrips.csv")
+#
+#         line_count = 0
+#         f = None
+#
+#         try:
+#             start_time = time.time()
+#             f = open(file_name, 'r')
+#
+#             for line in f:
+#                 line_count += 1
+#                 if line_count == 1: continue
+#
+#                 line = line.strip()
+#                 parts = line.split(",")
+#
+#                 route_id = int(parts[1].strip())
+#
+#                 if not self._include_route_dict.has_key(route_id):
+#                     print "SKIPPING TRIP"
+#                     continue
+#
+#                 service_type = self.make_service_type_from_google_data(parts[4].strip())
+#                 trip_id = int(parts[0].strip())
+#                 shape_id = int(parts[3].strip())
+#
+#                 headsign = parts[8].strip()
+#                 direction = int(parts[5].strip())
+#
+#                 if self._data.get(trip_id):
+#                     print "ALREADY HAVE TRIP ID!!!!!!", trip_id
+#                     continue
+#
+#                 self._data[trip_id] = (route_id, service_type, headsign, direction, shape_id)
+#
+#                 # This section maps route_id to shape_id
+#                 shape_id_list = self._route_id_to_shape_id.get(route_id, [])
+#                 shape_id_list.append(shape_id)
+#                 shape_id_list = list(set(shape_id_list))
+#                 self._route_id_to_shape_id[route_id] = shape_id_list
+#
+#                 # if not self._route_id_to_shape_id.has_key(route_id):
+#                 #     print "Added route_id -> shape_id", route_id, shape_id
+#                 #     self._route_id_to_shape_id[route_id] = shape_id
+#                 # else:
+#                 #     have_shape_id = self._route_id_to_shape_id.get(route_id)
+#                 #     if have_shape_id != shape_id:
+#                 #         msg = "WARNING: shape id mismatch: route_id: %s have: %s got: %s!!!!" % \
+#                 #                          (route_id, have_shape_id, shape_id)
+#                 #         print msg
+#
+#             print "read %d lines" % line_count
+#             read_time = time.time() - start_time
+#             print "%s: read time: %.2f" % (file_name, read_time)
+#
+#             for key, value in self._route_id_to_shape_id.iteritems():
+#                 print "Route ID: %s shape_ids: %s" % (repr(key), repr(value))
+#
+#             #for key, value in self._data.iteritems():
+#             #    print "Trip ID", key, "Data:", value
+#
+#             # raise ValueError('temp stop')
+#
+#             return
+#
+#         finally:
+#             if f:
+#                 print "closing file"
+#                 f.close()
+#
+#     def get_route_id(self, trip_id):
+#         # print "get route id for trip: %d" % trip_id
+#         data = self._data.get(trip_id)
+#         if data is None:
+#             return None
+#         return data[0]
+#
+#     def get_direction(self, trip_id):
+#         data = self._data.get(trip_id)
+#         if data is None:
+#             return None
+#         return data[3]
+#
+#     def get_service_type(self, trip_id):
+#         data = self._data.get(trip_id)
+#         if data is None:
+#             return None
+#         return data[1]
+#
+#     def get_headsign(self, trip_id):
+#         data = self._data.get(trip_id)
+#         if data is None:
+#             return None
+#         return data[2]
+#
+#     def get_shape_ids(self, route_id):
+#         return self._route_id_to_shape_id.get(route_id)
 
-    def __init__(self, base_path):
-
-        # self._june_data = False
-        # if base_path.find("2018_05_04") > 0:
-        #     print "this is the JUNE data"
-        #     self._june_data = True
-        # else:
-        #     print "this is the JULY data"
-
-        self._base_path = base_path
-        self._data = {}
-        self.read_file()
-        self.sort_data()
-
-    def sort_data(self):
-
-        result = {}
-
-        for shape_id, points in self._data.iteritems():
-            result[shape_id] = sorted(points)
-
-#        for shape_id, points in result.iteritems():
-#            # print "shape_id", shape_id
-#            for item in points:
-#                print item
-
-            #print "shape_id", shape_id, "points", points
-
-        self._data = result
-
-        #raise ValueError('temp stop')
-
-    def read_file(self):
-        """
-        0 shape_id,
-        1 shape_lat,
-        2 shape_lon,
-        3 point_seq,
-        4 dist
-        """
-        file_name = os.path.join(self._base_path, "my-TransitShapes.csv")
-
-        line_count = 0
-        f = None
-
-        try:
-            f = open(file_name, 'r')
-
-            for line in f:
-                line_count += 1
-                if line_count == 1: continue
-
-                line = line.strip()
-                parts = line.split(",")
-                print parts
-
-                shape_id = int(parts[0].strip())
-                lat = float(parts[1].strip())
-                lng = float(parts[2].strip())
-                seq = int(parts[3].strip())
-
-                points = self._data.get(shape_id, [])
-                points.append((seq, lat, lng))
-                self._data[shape_id] = points
-
-            # raise ValueError("temp stop")
-
-        finally:
-            if f:
-                f.close()
-
-class TransitTrips(object):
-
-    def __init__(self, base_path):
-
-        if base_path.find("2018_05_04") > 0:
-            print "this is the JUNE data"
-            self._include_route_dict = ROUTE_IDS_05_04
-        else:
-            print "this is the JULY/AUG data"
-            self._include_route_dict = ROUTE_IDS_06_21
-
-        self._base_path = base_path
-        self._data = {}
-        self._route_id_to_shape_id = {}
-
-        self.read_file()
-
-    def make_service_type_from_google_data(self, input):
-
-        try:
-            service_type = int(input[0])
-
-            if service_type not in [SERVICE.MWF, SERVICE.SAT, SERVICE.SUN]:
-                raise ValueError("Invalid service type")
-
-        except Exception as err:
-            print "%s: Error getting service type from: %s" % (repr(err), repr(input))
-            service_type = SERVICE.UNKNOWN
-
-        return service_type
-
-
-    def read_file(self):
-
-        """
-        0 trip_id,
-        1 route_id,
-        2 block_id,
-        3 shape_id,
-        4 service_id,
-        5 direction,
-        6 bikes,
-        7 wheelchairs,
-        8 headsign
-        """
-
-        file_name = os.path.join(self._base_path, "my-TransitTrips.csv")
-
-        line_count = 0
-        f = None
-
-        try:
-            start_time = time.time()
-            f = open(file_name, 'r')
-
-            for line in f:
-                line_count += 1
-                if line_count == 1: continue
-
-                line = line.strip()
-                parts = line.split(",")
-
-                route_id = int(parts[1].strip())
-
-                if not self._include_route_dict.has_key(route_id):
-                    print "SKIPPING TRIP"
-                    continue
-
-                service_type = self.make_service_type_from_google_data(parts[4].strip())
-                trip_id = int(parts[0].strip())
-                shape_id = int(parts[3].strip())
-
-                headsign = parts[8].strip()
-                direction = int(parts[5].strip())
-
-                if self._data.get(trip_id):
-                    print "ALREADY HAVE TRIP ID!!!!!!", trip_id
-                    continue
-
-                self._data[trip_id] = (route_id, service_type, headsign, direction, shape_id)
-
-                # This section maps route_id to shape_id
-                shape_id_list = self._route_id_to_shape_id.get(route_id, [])
-                shape_id_list.append(shape_id)
-                shape_id_list = list(set(shape_id_list))
-                self._route_id_to_shape_id[route_id] = shape_id_list
-
-                # if not self._route_id_to_shape_id.has_key(route_id):
-                #     print "Added route_id -> shape_id", route_id, shape_id
-                #     self._route_id_to_shape_id[route_id] = shape_id
-                # else:
-                #     have_shape_id = self._route_id_to_shape_id.get(route_id)
-                #     if have_shape_id != shape_id:
-                #         msg = "WARNING: shape id mismatch: route_id: %s have: %s got: %s!!!!" % \
-                #                          (route_id, have_shape_id, shape_id)
-                #         print msg
-
-            print "read %d lines" % line_count
-            read_time = time.time() - start_time
-            print "%s: read time: %.2f" % (file_name, read_time)
-
-            for key, value in self._route_id_to_shape_id.iteritems():
-                print "Route ID: %s shape_ids: %s" % (repr(key), repr(value))
-
-            #for key, value in self._data.iteritems():
-            #    print "Trip ID", key, "Data:", value
-
-            # raise ValueError('temp stop')
-
-            return
-
-        finally:
-            if f:
-                print "closing file"
-                f.close()
-
-    def get_route_id(self, trip_id):
-        # print "get route id for trip: %d" % trip_id
-        data = self._data.get(trip_id)
-        if data is None:
-            return None
-        return data[0]
-
-    def get_direction(self, trip_id):
-        data = self._data.get(trip_id)
-        if data is None:
-            return None
-        return data[3]
-
-    def get_service_type(self, trip_id):
-        data = self._data.get(trip_id)
-        if data is None:
-            return None
-        return data[1]
-
-    def get_headsign(self, trip_id):
-        data = self._data.get(trip_id)
-        if data is None:
-            return None
-        return data[2]
 
 class StopTimes(object):
 
@@ -271,7 +204,7 @@ class StopTimes(object):
 
         self.routes = TransitRoutes(base_path)
         self.trips = TransitTrips(base_path)
-        self.shapes = TransitShapes(base_path)
+        # self.shapes = TransitShapes(base_path)
 
         if stops is None:
             print "Instantiate new Stops class"

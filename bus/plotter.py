@@ -6,9 +6,7 @@ from map_html import BOTTOM as MAP_BOTTOM
 from map_html import POLYGON
 from map_html import POLYLINE
 from map_html import MARKER
-from map_html import CIRCLE_RED_20
-from map_html import CIRCLE_RED_5
-
+from map_html import CIRCLE
 
 class Plotter(object):
 
@@ -18,15 +16,28 @@ class Plotter(object):
         self._marker_list = []
         self._dot_list = []
         self._polyline_list = []
+        self._polydot_list = []
+    #    self._dot_dict = {}
+    #    self._dot_key = 1
 
-    def add_dot(self, point):
-        self._dot_list.append(point)
+    # def add_dot_group(self,  **kwargs):
+    #     self._dot_key += 1
+    #     kwargs['points'] = []
+    #     print kwargs
+    #     self._dot_dict[self._dot_key] = kwargs
+    #     return self._dot_key
+
+    # def add_dot(self, point):
+    #     self._dot_list.append(point)
 
     def add_marker(self, point, title, label):
         self._marker_list.append((point, title, label))
 
     def add_polyline(self, polyline):
         self._polyline_list.append(polyline)
+
+    def add_polydot(self, polyline):
+        self._polydot_list.append(polyline)
 
     def add_polygon(self, items):
 
@@ -58,6 +69,24 @@ class Plotter(object):
                 stroke_weight = item.get_attribute("strokeWeight", default=1)
 
                 f.write(POLYLINE % (stroke_color, stroke_opacity, stroke_weight))
+
+        if len(self._polydot_list):
+            for item in self._polydot_list:
+                i = 0
+                f.write("var circle = {\n")
+                points = item.get_points()
+                for point in points:
+                    f.write("%d: {center:{lat: %f, lng: %f},},\n" % (i, point.get_lat(), point.get_lng()))
+                    i += 1
+                f.write("};\n")
+
+                stroke_color = item.get_attribute("strokeColor", default="#ffffff")
+                stroke_opacity = item.get_attribute("strokeOpacity", default=0.5)
+                stroke_weight = item.get_attribute("strokeWeight", default=1)
+                fill_color = item.get_attribute("fillColor", default="#ff0000")
+                fill_opacity = item.get_attribute("fillOpacity", default=0.1)
+                radius = item.get_attribute("radius", default=50)
+                f.write(CIRCLE % (stroke_color, stroke_opacity, stroke_weight, fill_color, fill_opacity, radius))
 
         if len(self._polygon_list):
             for item in self._polygon_list:
@@ -93,22 +122,6 @@ class Plotter(object):
 
             f.write("};\n")
             f.write(MARKER)
-
-        if len(self._dot_list) > 0:
-
-            f.write("var circle = {\n")
-            i = 0
-            for item in self._dot_list:
-                point = item
-                lat = point.get_lat()
-                lng = point.get_lng()
-                f.write("%d: {center:{lat: %f, lng: %f},},\n" % (i, lat, lng))
-                i += 1
-
-            f.write("};\n")
-            f.write(CIRCLE_RED_5)
-
-
 
         f.write(MAP_BOTTOM)
         f.close()

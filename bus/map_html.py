@@ -76,6 +76,21 @@ for (var point in circle) {
 }
 """
 
+CIRCLE = """
+for (var point in circle) {
+  var circ = new google.maps.Circle({
+    strokeColor: '%s',
+    strokeOpacity: %f,
+    strokeWeight: %d,
+    fillColor: '%s',
+    fillOpacity: %f,
+    map: map,
+    center: circle[point].center,
+    radius: %d,
+  });
+}
+"""
+
 MARKER = """
 for (var point in marker) {
   var mark = new google.maps.Marker({
@@ -223,14 +238,14 @@ ROUTE_MIDDLE = """
 """
 
 POLYLINE = """
-        var flightPath = new google.maps.Polyline({
-          path: polyline,
-          geodesic: true,
-          strokeColor: '#0000FF',
-          strokeOpacity: 1.0,
-          strokeWeight: 2
-        });
-        flightPath.setMap(map);
+var flightPath = new google.maps.Polyline({
+  path: polyline,
+  geodesic: true,
+  strokeColor: '%s',
+  strokeOpacity: %f,
+  strokeWeight: %d
+});
+flightPath.setMap(map);
 """
 
 ROUTE_BOTTOM = """

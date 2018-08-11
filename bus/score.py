@@ -13,8 +13,37 @@ class Score(object):
 
         self._base_path = base_path
         self._stops = stops
+        self._brt_mode = False
 
-        self._stop_times = StopTimes(self._base_path, stops=stops)
+        if base_path.find("2018_05_04") > 0:
+            print "this is the JUNE data"
+
+        elif base_path.find('2018_08_05') > 0:
+            print "this is the JULY data"
+
+        else:
+            self._brt_mode = True
+
+        if not self._brt_mode:
+            self._stop_times = StopTimes(self._base_path, stops=stops)
+
+    def get_score_simple(self, raster_p, stop_polygons):
+
+        score = 0
+        raster_point = raster_p.get_centroid()
+
+        info = {}
+
+        for item in stop_polygons:
+            stop_id = item[1]
+            stop_p = item[0]
+
+            if raster_p.intersects(stop_p):
+                demand = self._stops.get_demand(stop_id)
+                a = 1 / demand
+                score += a
+
+        return score
 
     def get_score(self, raster_p, stop_polygons):
         """
@@ -74,11 +103,13 @@ class Score(object):
         score = 0
 
         for k, v in info.iteritems():
+
             # print k, repr(v)
 
             # a = 1000 * v.get('count') / v.get('demand')
-            a = 100 * v.get('count') / math.log10(v.get('demand'))
-            # a = 10 * v.get('count')
+            # a = 100 * v.get('count') / math.log10(v.get('demand'))
+            a = 10 * v.get('count')
+            # a = 100 / v.get('demand')
 
             # See if we can detect an artificial increase in frequenct on route 10089
     #        if v.get('route_id') == 10089:

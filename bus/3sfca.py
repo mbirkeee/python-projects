@@ -3,7 +3,7 @@ import math
 
 from my_utils import DaData
 from my_utils import get_point_dist
-from stops import TransitStops
+from transit_stops import TransitStops
 from stop_times import StopTimes
 from stop_times import SERVICE
 from stop_times import KEY

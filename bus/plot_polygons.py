@@ -2,17 +2,19 @@ import pyproj
 import random
 import math
 
-from my_utils import Plotter
+from plotter import Plotter
 
 from geometry import Polygon
+from geometry import Polyline
 from geometry import Point
 
 from my_utils import DaData
 from my_utils import DaHeatmap
 from my_utils import Weight
-from stops import TransitStops
+from transit_stops import TransitStops
 from intersect import Intersect
 from score import Score
+from constants import BASE
 
 PROJ = pyproj.Proj("+init=EPSG:32613")
 DECAY = Weight()
@@ -317,13 +319,29 @@ class Runner(object):
         # base_path = "../data/sts/csv/2018_05_04/"
         # base_path = "../data/sts/csv/2018_06_21/"
         base_path = "../data/sts/csv/2018_08_05/"
+        #base_path = BASE.BRT
 
         stop = TransitStops(base_path)
+
+        #------------------------------------------------------------------------------------
+        plotter = Plotter()
+        polypoint = Polyline()
+        stop_ids = stop.get_ids()
+        for stop_id in stop_ids:
+            print "Adding location for", stop_id
+            point = stop.get_point(stop_id)
+            print point
+            polypoint.add_point(stop.get_point(stop_id))
+        polypoint.add_attribute("fillOpacity", 0.8)
+        polypoint.add_attribute("radius", 50)
+        plotter.add_polydot(polypoint)
+        plotter.plot("temp/maps/stop_locations.html")
+        #------------------------------------------------------------------------------------
+
 
         xx = stop.get_name(3432)
         print xx
         # raise ValueError("temp stop")
-
 
         # stop.make_square_buffers(600)
         stop.make_round_buffer(400)
@@ -353,9 +371,12 @@ class Runner(object):
 
         raster_points = da_p.get_raster(raster_size)
         raster_polygons = []
+        polypoint = Polyline()
+        polypoint.add_attribute("radius", 10)
+
         for point in raster_points:
             # print "adding raster point", repr(point)
-            plotter.add_dot(point)
+            polypoint.add_point(point)
 
             p = point.get_square_buffer(raster_size)
             p.add_attribute("fillOpacity", 0.1)
@@ -366,7 +387,13 @@ class Runner(object):
 
             plotter.add_polygon(p)
             raster_polygons.append(p)
+        plotter.add_polydot(polypoint)
 
+        da_p.add_attribute("strokeWeight", 2)
+        da_p.add_attribute("strokeColor", "#202020")
+        da_p.add_attribute("strokeOpacity", 1)
+
+        plotter.add_polygon(da_p)
         plotter.plot("temp/maps/test_raster_%d.html" % da_id_list[0])
 
         # ===================================================================
@@ -398,7 +425,8 @@ class Runner(object):
 
             for p in raster_polygons:
                 # Figure out which stop polygons intersect this raster polygon
-                score = judge.get_score(p, stop_polygons)
+                # score = judge.get_score(p, stop_polygons)
+                score = judge.get_score_simple(p, stop_polygons)
 
                 if score == 0: continue
 
@@ -519,8 +547,9 @@ class Runner(object):
 
     def plot_stop_da_intersections(self):
         stop = TransitStops( "../data/sts/csv/2018_05_04/")
-        stop.make_square_buffers(800)
-        #stop.make_round_buffer(400)
+        #stop.make_square_buffers(400)
+
+        stop.make_round_buffer(400)
         group1 = {}
         stop_id_list = stop.get_ids()
         for stop_id in stop_id_list:
@@ -532,9 +561,7 @@ class Runner(object):
         for da_id in da_id_list:
             group2[da_id] = das.get_polygon(da_id)
 
-        intersect = Intersect()
-
-        intersect.process(group1, group2)
+        intersect = Intersect(group1, group2)
 
         polygons = intersect.get_intersections_for_group1_id(10004)
         plotter = Plotter()
@@ -557,6 +584,12 @@ class Runner(object):
         polygons = intersect.get_intersections_for_group2_id(47110114)
         plotter = Plotter()
 
+        p = group2.get(47110114)
+        p.add_attribute("fillColor", "#0000ff")
+        p.add_attribute("strokeWeight", 2)
+
+        plotter.add_polygon(p)
+
         for item in polygons:
             p = item[0]
             p.add_attribute("fillOpacity", 0.1)
@@ -567,11 +600,11 @@ class Runner(object):
             p = item[0]
             p.add_attribute("fillOpacity", 0.1)
             p.add_attribute("fillColor", "#ff0000")
-            p.add_attribute("strokeWeight", 0)
+            p.add_attribute("strokeWeight", 1)
             stop_id = item[1]
             msg = "stop_%d" % stop_id
             centroid = p.get_centroid()
-            plotter.add_marker(centroid, msg, "")
+            plotter.add_marker(centroid, msg, msg)
 
         plotter.plot("temp/maps/da_stop_intersect_47110114.html")
 
@@ -584,7 +617,7 @@ if __name__ == "__main__":
 #    runner.test_plot_random()
 #    runner.test_plot_random2()
 
-    runner.test_plot_das()
+#    runner.test_plot_das()
 
 #    runner.test_plot_heatmap('da_score_june.csv', 'heatmap_june.html')
 #    runner.test_plot_heatmap('da_score_july.csv', 'heatmap_july.html')

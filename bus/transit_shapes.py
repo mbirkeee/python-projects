@@ -1,16 +1,12 @@
 import os
 from geometry import Point
+from geometry import Polyline
+
+from route_id_names import BAD_SHAPES
 
 class TransitShapes(object):
 
     def __init__(self, base_path):
-
-        # self._june_data = False
-        # if base_path.find("2018_05_04") > 0:
-        #     print "this is the JUNE data"
-        #     self._june_data = True
-        # else:
-        #     print "this is the JULY data"
 
         self._base_path = base_path
         self._data = {}
@@ -77,6 +73,16 @@ class TransitShapes(object):
 
         print "Read %d shapes from %s" % (line_count-1, file_name)
 
+    def get_polyline(self, shape_id):
+
+        point_data = self._data.get(shape_id)
+        if point_data is None:
+            raise ValueError("No data for shape id: %s" % repr(shape_id))
+        p = Polyline()
+        for item in point_data:
+            p.add_point(item[1])
+        return p
+
     def get_points(self, shape_id_list):
 
         result = []
@@ -89,8 +95,8 @@ class TransitShapes(object):
             if point_data is None:
                 raise ValueError("No data for shape id: %s" % repr(shape_id))
 
-            for point in point_data:
-                print point
+            # for point in point_data:
+            #     print point
 
             print "Shape ID: %d Adding %d points" % (shape_id, len(point_data))
             result.extend(point_data)

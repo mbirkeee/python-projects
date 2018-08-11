@@ -215,3 +215,42 @@ ROUTE_IDS_05_04 = {
 #    10032 : "Willowgrove Sq/Silverspring",
     10107 : "Willowgrove Sq/Silverspring",
 }
+
+# HAve detected a few bad shape IDs in the data.  This dict suppresses them
+BAD_SHAPES = {
+    10125 : [73456]
+}
+
+BAD_STOP_IDS_BRT = {
+    'remix-aecb02f2-5b8a-4b0e-9864-e19c07a29e7f' : 10000,
+    'City Centre'                                : 10001,
+    'Confederation'                              : 10002,
+    'Lawson'                                     : 10003,
+    'Market Mall'                                : 10004,
+    'remix-cd4a214b-ea7f-4f85-a483-f67870acddad' : 10005,
+    'remix-c928cfb9-0347-4b43-a69f-dcc1368fda9a' : 10006,
+    'remix-353597bb-b43a-4b1e-879b-d51b3d5f758f' : 10007,
+    'remix-bafe47a6-8522-41d7-8d6f-a043b364b47b' : 10008,
+    'remix-2c8102b7-26fa-4a8a-8d23-34a564c36b94' : 10009,
+    'remix-4c26a811-e7a6-4fd9-9b21-400dbe9b4119' : 10010,
+    'remix-dbe1840e-545e-4139-9747-6e580019d412' : 10011,
+    'remix-4cda1ffa-0b2b-4d94-a584-3883acf820b8' : 10012,
+    'remix-00697fd8-9bc6-46ea-97de-3ddb36b4e411' : 10013,
+    'remix-b2a01211-2b25-42bb-821d-d68870ecfb7d' : 10014,
+    'remix-85b5c071-1019-4ae4-b71f-f8b268c17f30' : 10015,
+    'remix-b7602926-1585-4a95-b63e-322b4484c48d' : 10016,
+    'remix-5fa6b263-a968-4e7b-ac51-f8ae81e877ef' : 10017,
+    'remix-160c8934-2d09-4397-a182-dde5998f1bd3' : 10018,
+    'remix-b6af24e6-241a-400a-bc2e-c26a97d96ae0' : 10019,
+    'remix-23308a1d-8a87-44de-83e9-416f2dd2a110' : 10020,
+    'remix-49d01a56-50cc-4f4f-9bb8-bf8fbf528202' : 10021,
+    'remix-c28ae3dd-36bd-4324-942e-691f7ca86ce0' : 10022,
+    'remix-aba251a8-d08c-4122-b808-a4bffb2997e2' : 10023,
+    'remix-83bbe727-3627-41e9-a90f-95f7f558e1f8' : 10024,
+    'remix-53723e43-e126-4c04-b84a-786c0900c1d5' : 10025,
+    'remix-d52fa55b-7456-4a86-ab16-d7986314666b' : 10026,
+    'remix-9354d6d3-469c-488c-93fb-6a6517c3bcd0' : 10027,
+    'University-Place Riel'                      : 10028,
+    'remix-f7a53adc-4a5f-4738-9a22-7531c0197d72' : 10029,
+    'Wildwood-Centre Mall'                       : 10030,
+}

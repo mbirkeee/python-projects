@@ -72,6 +72,25 @@ class Point(object):
         return math.sqrt(math.pow((x1 - x2), 2) + math.pow((y1 - y2), 2))
 
 
+class Polyline(object):
+
+    def __init__(self):
+
+        self._points = []
+        self._attributes = {}
+
+    def add_point(self, point):
+        self._points.append(point)
+
+    def get_points(self):
+        return self._points
+
+    def add_attribute(self, key, value):
+        self._attributes[key] = value
+
+    def get_attribute(self, key, default=None):
+        return self._attributes.get(key, default)
+
 class Polygon(object):
 
     def __init__(self):

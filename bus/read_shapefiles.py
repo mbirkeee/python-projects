@@ -2,6 +2,8 @@ import shapefile
 import pyproj
 import csv
 import StringIO
+import math
+import random
 
 from map_html import TOP as MAP_TOP
 from map_html import BOTTOM as MAP_BOTTOM
@@ -10,8 +12,9 @@ from map_html import POLYGON, POLYLINE
 from map_html import CIRCLE1, CIRCLE2
 from map_html import CIRCLE_RED_20, CIRCLE_RED_50
 
-from my_utils import Plotter
+from plotter import Plotter
 from geometry import Point
+from geometry import Polyline
 
 import settings
 
@@ -216,10 +219,14 @@ class Runner(object):
 #            print repr(record)
             # continue
 
-            name = record[5]
+            name = record[5].strip()
             direction = record[2].strip().lower()
-            display_name = "%s (%s)" % (name.strip(), direction)
+            display_name = "%s (%s)" % (name, direction)
             route_id = record[1]
+
+            parts = name.split()
+            route_number = int(parts[0].strip())
+            print "route number!!!!!!!", route_number
 
 #            print "ROUTE_ID", route_id
 #            print "LINE:", display_name, route_id
@@ -287,19 +294,27 @@ class Runner(object):
 
     def plot_brt_all(self):
 
+        m = int(math.pow(2, 24))
+        # m2 = int(math.pow(2,16))
         plotter = Plotter()
 
         for k, v in self._route_dict.iteritems():
+            print "v---------", v
             points = v.get('points')
-            print repr(points)
-            polyline = []
+            polyline = Polyline()
 
+
+
+            color = "#%6x" % random.randint(10000, 10000000)
+            # color = "#ff%4x" % random.randint(0, m2)
+            polyline.add_attribute("strokeColor", color)
+            polyline.add_attribute("strokeWeight", 4)
             for point in points:
-                polyline.append(Point(point[1], point[0]))
+                polyline.add_point(Point(point[1], point[0]))
 
             plotter.add_polyline(polyline)
 
-        plotter.plot("temp/maps/test_brt_all.html")
+        plotter.plot("temp/maps/brt_all_routes.html")
 
     def plot_brt_route(self, name, direction, points, stop_ids):
 
@@ -514,6 +529,10 @@ class Runner(object):
         lng = value.get('lng')
         return lat, lng
 
+    def read_test_buffers(self):
+        sf = shapefile.Reader("../data/shapefiles/test_network_polygons/june_buffers_400.shp")
+
+
 
     def read_statscan_da_shapefile(self):
         """
@@ -644,11 +663,12 @@ if __name__ == "__main__":
     """
     runner = Runner()
 #    runner.read_statscan_da_shapefile()
+#    runner.read_test_buffers()
 
     runner.read_stops()
     runner.read_directions()
     # runner.read_stops_new()
-    runner.read_direction_stops()
+#    runner.read_direction_stops()
 
 #    runner.plot_brt_routes()
     runner.plot_brt_all()
