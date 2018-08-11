@@ -22,3 +22,7 @@ class KEY(object):
     POPULATION          = 'pop'
     WEIGHT              = 'weight'
     DAILY_DEPARTURES    = 'daily_departures'
+
+    BAD_ID              = 'bad_id'
+    POINT               = 'point'
+    NAME                = 'name'

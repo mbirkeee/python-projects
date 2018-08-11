@@ -12,19 +12,18 @@ class TransitTrips(object):
     def __init__(self, base_path):
 
         if base_path.find("2018_05_04") > 0:
-            print "this is the JUNE data"
+            print "TransitTrips: using JUNE data"
             self._include_route_dict = ROUTE_IDS_05_04
         else:
-            print "this is the JULY/AUG data"
+            print "TransitTrips: using JULY/AUG data"
             self._include_route_dict = ROUTE_IDS_06_21
 
         self._base_path = base_path
-        self._data = {}
+        self._trip_dict = {}
         self._route_id_to_shape_id = {}
+        self.read_file_trips()
 
-        self.read_file()
-
-    def make_service_type_from_google_data(self, input):
+    def make_service_type(self, input):
 
         try:
             service_type = int(input[0])
@@ -39,7 +38,7 @@ class TransitTrips(object):
         return service_type
 
 
-    def read_file(self):
+    def read_file_trips(self):
 
         """
         0 trip_id,
@@ -52,8 +51,9 @@ class TransitTrips(object):
         7 wheelchairs,
         8 headsign
         """
-
         file_name = os.path.join(self._base_path, "my-TransitTrips.csv")
+
+        print "Reading transit trips file: %s" % file_name
 
         line_count = 0
         f = None
@@ -75,18 +75,18 @@ class TransitTrips(object):
                     # print "SKIPPING TRIP"
                     continue
 
-                service_type = self.make_service_type_from_google_data(parts[4].strip())
+                service_type = self.make_service_type(parts[4].strip())
                 trip_id = int(parts[0].strip())
                 shape_id = int(parts[3].strip())
 
                 headsign = parts[8].strip()
                 direction = int(parts[5].strip())
 
-                if self._data.get(trip_id):
+                if self._trip_dict.get(trip_id):
                     print "ALREADY HAVE TRIP ID!!!!!!", trip_id
                     continue
 
-                self._data[trip_id] = (route_id, service_type, headsign, direction, shape_id)
+                self._trip_dict[trip_id] = (route_id, service_type, headsign, direction, shape_id)
 
                 # This section maps route_id to shape_id
 
@@ -114,34 +114,36 @@ class TransitTrips(object):
             #    print "Trip ID", key, "Data:", value
             # raise ValueError('temp stop')
 
+            print "Read %d items from: %s" % (len(self._trip_dict), file_name)
+
             return
 
         finally:
             if f:
-                print "closing file"
                 f.close()
+
 
     def get_route_id(self, trip_id):
         # print "get route id for trip: %d" % trip_id
-        data = self._data.get(trip_id)
+        data = self._trip_dict.get(trip_id)
         if data is None:
             return None
         return data[0]
 
     def get_direction(self, trip_id):
-        data = self._data.get(trip_id)
+        data = self._trip_dict.get(trip_id)
         if data is None:
             return None
         return data[3]
 
     def get_service_type(self, trip_id):
-        data = self._data.get(trip_id)
+        data = self._trip_dict.get(trip_id)
         if data is None:
             return None
         return data[1]
 
     def get_headsign(self, trip_id):
-        data = self._data.get(trip_id)
+        data = self._trip_dict.get(trip_id)
         if data is None:
             return None
         return data[2]

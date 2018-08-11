@@ -1,5 +1,9 @@
 import os
 import shapefile
+import time
+
+from constants import KEY
+from constants import SERVICE
 
 from geometry import Polyline
 from geometry import Point
@@ -7,15 +11,23 @@ from geometry import Point
 from route_id_names import ROUTE_IDS_05_04
 from route_id_names import ROUTE_IDS_06_21
 from route_id_names import BAD_STOP_IDS_BRT
+from route_id_names import BAD_SHAPES
 
 from transit_trips import TransitTrips
 from transit_shapes import TransitShapes
 
-class TransitRoutesBrt(object):
+from transit_objects import TransitStop
+from transit_objects import TransitRoute
+from stop_times import StopTimes
+
+class TransitShapefile(object):
+    """
+    This manager processes the transit data as supplied in shapefiles (e.g., the BRT data)
+    """
     def __init__(self, base_path):
         self._base_path = base_path
 
-        self._data = {}
+        self._route_dict = {}
         self._stop_dict = {}
 
         self._dir_dict = {
@@ -25,54 +37,82 @@ class TransitRoutesBrt(object):
             "ccw"       : "CC"
         }
 
-        self._active_stop_ids = None
+        self._active_stop_ids = []
+        self._active_stops = []
 
         self.read_directions()
         self.read_stops()
         self.read_direction_stops()
 
-    def get_stop_data(self, stop_id):
-        return self._stop_dict.get(stop_id)
+        # After dictionaries built, cross-link them
+        for route in self._route_dict.itervalues():
+            route.set_stop_dict(self._stop_dict)
+
+        for stop in self._stop_dict.itervalues():
+            stop.set_route_dict(self._route_dict)
+
+    def get_active_stops(self):
+        if not self._active_stops:
+            self.get_active_stop_ids()
+        return self._active_stops
 
     def get_active_stop_ids(self):
-        if self._active_stop_ids is None:
-            result = []
-            for stop_id, stop_data in self._stop_dict.iteritems():
-                routes = stop_data.get('routes', [])
-                if len(routes) > 0:
-                    result.append(stop_id)
-            self._active_stop_ids = result
+
+        if not self._active_stop_ids:
+            for stop_id, stop in self._stop_dict.iteritems():
+                if len(stop.get_route_ids()) > 0:
+                    self._active_stop_ids.append(stop_id)
+                    self._active_stops.append(stop)
 
         return self._active_stop_ids
 
-    def get_polylines(self, route_id):
-        """
-        Return a list to be compatible with pre-brt data
-        """
-        p = Polyline()
-        data = self._data.get(route_id)
-        points = data.get('points')
-        for point in points:
-            # print point.get_lat_lng()
-            p.add_point(point)
+    def get_segments(self, route_id):
+        route = self.get_route(route_id)
+        return route.get_segments()
 
-        print "BRT", route_id, p, len(p.get_points())
-        return [p]
+    # def get_polylines(self, route_id):
+    #     """
+    #     Return a list to be compatible with pre-brt data
+    #     """
+    #     p = Polyline()
+    #     data = self._route_dict.get(route_id)
+    #     points = data.get('points')
+    #     for point in points:
+    #         # print point.get_lat_lng()
+    #         p.add_point(point)
+    #
+    #     print "BRT", route_id, p, len(p.get_points())
+    #     return [p]
 
-    def get_points(self, route_id):
-        raise ValueError("fixme!!")
+ #   def get_points(self, route_id):
+ #       raise ValueError("fixme!!")
+
+    def get_route(self, route_id):
+        return self._route_dict.get(route_id)
+
+    def get_stop(self, stop_id):
+        return self._stop_dict.get(stop_id)
+
+    def get_routes(self):
+        return [route for route in self._route_dict.itervalues()]
+
+    def get_stops(self, route_id):
+        route = self.get_route(route_id)
+        stop_ids = route.get_stop_ids()
+        result = [self.get_stop(stop_id) for stop_id in stop_ids]
+        return result
 
     def get_route_ids(self):
-        result = [k for k in self._data.iterkeys()]
+        result = [k for k in self._route_dict.iterkeys()]
         return result
 
     def get_route_name(self, route_id):
-        data = self._data.get(route_id, {})
-        return data.get('name')
+        route = self.get_route(route_id)
+        return route.get_name()
 
     def get_route_number(self, route_id):
-        data = self._data.get(route_id, {})
-        return data.get('number')
+        route = self.get_route(route_id)
+        return route.get_number()
 
     def read_directions(self):
 
@@ -93,7 +133,7 @@ class TransitRoutesBrt(object):
             name = record[5].strip()
 
             space_pos = name.find(' ')
-            number = int(name[:space_pos])
+            route_number = int(name[:space_pos])
             name = name[space_pos:]
 
             d = record[2].strip().lower()
@@ -103,17 +143,27 @@ class TransitRoutesBrt(object):
             display_name = "%s (%s)" % (name.strip(), direction)
             route_id = int(record[1])
 
-            if self._data.has_key(route_id):
+            if self._route_dict.has_key(route_id):
                 raise ValueError("Already have route key")
 
-            points = [Point(p[1], p[0]) for p in shape.points]
+            # points = [Point(p[1], p[0]) for p in shape.points]
 
-            self._data[route_id] = {
-                'name'      : display_name,
-                "direction" : direction,
-                "points"    : points,
-                "number"    : number,
-            }
+            segment = Polyline()
+            for p in shape.points:
+                segment.add_point(Point(p[1], p[0]))
+
+            route = TransitRoute(route_id, route_number, display_name)
+            route.add_segment(segment)
+            route.set_attribute(KEY.DIRECTION, direction)
+
+            # self._data[route_id] = {
+            #     'name'      : display_name,
+            #     "direction" : direction,
+            #     "points"    : points,
+            #     "number"    : number,
+            # }
+
+            self._route_dict[route_id] = route
 
     def read_direction_stops(self):
 
@@ -125,8 +175,6 @@ class TransitRoutesBrt(object):
         48 Suburban Connector, 33rd St - Confed (Inbound)"]
         """
         line_count = 0
-
-        temp_dict = {}
 
         # f = open("%s/test.out" % self._shape_base, 'rb')
         f = open("%s/direction_stops.dbf" % self._base_path, 'rb')
@@ -176,7 +224,7 @@ class TransitRoutesBrt(object):
                         print "DONE"
                         break
 
-                    dir_id = int(parts[part_index].strip())
+                    route_id = int(parts[part_index].strip())
 
                     stop_id = parts[part_index + 1].strip()
                     if stop_id == "Market":
@@ -190,52 +238,26 @@ class TransitRoutesBrt(object):
 
                     stop_id = int(stop_id)
 
-                    stop_data = self._stop_dict.get(stop_id)
-                    route_list = stop_data.get('routes', [])
-                    route_list.append(dir_id)
-                    route_list = list(set(route_list))
-                    stop_data['routes'] = route_list
+                    stop = self._stop_dict.get(stop_id)
+                    stop.add_route_id(route_id)
+
+                    route = self._route_dict.get(route_id)
+                    route.add_stop_id(stop_id)
 
                     dist = parts[part_index + 2].strip()
 
                     # print "dir_id", dir_id, "stop_id", stop_id, "dist", dist, self.get_route_name(dir_id)
                     part_index += 3
 
-                    stop_list = temp_dict.get(dir_id, [])
-                    stop_list.append(stop_id)
-                    temp_dict[dir_id] = stop_list
-
-                # part_index = 0
-                # for part in parts:
-                #     print "part: %d: >>%s<<" % (part_index, part.strip())
-                #     part_index += 1
-                #     if part_index > 50:
-                #         break
-
         f.close()
 
-        for k, v in self._stop_dict.iteritems():
-            print "Stop: %d routes: %d" % (k, len(v.get('routes', [])))
+        for stop_id, stop in self._stop_dict.iteritems():
+            print "Stop: %d Routes: %d" % (stop_id, len(stop.get_route_ids()))
 
-        for route_id, stop_list in temp_dict.iteritems():
-            route_data = self._data.get(route_id)
-            if route_data is None:
-                # raise ValueError("failed to get route: %s" % route_id)
-                print "failed to get route: %s" % route_id
-                continue
+        for route_id, route in self._route_dict.iteritems():
+            print "Route: %d Name: %s Stops: %d" % (route.get_number(), route.get_name(), len(route.get_stop_ids()))
 
-            route_data['stops'] = stop_list
-            # print stop_list
-
-            self._data[route_id] = route_data
-
-        x = [(route_id, route_data) for route_id, route_data in self._data.iteritems()]
-        x = sorted(x)
-
-        for item in x:
-            route_data = item[1]
-            print "Name: %s Stops: %d" % (route_data.get('name'), len(route_data.get('stops')))
-        print "number of routes", len(x)
+        print "number of routes", len(self._route_dict)
 
     def read_stops(self):
 
@@ -291,25 +313,20 @@ class TransitRoutesBrt(object):
             # parts = lines.split(',')
             # # print "LINE PARTS:", len(parts)
 
-            stop_data = {
-                'name' : stop_name,
-                'point' : Point(float(lat), float(lng))
-            }
+            stop = TransitStop(stop_id, stop_name, Point(float(lat), float(lng)))
 
             if bad_id is not None:
-                stop_data['bad_id'] = bad_id
-
-            # print "Adding", repr(stop_data)
+                stop.set_attribute(KEY.BAD_ID, bad_id)
 
             if self._stop_dict.has_key(stop_id):
                 raise ValueError("already have stop id: %s %d" % (repr(stop_id), index))
 
-            self._stop_dict[stop_id] = stop_data
+            self._stop_dict[stop_id] = stop
 
-        for k, v in self._stop_dict.iteritems():
-            point = v.get('point')
-            name = v.get('name')
-            print "stop_id: %d name: %s lat:%f lng: %f" % (k, name, point.get_lat(), point.get_lng())
+        for stop_id, stop in self._stop_dict.iteritems():
+            point = stop.get_point()
+            name = stop.get_name()
+            print "stop_id: %d name: %s lat:%f lng: %f" % (stop_id, name, point.get_lat(), point.get_lng())
 
         print "Read %d stops" % len(self._stop_dict)
 
@@ -317,7 +334,7 @@ class TransitRoutesBrt(object):
     def get_stop_points(self, route_id):
 
         result = []
-        data = self._data.get(route_id)
+        data = self._route_dict.get(route_id)
         stops = data.get("stops")
         for stop_id in stops:
             stop_data = self._stop_dict.get(stop_id)
@@ -331,9 +348,9 @@ class TransitRoutesBrt(object):
 
 class TransitRoutes(object):
 
-    def __init__(self, base_path):
+    def __init__(self, base_path, link_shapes=False, link_stops=True):
 
-        self._brt_mode = False
+        self._shapefile_mode = False
 
         if base_path.find("2018_05_04") > 0:
             print "this is the JUNE data"
@@ -344,17 +361,114 @@ class TransitRoutes(object):
             self._include_route_dict = ROUTE_IDS_06_21
 
         else:
-            self._brt_mode = True
+            self._shapefile_mode = True
 
-        if self._brt_mode:
-            self._brt = TransitRoutesBrt(base_path)
+        if self._shapefile_mode:
+            self._shapefile = TransitShapefile(base_path)
         else:
             self._base_path = base_path
-            self._data = {}
+            self._route_dict = {}
             self._deprecated = {}
             self.read_file()
-            self._transit_trips = None
-            self._transit_shapes = None
+
+            self._stop_dict = {}
+            self.read_file_stops()
+
+            self._trips = TransitTrips(base_path)
+
+            if link_shapes:
+                self._shapes = TransitShapes(base_path)
+
+                for route in self.get_routes():
+                    shape_ids = self._trips.get_shape_ids(route.get_id())
+                    for shape_id in shape_ids:
+                        segment = self._shapes.get_polyline(shape_id)
+                        route.add_segment(segment, segment_id=shape_id)
+
+            # Must cross-link routes/stops before calling stop times
+            # After dictionaries built, cross-link them
+            for route in self._route_dict.itervalues():
+                route.set_stop_dict(self._stop_dict)
+
+            for stop in self._stop_dict.itervalues():
+                stop.set_route_dict(self._route_dict)
+
+            if link_stops:
+                # This is SO ugly... must pass in reference to self
+                self._stop_times = StopTimes(base_path, self)
+                # self._trip_dict = {}
+                # self._route_id_to_shape_id = {}
+                # self.read_file_trips()
+
+    def get_route_from_trip_id(self, trip_id):
+
+        route_id = self._trips.get_route_id(trip_id)
+        return self.get_route(route_id)
+
+    def get_trip_service_type(self, trip_id):
+        return self._trips.get_service_type(trip_id)
+
+    def get_trip_headsign(self, trip_id):
+        return self._trips.get_headsign(trip_id)
+
+    def get_trip_direction(self, trip_id):
+        return self._trips.get_direction(trip_id)
+
+    def read_file_stops(self):
+        """
+        0 stop_id,
+        1 stop_code,
+        2 stop_lat,
+        3 stop_lon,
+        4 location_type,
+        5 wheelchair_boarding,
+        6 name
+        """
+        file_name = os.path.join(self._base_path, "my-TransitStops.csv")
+
+        result = {}
+        line_count = 0
+        f = None
+        fake_stop_id = 10000
+
+        try:
+            f = open(file_name, 'r')
+
+            for line in f:
+                line_count += 1
+                if line_count == 1: continue
+
+                line = line.strip()
+                parts = line.split(",")
+
+                bad_id = None
+                try:
+                    item = parts[0].strip()
+                    stop_id = int(item)
+
+                except Exception as err:
+                    print "Exception processing line: %s" % repr(err), item
+                    print "line: %s" % line
+                    stop_id = fake_stop_id
+                    print "Assign fake stop ID: %d" % fake_stop_id
+                    fake_stop_id += 1
+                    bad_id = item
+
+                name = parts[6].strip()
+                lat = float(parts[2].strip())
+                lng = float(parts[3].strip())
+
+                stop = TransitStop(stop_id, name, Point(lat, lng))
+                if bad_id:
+                    stop.set_attribute(KEY.BAD_ID, bad_id)
+
+                result[stop_id] = stop
+
+        finally:
+            if f: f.close()
+
+        self._stop_dict = result
+        print "Read %d stops" % len(self._stop_dict)
 
     def read_file(self):
         """
@@ -381,7 +495,7 @@ class TransitRoutes(object):
                 parts = line.split(",")
 
                 route_id = int(parts[0].strip())
-                short_name = parts[4].strip()
+                route_number = int(parts[4].strip())
                 long_name = parts[5].strip()
 
                 # I am not sure what the route type is
@@ -394,28 +508,27 @@ class TransitRoutes(object):
 
                 if not self._include_route_dict.has_key(route_id):
                     print "SKIPPING ROUTE", route_id
-                    self._deprecated[route_id] = (short_name, long_name)
+                    self._deprecated[route_id] = (route_number, long_name)
                     continue
 
-
-                if self._data.has_key(route_id):
+                if self._route_dict.has_key(route_id):
                     raise ValueError("THIS IS A DUP!!!")
 
-                self._data[route_id] = (short_name, long_name)
+                route = TransitRoute(route_id, route_number, long_name)
 
-            print "number of routes:", len(self._data)
-            print "%s: read %d lines" % (file_name, line_count)
+                # self._data[route_id] = (short_name, long_name)
+                self._route_dict[route_id] = route
+
+            print "number of routes:", len(self._route_dict)
 
         finally:
             if f:
-                print "closing file"
                 f.close()
 
         # ----- TEST -----
-        route_id_list = self.get_route_ids()
         s = []
-        for route_id in route_id_list:
-            name = self.get_route_name_from_id(route_id)
+        for route_id, route in self._route_dict.iteritems():
+            name = route.get_name()
             s.append((name, route_id))
 
         s = sorted(s)
@@ -424,19 +537,24 @@ class TransitRoutes(object):
         # ---- END TEST -----
 
     def get_stop_points(self, route_id):
-        if self._brt_mode:
-            return self._brt.get_stop_points(route_id)
+        if self._shapefile_mode:
+            return self._shapefile.get_stop_points(route_id)
         raise ValueError("fixme")
 
-    def get_polylines(self, route_id):
+    # def get_stops(self, route_id):
+    #     if self._shapefile_mode:
+    #         return self._shapefile.get_stops(route_id)
+    #     raise ValueError("fixme")
+
+    def get_segments(self, route_id):
         """
         Unfortunately the pre-BRT data routes are described in not one but several polylines.
         These MUST be plotted independently otherwise we get lots of spurious lines on the plot
         :param route_id:
         :return:
         """
-        if self._brt_mode:
-            return self._brt.get_polylines(route_id)
+        if self._shapefile_mode:
+            return self._shapefile.get_segments(route_id)
 
         # Allocate on demand
         if self._transit_trips is None:
@@ -455,28 +573,38 @@ class TransitRoutes(object):
         return result
 
     def get_route_ids(self):
-        if self._brt_mode:
-            return self._brt.get_route_ids()
+        if self._shapefile_mode:
+            return self._shapefile.get_route_ids()
 
-        result = [k for k in self._data.iterkeys()]
+        result = [k for k in self._route_dict.iterkeys()]
         return result
 
-    def get_route_name_from_id(self, route_id):
-        if self._brt_mode:
-            return self._brt.get_route_name(route_id)
+    def get_stop(self, stop_id):
+        if self._shapefile_mode:
+            return self._shapefile.get_stop()
+        return self._stop_dict.get(stop_id)
 
-        data = self._data.get(route_id)
-        if data is None:
-            return "Unknown: %s" % repr(route_id)
-        return data[1]
+    def get_route(self, route_id):
+        if self._shapefile_mode:
+            return self._shapefile.get_route(route_id)
+        return self._route_dict.get(route_id)
 
-    def get_route_number_from_id(self, route_id):
-        if self._brt_mode:
-            return self._brt.get_route_number(route_id)
+    def get_routes(self):
+        if self._shapefile_mode:
+            return self._shapefile.get_routes()
 
-        data = self._data.get(route_id)
-        if data is None:
-            return "Unknown: %s" % repr(route_id)
-        return data[0]
+        return [route for route in self._route_dict.itervalues()]
 
-
+    # def make_service_type(self, input):
+    #
+    #     try:
+    #         service_type = int(input[0])
+    #
+    #         if service_type not in [SERVICE.MWF, SERVICE.SAT, SERVICE.SUN]:
+    #             raise ValueError("Invalid service type")
+    #
+    #     except Exception as err:
+    #         print "%s: Error getting service type from: %s" % (repr(err), repr(input))
+    #         service_type = SERVICE.UNKNOWN
+    #
+    #     return service_type

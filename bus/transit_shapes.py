@@ -41,6 +41,7 @@ class TransitShapes(object):
         """
         file_name = os.path.join(self._base_path, "my-TransitShapes.csv")
 
+        print "Reading file: %s..." % file_name
         line_count = 0
         f = None
 

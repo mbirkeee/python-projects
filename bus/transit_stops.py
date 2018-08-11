@@ -2,94 +2,85 @@ import os
 import math
 
 from my_utils import Weight
+from my_utils import is_shapefile
 from geometry import Point
 from geometry import Polygon
 
-from transit_routes import TransitRoutesBrt
+from transit_routes import TransitShapefile
+from transit_objects import TransitStop
+
+from constants import KEY
 
 class TransitStops(object):
 
     def __init__(self, base_path):
 
         self._base_path = base_path
-        self._brt_mode = False
+        self._shapefile_mode = False
         self._weight = Weight()
 
-        if base_path.find("2018_05_04") > 0:
-            print "this is the JUNE data"
-
-        elif base_path.find('2018_08_05') > 0:
-            print "this is the JULY data"
-
+        if is_shapefile(self._base_path):
+            self._shapefile_mode = True
+            self._shapefile = TransitShapefile(base_path)
         else:
-            self._brt_mode = True
+            self._stop_dict = {}
+            self.read_file_stops()
 
-        if self._brt_mode:
-            self._brt = TransitRoutesBrt(base_path)
-        else:
-            self._data = {}
-            self.read_file()
-
-    def read_file(self):
-        """
-        0 stop_id,
-        1 stop_code,
-        2 stop_lat,
-        3 stop_lon,
-        4 location_type,
-        5 wheelchair_boarding,
-        6 name
-        """
-
-        file_name = os.path.join(self._base_path, "my-TransitStops.csv")
-
-        result = {}
-        line_count = 0
-        f = None
-        fake_stop_id = 10000
-
-        try:
-            f = open(file_name, 'r')
-
-            for line in f:
-                line_count += 1
-                if line_count == 1: continue
-
-                parts = line.split(",")
-
-                try:
-                    stop_id = int(parts[1].strip())
-
-                except Exception as err:
-                    print "Exception processing line: %s" % repr(err)
-                    print "line: %s" % line
-                    stop_id = fake_stop_id
-                    print "Assign fake stop ID: %d" % fake_stop_id
-                    fake_stop_id += 1
-
-                try:
-                    name = parts[6].strip()
-                    lat = float(parts[2].strip())
-                    lng = float(parts[3].strip())
-
-                    # print stop_id, lat, lng, name
-
-                    stop_data = {
-                        'point' : Point(lat, lng),
-                        'name'  : name
-                    }
-
-                    result[stop_id] = stop_data
-
-                except Exception as err:
-                    print "Exception processing line: %s" % repr(err)
-                    print "line: %s" % line
-
-
-        finally:
-            if f: f.close()
-
-        self._data = result
+    # def read_file_stops(self):
+    #     """
+    #     0 stop_id,
+    #     1 stop_code,
+    #     2 stop_lat,
+    #     3 stop_lon,
+    #     4 location_type,
+    #     5 wheelchair_boarding,
+    #     6 name
+    #     """
+    #     file_name = os.path.join(self._base_path, "my-TransitStops.csv")
+    #
+    #     result = {}
+    #     line_count = 0
+    #     f = None
+    #     fake_stop_id = 10000
+    #
+    #     try:
+    #         f = open(file_name, 'r')
+    #
+    #         for line in f:
+    #             line_count += 1
+    #             if line_count == 1: continue
+    #
+    #             line = line.strip()
+    #             parts = line.split(",")
+    #
+    #             bad_id = None
+    #             try:
+    #                 item = parts[0].strip()
+    #                 stop_id = int(item)
+    #
+    #             except Exception as err:
+    #                 print "Exception processing line: %s" % repr(err), item
+    #                 print "line: %s" % line
+    #                 stop_id = fake_stop_id
+    #                 print "Assign fake stop ID: %d" % fake_stop_id
+    #                 fake_stop_id += 1
+    #                 bad_id = item
+    #
+    #             name = parts[6].strip()
+    #             lat = float(parts[2].strip())
+    #             lng = float(parts[3].strip())
+    #
+    #             stop = TransitStop(stop_id, name, Point(lat, lng))
+    #             if bad_id:
+    #                 stop.set_attribute(KEY.BAD_ID, bad_id)
+    #
+    #             result[stop_id] = stop
+    #
+    #     finally:
+    #         if f: f.close()
+    #
+    #     self._stop_dict = result
+    #     print "Read %d stops" % len(self._stop_dict)
 
     def get_name(self, stop_id):
         # print "Getting STOP name for stop id", stop_id
@@ -108,18 +99,25 @@ class TransitStops(object):
 
         return stop_data.get('point')
 
-    def get_ids(self):
-        if self._brt_mode:
-            return self._brt.get_active_stop_ids()
+    def get_active_stops(self):
+        if self._shapefile_mode:
+            return self._shapefile.get_active_stops()
 
-        result = [stop_id for stop_id in self._data.iterkeys()]
+        print "NOTE!!!! THIS DOES NOT YET CHECK FOR ACTIVE STOPS!!!!!"
+        return [stop for stop in self._stop_dict.itervalues()]
+
+    def get_ids(self):
+        if self._shapefile_mode:
+            return self._shapefile.get_active_stop_ids()
+
+        result = [stop_id for stop_id in self._stop_dict.iterkeys()]
         return result
 
     def get_stop_data(self, stop_id):
-        if self._brt_mode:
-            return self._brt.get_stop_data(stop_id)
+        if self._shapefile_mode:
+            return self._shapefile.get_stop_data(stop_id)
 
-        return self._data.get(stop_id)
+        return self._stop_dict.get(stop_id)
 
     def get_buffer(self, stop_id):
 
@@ -129,24 +127,10 @@ class TransitStops(object):
 
         return stop_data.get('buffer')
 
-    def make_round_buffer(self, size):
-        stop_ids = self.get_ids()
-        for stop_id in stop_ids:
-            stop_data = self.get_stop_data(stop_id)
-
-        # for stop_id, stop_data in self._data.iteritems():
-        #     print "Making round buffer for stop_id: %d" % stop_id
-            point = stop_data.get('point')
-            # print repr(point)
-            x = point.get_x()
-            y = point.get_y()
-
-            p = Polygon()
-            for i in xrange(360/10):
-                r = math.radians(i * 10)
-                p.add_point(Point(x + size * math.sin(r), y + size * math.cos(r)))
-
-            stop_data['buffer'] = p
+    def make_round_buffers(self, size):
+        stops = self.get_active_stops()
+        for stop in stops:
+            stop.make_round_buffer(size)
 
     def make_square_buffers(self, size):
 
@@ -158,7 +142,7 @@ class TransitStops(object):
             (-half, -half),
         ]
 
-        for stop_id, stop_data in self._data.iteritems():
+        for stop_id, stop_data in self._stop_dict.iteritems():
             # print "Making buffer for stop_id: %d" % stop_id
             point = stop_data.get('point')
             # print repr(point)

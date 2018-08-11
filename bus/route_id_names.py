@@ -218,7 +218,8 @@ ROUTE_IDS_05_04 = {
 
 # HAve detected a few bad shape IDs in the data.  This dict suppresses them
 BAD_SHAPES = {
-    10125 : [73456]
+    10125 : [73456],
+    10175 : [73729]
 }
 
 BAD_STOP_IDS_BRT = {

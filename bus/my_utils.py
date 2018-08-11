@@ -7,23 +7,13 @@ import math
 from geometry import Polygon
 from geometry import Point
 
-from map_html import TOP as MAP_TOP
-from map_html import BOTTOM as MAP_BOTTOM
-from map_html import POLYGON
-from map_html import POLYLINE
-from map_html import MARKER
-from map_html import CIRCLE_RED_20
-from map_html import CIRCLE_RED_5
-
 from constants import BASE
 PROJ = pyproj.Proj("+init=EPSG:32613")
 
-def is_brt(base):
-    if base.find('brt'):
+def is_shapefile(base):
+    if base.find('shapefile') >= 0:
         return True
     return False
-
-
 
 def base_path_from_date(date):
     if date.find('jul') >= 0:

@@ -7,33 +7,36 @@ import time
 # from my_utils import UserGPS
 # from my_utils import TransitData
 
-from transit_routes import TransitRoutes
-from transit_trips import TransitTrips
+from constants import KEY
+from constants import SERVICE
 
-from transit_stops import TransitStops
+# from transit_routes import TransitRoutes
+# from transit_trips import TransitTrips
+
+#from transit_stops import TransitStops
 
 
 LATEST_TIME = (24 * 60 * 60) - 1
 
-class SERVICE(object):
-    UNKNOWN = 0
-    MWF     = 1
-    SAT     = 2
-    SUN     = 3
-
-class KEY(object):
-    SERVICE_TYPE    = 'serv_type'
-    DEPART_TIME     = 'depart_time'
-    ROUTE_ID        = 'route_id'
-    TRIP_ID         = 'trip_id'
-    HEADSIGN        = 'headsign'
-    DIRECTION       = 'direction'
-    STOP_ID         = 'stop_id'
-    EST_WAIT_SEC    = 'est_wait_sec'
-    DISTANCE        = 'dist'
-    POPULATION      = 'pop'
-    WEIGHT              = 'weight'
-    DAILY_DEPARTURES    = 'daily_departures'
+# class SERVICE(object):
+#     UNKNOWN = 0
+#     MWF     = 1
+#     SAT     = 2
+#     SUN     = 3
+#
+# class KEY(object):
+#     SERVICE_TYPE    = 'serv_type'
+#     DEPART_TIME     = 'depart_time'
+#     ROUTE_ID        = 'route_id'
+#     TRIP_ID         = 'trip_id'
+#     HEADSIGN        = 'headsign'
+#     DIRECTION       = 'direction'
+#     STOP_ID         = 'stop_id'
+#     EST_WAIT_SEC    = 'est_wait_sec'
+#     DISTANCE        = 'dist'
+#     POPULATION      = 'pop'
+#     WEIGHT              = 'weight'
+#     DAILY_DEPARTURES    = 'daily_departures'
 
 def timestr_to_int(input):
 
@@ -52,170 +55,12 @@ def int_to_timestr(input):
     return "%02d:%02d:%02d" % (hours, minutes, seconds)
 
 
-#
-# class TransitTrips(object):
-#
-#     def __init__(self, base_path):
-#
-#         if base_path.find("2018_05_04") > 0:
-#             print "this is the JUNE data"
-#             self._include_route_dict = ROUTE_IDS_05_04
-#         else:
-#             print "this is the JULY/AUG data"
-#             self._include_route_dict = ROUTE_IDS_06_21
-#
-#         self._base_path = base_path
-#         self._data = {}
-#         self._route_id_to_shape_id = {}
-#
-#         self.read_file()
-#
-#     def make_service_type_from_google_data(self, input):
-#
-#         try:
-#             service_type = int(input[0])
-#
-#             if service_type not in [SERVICE.MWF, SERVICE.SAT, SERVICE.SUN]:
-#                 raise ValueError("Invalid service type")
-#
-#         except Exception as err:
-#             print "%s: Error getting service type from: %s" % (repr(err), repr(input))
-#             service_type = SERVICE.UNKNOWN
-#
-#         return service_type
-#
-#
-#     def read_file(self):
-#
-#         """
-#         0 trip_id,
-#         1 route_id,
-#         2 block_id,
-#         3 shape_id,
-#         4 service_id,
-#         5 direction,
-#         6 bikes,
-#         7 wheelchairs,
-#         8 headsign
-#         """
-#
-#         file_name = os.path.join(self._base_path, "my-TransitTrips.csv")
-#
-#         line_count = 0
-#         f = None
-#
-#         try:
-#             start_time = time.time()
-#             f = open(file_name, 'r')
-#
-#             for line in f:
-#                 line_count += 1
-#                 if line_count == 1: continue
-#
-#                 line = line.strip()
-#                 parts = line.split(",")
-#
-#                 route_id = int(parts[1].strip())
-#
-#                 if not self._include_route_dict.has_key(route_id):
-#                     print "SKIPPING TRIP"
-#                     continue
-#
-#                 service_type = self.make_service_type_from_google_data(parts[4].strip())
-#                 trip_id = int(parts[0].strip())
-#                 shape_id = int(parts[3].strip())
-#
-#                 headsign = parts[8].strip()
-#                 direction = int(parts[5].strip())
-#
-#                 if self._data.get(trip_id):
-#                     print "ALREADY HAVE TRIP ID!!!!!!", trip_id
-#                     continue
-#
-#                 self._data[trip_id] = (route_id, service_type, headsign, direction, shape_id)
-#
-#                 # This section maps route_id to shape_id
-#                 shape_id_list = self._route_id_to_shape_id.get(route_id, [])
-#                 shape_id_list.append(shape_id)
-#                 shape_id_list = list(set(shape_id_list))
-#                 self._route_id_to_shape_id[route_id] = shape_id_list
-#
-#                 # if not self._route_id_to_shape_id.has_key(route_id):
-#                 #     print "Added route_id -> shape_id", route_id, shape_id
-#                 #     self._route_id_to_shape_id[route_id] = shape_id
-#                 # else:
-#                 #     have_shape_id = self._route_id_to_shape_id.get(route_id)
-#                 #     if have_shape_id != shape_id:
-#                 #         msg = "WARNING: shape id mismatch: route_id: %s have: %s got: %s!!!!" % \
-#                 #                          (route_id, have_shape_id, shape_id)
-#                 #         print msg
-#
-#             print "read %d lines" % line_count
-#             read_time = time.time() - start_time
-#             print "%s: read time: %.2f" % (file_name, read_time)
-#
-#             for key, value in self._route_id_to_shape_id.iteritems():
-#                 print "Route ID: %s shape_ids: %s" % (repr(key), repr(value))
-#
-#             #for key, value in self._data.iteritems():
-#             #    print "Trip ID", key, "Data:", value
-#
-#             # raise ValueError('temp stop')
-#
-#             return
-#
-#         finally:
-#             if f:
-#                 print "closing file"
-#                 f.close()
-#
-#     def get_route_id(self, trip_id):
-#         # print "get route id for trip: %d" % trip_id
-#         data = self._data.get(trip_id)
-#         if data is None:
-#             return None
-#         return data[0]
-#
-#     def get_direction(self, trip_id):
-#         data = self._data.get(trip_id)
-#         if data is None:
-#             return None
-#         return data[3]
-#
-#     def get_service_type(self, trip_id):
-#         data = self._data.get(trip_id)
-#         if data is None:
-#             return None
-#         return data[1]
-#
-#     def get_headsign(self, trip_id):
-#         data = self._data.get(trip_id)
-#         if data is None:
-#             return None
-#         return data[2]
-#
-#     def get_shape_ids(self, route_id):
-#         return self._route_id_to_shape_id.get(route_id)
-
-
 class StopTimes(object):
 
-    def __init__(self, base_path, stops=None):
+    def __init__(self, base_path, route_mgr):
 
-        self.routes = TransitRoutes(base_path)
-        self.trips = TransitTrips(base_path)
-        # self.shapes = TransitShapes(base_path)
-
-        if stops is None:
-            print "Instantiate new Stops class"
-            self.stops = TransitStops(base_path)
-        else:
-            # Stops already allocated
-            print "Use existing Stops class"
-            self.stops = stops
-
-        self._data = {}
-        self._route_id_dict = {}
+        self.route_mgr = route_mgr
+        self._departure_dict = {}
 
         self._base_path = base_path
         self._count_duplicate_keys_total = 0
@@ -224,38 +69,30 @@ class StopTimes(object):
 
         self.read_file()
 
-
-        # keys = [k for k in self._data.iterkeys()]
-        # keys = sorted(keys)
-        # keys.reverse()
-        # for k in keys:
-        #     print k
-
-
-    def get_stop_point(self, stop_id):
-        return self.stops.get_point(stop_id)
-
-    def get_stop_name(self, stop_id):
-        return self.stops.get_name(stop_id)
-
-    def get_route_name_from_id(self, route_id):
-        # return "name_%d" % route_id
-        return self.routes.get_route_name_from_id(route_id)
-
-    def get_route_number_from_id(self, route_id):
-        # return "number_%d" % route_id
-        return self.routes.get_route_number_from_id(route_id)
+    # def get_stop_point(self, stop_id):
+    #     return self.stops.get_point(stop_id)
+    #
+    # def get_stop_name(self, stop_id):
+    #     return self.stops.get_name(stop_id)
+    #
+    # def get_route_name_from_id(self, route_id):
+    #     # return "name_%d" % route_id
+    #     return self.routes.get_route_name_from_id(route_id)
+    #
+    # def get_route_number_from_id(self, route_id):
+    #     # return "number_%d" % route_id
+    #     return self.routes.get_route_number_from_id(route_id)
 
     def get_data(self):
-        return self._data
+        return self._departure_dict
 
-    def get_stop_ids(self):
-
-        stop_ids = [key for key in self._data.iterkeys()]
-        return stop_ids
-
-    def get_route_ids(self):
-        return self.routes.get_route_ids()
+    # def get_stop_ids(self):
+    #
+    #     stop_ids = [key for key in self._departure_dict.iterkeys()]
+    #     return stop_ids
+    #
+    # def get_route_ids(self):
+    #     return self.routes.get_route_ids()
 
     def get_stop_route_departures(self, stop_id, route_id, direction, service_type):
         departures = self.get_stop_departures(stop_id, service_type)
@@ -331,7 +168,7 @@ class StopTimes(object):
 
     def get_stop_departures(self, stop_id, service_type, start_time=0, stop_time=LATEST_TIME):
 
-        stops = self._data.get(stop_id)
+        stops = self._departure_dict.get(stop_id)
         if stops is None:
             print "Failed to find departure data for stop: %s (%s)" % (repr(stop_id), self.stops.get_name(stop_id))
             return []
@@ -349,7 +186,7 @@ class StopTimes(object):
 
         return result
 
-    def make_stop_id_from_google(self, input):
+    def make_stop_id(self, input):
 
         try:
             if input.find('_') > 0:
@@ -373,22 +210,9 @@ class StopTimes(object):
         3 departure_time,
         4 stop_sequence,
         5 shape_dist_traveled
-
         """
 
-        # NOTE: It appears to be faster to read and process the CSV file than to load the data from a pickle
-        # file_name_pickle = os.path.join(self._base_path, "TransitStopTimes.pickle")
-        # try:
-        #     start_time = time.time()
-        #     self._data = pickle.load( open( file_name_pickle, "rb" ))
-        #     read_time = time.time() - start_time
-        #     print "pickle read time: %.2f sec" % read_time
-        # except:
-        #     self._data = None
-        #
-        # if self._data is not None:
-        #     print "loaded data from pickle"
-        #     return
+        print "StopTimes: Mapping stops to routes..."
 
         file_name = os.path.join(self._base_path, "my-TransitStopTimes.csv")
         line_count = 0
@@ -406,7 +230,7 @@ class StopTimes(object):
                 parts = line.split(",")
 
                 try:
-                    stop_id = self.make_stop_id_from_google(parts[0].strip())
+                    stop_id = self.make_stop_id(parts[0].strip())
                 except:
                     print "Failed to get stop id from: %s" % repr(parts[0].strip())
                     stop_id = None
@@ -422,98 +246,70 @@ class StopTimes(object):
                     continue
 
                 trip_id = int(parts[1].strip())
-                route_id = self.trips.get_route_id(trip_id)
-                if route_id is None:
-                    if stop_id == 3432:
-                        print "No route for stop %d trip %d" % (stop_id, trip_id)
-                        print line
-                        # raise ValueError("stop me")
-                    continue
+
+                route = self.route_mgr.get_route_from_trip_id(trip_id)
+
+                # if route_id is None:
+                #     if stop_id == 3432:
+                #         print "No route for stop %d trip %d" % (stop_id, trip_id)
+                #         print line
+                #         # raise ValueError("stop me")
+                #     continue
 
                 depart_time_str = parts[3].strip()
                 depart_time = timestr_to_int(depart_time_str)
 
-                # print stop_id, trip_ip, depart_time
+                # print stop_id, trip_id, depart_time
                 # print "LINE", line, trip_id, stop_id
 
-                stop_data = self._data.get(stop_id, {})
-                service_type = self.trips.get_service_type(trip_id)
-                headsign = self.trips.get_headsign(trip_id)
-                direction = self.trips.get_direction(trip_id)
-                route_name = self.get_route_name_from_id(route_id)
+                stop = self.route_mgr.get_stop(stop_id)
 
-                # primary_route_id = self.routes.get_primary_route_id(route_id)
-                # if primary_route_id is None:
-                #     # This is a primary route
-                #     self._count_primary += 1
-                # else:
-                #     # This is a duplicate route
-                #     self._count_duplicate +=1
-                #
-                # if primary_route_id is not None:
-                #     # Do not include duplicate routes in result
-                #     continue
+                # Cross link the stop / routes
+                stop.add_route_id(route.get_id())
+                route.add_stop_id(stop_id)
 
-                # print depart_time, service_type, route_id, direction
-                key = "%d-%d-%d-%d" % (depart_time, service_type, route_id, direction)
+                departure_data = self._departure_dict.get(stop_id, {})
 
-                if stop_data.has_key(key):
-                    print "Already have key", key, depart_time_str, stop_id
+                service_type = self.route_mgr.get_trip_service_type(trip_id)
+                headsign = self.route_mgr.get_trip_headsign(trip_id)
+                direction = self.route_mgr.get_trip_direction(trip_id)
+
+                key = "%d-%d-%d-%d" % (depart_time, service_type, route.get_id(), direction)
+
+                # print "WANT TO CHECK KEY", key
+
+                if departure_data.has_key(key):
+                    self._count_duplicate_keys_total += 1
+                    continue
+
+                    # print "Already have departure key", key, depart_time_str, stop_id
 
                     # raise ValueError("duplicate key")
                     x = self._key_counts.get(key, 0)
                     x += 1
                     self._key_counts[key] = x
-                    self._count_duplicate_keys_total += 1
                     continue
-
-                if route_id is None:
-                    print "failed to get route_id ID", trip_id
-
-                else:
-                    count = self._route_id_dict.get(route_id, 0)
-                    count += 1
-                    self._route_id_dict[route_id] = count
 
                 if service_type is None:
                     print "failed to get service_id for trip_id", trip_id
 
-                stop_data[key] = {
+                departure_data[key] = {
                         KEY.TRIP_ID         : trip_id,
                         KEY.DEPART_TIME     : depart_time,
                         KEY.SERVICE_TYPE    : service_type,
-                        KEY.ROUTE_ID        : route_id,
+                        KEY.ROUTE_ID        : route.get_id(),
                         KEY.HEADSIGN        : headsign,
                         KEY.DIRECTION       : direction
                 }
-                self._data[stop_id] = stop_data
+                self._departure_dict[stop_id] = departure_data
 
-            print "read %d lines" % line_count
             read_time = time.time() - start_time
-            print "file: %s read time: %.2f sec" % (file_name, read_time)
-
-            print "duplicate_key count", self._count_duplicate_keys_total
-
-            # for route_id, count in self._route_id_dict.iteritems():
-            #     print "route_id", route_id, count
-
-            #for k, v in self._key_counts.iteritems():
-            #    print k, v
-
-            # start_time = time.time()
-            # pickle.dump( self._data, open( file_name_pickle, "wb" ) )
-            # write_time = time.time() - start_time
-            # print "pickle write time: %.2f sec" % write_time
-
-            # j = open(file_name_json, 'w')
-            # simplejson.dump(self._stop_time_data, j, indent=4)
-            # j.close()
+            print "file: %s departures: %d read time: %.2f sec" % (file_name, line_count - 1, read_time)
+            print "StopTimes: duplicate departure key count", self._count_duplicate_keys_total
 
         finally:
             if f:
-                print "closing file"
                 f.close()
-
 
 def test_read():
 

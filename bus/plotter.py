@@ -1,4 +1,7 @@
 from geometry import Polygon
+from geometry import Polyline
+from geometry import Polypoint
+
 from geometry import Point
 
 from map_html import TOP as MAP_TOP
@@ -8,6 +11,14 @@ from map_html import POLYLINE
 from map_html import MARKER
 from map_html import CIRCLE
 
+class ATTR(object):
+    STROKE_COLOR    = "strokeColor"
+    STROKE_WEIGHT   = "strokeWeight"
+    STROKE_OPACITY  = "strokeOpacity"
+    FILL_COLOR      = "fillColor"
+    FILL_OPACITY    = "fillOpacity"
+    RADIUS          = "radius"
+
 class Plotter(object):
 
     def __init__(self):
@@ -16,7 +27,7 @@ class Plotter(object):
         self._marker_list = []
         self._dot_list = []
         self._polyline_list = []
-        self._polydot_list = []
+        self._polypoint_list = []
     #    self._dot_dict = {}
     #    self._dot_key = 1
 
@@ -33,11 +44,15 @@ class Plotter(object):
     def add_marker(self, point, title, label):
         self._marker_list.append((point, title, label))
 
-    def add_polyline(self, polyline):
-        self._polyline_list.append(polyline)
+    def add_polyline(self, item):
+        if not isinstance(item, Polyline):
+            raise ValueError("%s not a Polyline" % type(item))
+        self._polyline_list.append(item)
 
-    def add_polydot(self, polyline):
-        self._polydot_list.append(polyline)
+    def add_polypoint(self, item):
+        if not isinstance(item, Polyline):
+            raise ValueError("%s not a Polypoint" % type(item))
+        self._polypoint_list.append(item)
 
     def add_polygon(self, items):
 
@@ -46,8 +61,7 @@ class Plotter(object):
 
         for item in items:
             if not isinstance(item, Polygon):
-                raise ValueError("not a Polygon")
-            #print "ADD item", item
+                raise ValueError("%s not a Polygon" % type(item))
             self._polygon_list.append(item)
 
     def plot(self, file_name):
@@ -64,14 +78,14 @@ class Plotter(object):
                     f.write("{lat: %f, lng: %f},\n" % point.get_lat_lng())
                 f.write("];\n")
 
-                stroke_color = item.get_attribute("strokeColor", default="#202020")
-                stroke_opacity = item.get_attribute("strokeOpacity", default=0.5)
-                stroke_weight = item.get_attribute("strokeWeight", default=1)
+                stroke_color = item.get_attribute(ATTR.STROKE_COLOR, default="#202020")
+                stroke_opacity = item.get_attribute(ATTR.STROKE_OPACITY, default=0.5)
+                stroke_weight = item.get_attribute(ATTR.STROKE_WEIGHT, default=1)
 
                 f.write(POLYLINE % (stroke_color, stroke_opacity, stroke_weight))
 
-        if len(self._polydot_list):
-            for item in self._polydot_list:
+        if len(self._polypoint_list):
+            for item in self._polypoint_list:
                 i = 0
                 f.write("var circle = {\n")
                 points = item.get_points()
@@ -80,12 +94,12 @@ class Plotter(object):
                     i += 1
                 f.write("};\n")
 
-                stroke_color = item.get_attribute("strokeColor", default="#ffffff")
-                stroke_opacity = item.get_attribute("strokeOpacity", default=0.5)
-                stroke_weight = item.get_attribute("strokeWeight", default=1)
-                fill_color = item.get_attribute("fillColor", default="#ff0000")
-                fill_opacity = item.get_attribute("fillOpacity", default=0.1)
-                radius = item.get_attribute("radius", default=50)
+                stroke_color = item.get_attribute(ATTR.STROKE_COLOR, default="#ffffff")
+                stroke_opacity = item.get_attribute(ATTR.STROKE_OPACITY, default=0.5)
+                stroke_weight = item.get_attribute(ATTR.STROKE_WEIGHT, default=1)
+                fill_color = item.get_attribute(ATTR.FILL_COLOR, default="#ff0000")
+                fill_opacity = item.get_attribute(ATTR.FILL_OPACITY, default=0.1)
+                radius = item.get_attribute(ATTR.RADIUS, default=50)
                 f.write(CIRCLE % (stroke_color, stroke_opacity, stroke_weight, fill_color, fill_opacity, radius))
 
         if len(self._polygon_list):
@@ -99,11 +113,11 @@ class Plotter(object):
 
                 # fill_opacity = float(random.randint(0, 1000)/1000.0)
 
-                stroke_color = item.get_attribute("strokeColor", default="#202020")
-                stroke_opacity = item.get_attribute("strokeOpacity", default=0.5)
-                stroke_weight = item.get_attribute("strokeWeight", default=1)
-                fill_color = item.get_attribute("fillColor", default="#ff0000")
-                fill_opacity = item.get_attribute("fillOpacity", default=0.1)
+                stroke_color = item.get_attribute(ATTR.STROKE_COLOR, default="#202020")
+                stroke_opacity = item.get_attribute(ATTR.STROKE_OPACITY, default=0.5)
+                stroke_weight = item.get_attribute(ATTR.STROKE_WEIGHT, default=1)
+                fill_color = item.get_attribute(ATTR.FILL_COLOR, default="#ff0000")
+                fill_opacity = item.get_attribute(ATTR.FILL_OPACITY, default=0.1)
 
                 f.write(POLYGON % (stroke_color, stroke_opacity, stroke_weight, fill_color, fill_opacity))
 

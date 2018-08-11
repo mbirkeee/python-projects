@@ -46,35 +46,35 @@ TOP = """
 */
 """
 
-CIRCLE_RED_20 = """
-for (var point in circle) {
-  var circ = new google.maps.Circle({
-    strokeColor: '#FF0000',
-    strokeOpacity: 0.25,
-    strokeWeight: 1,
-    fillColor: '#FF0000',
-    fillOpacity: 0.25,
-    map: map,
-    center: circle[point].center,
-    radius: 20,
-  });
-}
-"""
+# CIRCLE_RED_20 = """
+# for (var point in circle) {
+#   var circ = new google.maps.Circle({
+#     strokeColor: '#FF0000',
+#     strokeOpacity: 0.25,
+#     strokeWeight: 1,
+#     fillColor: '#FF0000',
+#     fillOpacity: 0.25,
+#     map: map,
+#     center: circle[point].center,
+#     radius: 20,
+#   });
+# }
+# """
 
-CIRCLE_RED_5 = """
-for (var point in circle) {
-  var circ = new google.maps.Circle({
-    strokeColor: '#FF0000',
-    strokeOpacity: 0.25,
-    strokeWeight: 1,
-    fillColor: '#FF0000',
-    fillOpacity: 0.5,
-    map: map,
-    center: circle[point].center,
-    radius: 5,
-  });
-}
-"""
+# CIRCLE_RED_5 = """
+# for (var point in circle) {
+#   var circ = new google.maps.Circle({
+#     strokeColor: '#FF0000',
+#     strokeOpacity: 0.25,
+#     strokeWeight: 1,
+#     fillColor: '#FF0000',
+#     fillOpacity: 0.5,
+#     map: map,
+#     center: circle[point].center,
+#     radius: 5,
+#   });
+# }
+# """
 
 CIRCLE = """
 for (var point in circle) {
@@ -114,50 +114,50 @@ for (var point in marker) {
 # """
 
 
-CIRCLE_RED_50 = """
-for (var point in circle) {
-  var circ = new google.maps.Circle({
-    strokeColor: '#FF0000',
-    strokeOpacity: 0.50,
-    strokeWeight: 1,
-    fillColor: '#FF0000',
-    fillOpacity: 0.50,
-    map: map,
-    center: circle[point].center,
-    radius: 50
-  });
-}
-"""
+# CIRCLE_RED_50 = """
+# for (var point in circle) {
+#   var circ = new google.maps.Circle({
+#     strokeColor: '#FF0000',
+#     strokeOpacity: 0.50,
+#     strokeWeight: 1,
+#     fillColor: '#FF0000',
+#     fillOpacity: 0.50,
+#     map: map,
+#     center: circle[point].center,
+#     radius: 50
+#   });
+# }
+# """
 
-CIRCLE1 = """
-for (var point in circle1) {
-  var circle = new google.maps.Circle({
-    strokeColor: '#FF0000',
-    strokeOpacity: 0.25,
-    strokeWeight: 1,
-    fillColor: '#FF0000',
-    fillOpacity: 0.25,
-    map: map,
-    center: circle1[point].center,
-    radius: 100
-  });
-}
-"""
-
-CIRCLE2 = """
-for (var point in circle2) {
-  var circle = new google.maps.Circle({
-    strokeColor: '#0000FF',
-    strokeOpacity: 0.25,
-    strokeWeight: 1,
-    fillColor: '#0000FF',
-    fillOpacity: 0.25,
-    map: map,
-    center: circle2[point].center,
-    radius: 2
-  });
-}
-"""
+# CIRCLE1 = """
+# for (var point in circle1) {
+#   var circle = new google.maps.Circle({
+#     strokeColor: '#FF0000',
+#     strokeOpacity: 0.25,
+#     strokeWeight: 1,
+#     fillColor: '#FF0000',
+#     fillOpacity: 0.25,
+#     map: map,
+#     center: circle1[point].center,
+#     radius: 100
+#   });
+# }
+# """
+#
+# CIRCLE2 = """
+# for (var point in circle2) {
+#   var circle = new google.maps.Circle({
+#     strokeColor: '#0000FF',
+#     strokeOpacity: 0.25,
+#     strokeWeight: 1,
+#     fillColor: '#0000FF',
+#     fillOpacity: 0.25,
+#     map: map,
+#     center: circle2[point].center,
+#     radius: 2
+#   });
+# }
+# """
 
 POLYGON = """
 var my_polygon = new google.maps.Polygon({
@@ -223,19 +223,19 @@ ROUTE_TOP = """
         var flightPlanCoordinates = [
 """
 
-ROUTE_MIDDLE = """
-        ];
-        var flightPath = new google.maps.Polyline({
-          path: flightPlanCoordinates,
-          geodesic: true,
-          strokeColor: '#0000FF',
-          strokeOpacity: 1.0,
-          strokeWeight: 2
-        });
-
-        flightPath.setMap(map);
-        var trip = {
-"""
+# ROUTE_MIDDLE = """
+#         ];
+#         var flightPath = new google.maps.Polyline({
+#           path: flightPlanCoordinates,
+#           geodesic: true,
+#           strokeColor: '#0000FF',
+#           strokeOpacity: 1.0,
+#           strokeWeight: 2
+#         });
+#
+#         flightPath.setMap(map);
+#         var trip = {
+# """
 
 POLYLINE = """
 var flightPath = new google.maps.Polyline({
@@ -248,26 +248,26 @@ var flightPath = new google.maps.Polyline({
 flightPath.setMap(map);
 """
 
-ROUTE_BOTTOM = """
-        };
-
-        for (var point in trip) {
-          var circle = new google.maps.Circle({
-            strokeColor: trip[point].color,
-            strokeOpacity: 1,
-            strokeWeight: 2,
-            fillColor: trip[point].color,
-            fillOpacity: 1,
-            map: map,
-            center: trip[point].center,
-            radius: 30
-          });
-        }
-      }
-    </script>
-    <script async defer
-      src="https://maps.googleapis.com/maps/api/js?key=%s&callback=initMap">
-    </script>
-  </body>
-</html>
-""" % GOOGLE_MAPS_KEY
+# ROUTE_BOTTOM = """
+#         };
+#
+#         for (var point in trip) {
+#           var circle = new google.maps.Circle({
+#             strokeColor: trip[point].color,
+#             strokeOpacity: 1,
+#             strokeWeight: 2,
+#             fillColor: trip[point].color,
+#             fillOpacity: 1,
+#             map: map,
+#             center: trip[point].center,
+#             radius: 30
+#           });
+#         }
+#       }
+#     </script>
+#     <script async defer
+#       src="https://maps.googleapis.com/maps/api/js?key=%s&callback=initMap">
+#     </script>
+#   </body>
+# </html>
+# """ % GOOGLE_MAPS_KEY

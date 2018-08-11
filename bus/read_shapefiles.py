@@ -307,8 +307,8 @@ class Runner(object):
 
             color = "#%6x" % random.randint(10000, 10000000)
             # color = "#ff%4x" % random.randint(0, m2)
-            polyline.add_attribute("strokeColor", color)
-            polyline.add_attribute("strokeWeight", 4)
+            polyline.set_attribute("strokeColor", color)
+            polyline.set_attribute("strokeWeight", 4)
             for point in points:
                 polyline.add_point(Point(point[1], point[0]))
 

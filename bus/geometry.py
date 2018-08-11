@@ -85,11 +85,14 @@ class Polyline(object):
     def get_points(self):
         return self._points
 
-    def add_attribute(self, key, value):
+    def set_attribute(self, key, value):
         self._attributes[key] = value
 
     def get_attribute(self, key, default=None):
         return self._attributes.get(key, default)
+
+class Polypoint(Polyline):
+    pass
 
 class Polygon(object):
 
@@ -114,7 +117,7 @@ class Polygon(object):
     def get_points(self):
         return self._points
 
-    def add_attribute(self, key, value):
+    def set_attribute(self, key, value):
         self._attributes[key] = value
 
     def get_attribute(self, key, default=None):
