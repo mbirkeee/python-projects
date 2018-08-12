@@ -407,6 +407,11 @@ class TransitRoutes(object):
             return self._shapefile.get_stops()
         return [stop for stop in self._stop_dict.itervalues()]
 
+    def make_round_buffers(self, radius):
+        stops = self.get_stops()
+        for stop in stops:
+            stop.make_round_buffer(radius)
+
     def get_active_stops(self):
         if self._shapefile_mode:
             return self._shapefile.get_active_stops()

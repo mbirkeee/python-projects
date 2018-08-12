@@ -23,6 +23,9 @@ class TransitRoute(object):
     def set_stop_dict(self, stop_dict):
         self._stop_dict = stop_dict
 
+    def get_stop_ids(self):
+        return self._stop_ids
+
     def get_stops(self):
         result = []
         for stop_id in self._stop_ids:
@@ -43,7 +46,6 @@ class TransitRoute(object):
     def get_segments_dict(self):
         return self._segment_dict
 
-
     def set_attribute(self, key, value):
         self._attributes[key] = value
 
@@ -52,9 +54,6 @@ class TransitRoute(object):
 
     def get_name(self):
         return self._name
-
-    def get_stop_ids(self):
-        return self._stop_ids
 
     def add_stop_id(self, stop_id):
         if stop_id is None:
@@ -77,6 +76,9 @@ class TransitStop(object):
         self._route_dict = None
 
         self._attributes = {}
+
+    def get_polygon(self):
+        return self._buffer_p
 
     def set_route_dict(self, route_dict):
         self._route_dict = route_dict

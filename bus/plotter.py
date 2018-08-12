@@ -1,8 +1,5 @@
 from geometry import Polygon
 from geometry import Polyline
-from geometry import Polypoint
-
-from geometry import Point
 
 from map_html import TOP as MAP_TOP
 from map_html import BOTTOM as MAP_BOTTOM
@@ -63,6 +60,20 @@ class Plotter(object):
             if not isinstance(item, Polygon):
                 raise ValueError("%s not a Polygon" % type(item))
             self._polygon_list.append(item)
+
+    def add_das(self, das):
+        """
+        helper function to add all DA polygons to the plot
+        """
+        ps = das.get_polygons()
+        for p in ps:
+            p.set_attribute(ATTR.STROKE_COLOR, "#202020")
+            p.set_attribute(ATTR.STROKE_WEIGHT, 1)
+            p.set_attribute(ATTR.STROKE_OPACITY, 1)
+            p.set_attribute(ATTR.FILL_COLOR, "#ffffff")
+            p.set_attribute(ATTR.FILL_OPACITY, 0)
+            self.add_polygon(p)
+
 
     def plot(self, file_name):
         print "plot called", file_name

@@ -9,10 +9,13 @@ from geometry import Polyline
 from geometry import Polypoint
 from geometry import Point
 
-from my_utils import DaData
+from da_manager import DaData
+
 from my_utils import DaHeatmap
 from my_utils import Weight
-from transit_stops import TransitStops
+# from transit_stops import TransitStops
+from transit_routes import TransitRoutes
+
 from intersect import Intersect
 from score import Score
 from constants import BASE
@@ -304,7 +307,7 @@ class Runner(object):
         das = DaData()
 
         if True:
-            group1 = das.get_polygons()
+            group1 = das.get_polygon_dict()
             da_id_list = das.get_da_id_list()
         else:
             da_id_list = [
@@ -355,6 +358,7 @@ class Runner(object):
         group2 = stop_mgr.get_buffer_polygons()
 
         intersect = Intersect(group1, group2, limit=2000)
+
         stop_mgr.compute_demand(intersect, das)
         stop_polygons = intersect.get_intersections(group=1, id=da_id_list[0])
 
@@ -553,24 +557,20 @@ class Runner(object):
         f.close()
 
     def plot_stop_da_intersections(self):
-        stop = TransitStops( "../data/sts/csv/2018_05_04/")
-        #stop.make_square_buffers(400)
 
-        stop.make_round_buffer(400)
-        group1 = {}
-        stop_id_list = stop.get_ids()
-        for stop_id in stop_id_list:
-            group1[stop_id] = stop.get_buffer(stop_id)
+        dataman = TransitRoutes(BASE.JULY, link_stops=False, link_shapes=False)
 
-        group2 = {}
+        dataman.make_round_buffers(400)
+        group1 = dataman.get_stops()
+
         das = DaData()
-        da_id_list = das.get_da_id_list()
-        for da_id in da_id_list:
-            group2[da_id] = das.get_polygon(da_id)
+        group2 = das.get_das()
 
         intersect = Intersect(group1, group2)
 
-        polygons = intersect.get_intersections_for_group1_id(10004)
+        s_id = 3312
+
+        polygons = intersect.get_intersections_for_group1_id(s_id)
         plotter = Plotter()
 
         for item in polygons:
@@ -583,15 +583,16 @@ class Runner(object):
             p = item[0]
             centroid = p.get_centroid()
             da_id = item[1]
-            msg = "da_%d" % da_id
-            plotter.add_marker(centroid, msg, "")
+            msg = "%d" % da_id
+            plotter.add_marker(centroid, msg, msg)
 
-        plotter.plot("temp/maps/stop_da_intersect_3004.html")
+        plotter.plot("temp/maps/stop_da_intersect_%d.html" % s_id )
 
         polygons = intersect.get_intersections_for_group2_id(47110114)
         plotter = Plotter()
 
-        p = group2.get(47110114)
+        da = das.get_da(47110114)
+        p = da.get_polygon()
         p.set_attribute("fillColor", "#0000ff")
         p.set_attribute("strokeWeight", 2)
 
@@ -632,9 +633,9 @@ if __name__ == "__main__":
 #    runner.plot_heatmap_change()
 #    runner.plot_stop_buffers()
 
-#    runner.plot_stop_da_intersections()
+    runner.plot_stop_da_intersections()
 
-    runner.plot_test_raster()
+#    runner.plot_test_raster()
 
 
 #    runner.test_plot_da_pop_dens()
