@@ -38,9 +38,9 @@ class TransitRoute(object):
             self._segment_dict[segment_id] = segment
 
     def get_segments(self):
-        if len(self._segment_dict) == 0:
-            return self._segments
+        return self._segments
 
+    def get_segments_dict(self):
         return self._segment_dict
 
 

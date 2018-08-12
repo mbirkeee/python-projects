@@ -3,40 +3,10 @@ import simplejson
 import os
 import time
 
-# import my_utils
-# from my_utils import UserGPS
-# from my_utils import TransitData
-
 from constants import KEY
 from constants import SERVICE
 
-# from transit_routes import TransitRoutes
-# from transit_trips import TransitTrips
-
-#from transit_stops import TransitStops
-
-
 LATEST_TIME = (24 * 60 * 60) - 1
-
-# class SERVICE(object):
-#     UNKNOWN = 0
-#     MWF     = 1
-#     SAT     = 2
-#     SUN     = 3
-#
-# class KEY(object):
-#     SERVICE_TYPE    = 'serv_type'
-#     DEPART_TIME     = 'depart_time'
-#     ROUTE_ID        = 'route_id'
-#     TRIP_ID         = 'trip_id'
-#     HEADSIGN        = 'headsign'
-#     DIRECTION       = 'direction'
-#     STOP_ID         = 'stop_id'
-#     EST_WAIT_SEC    = 'est_wait_sec'
-#     DISTANCE        = 'dist'
-#     POPULATION      = 'pop'
-#     WEIGHT              = 'weight'
-#     DAILY_DEPARTURES    = 'daily_departures'
 
 def timestr_to_int(input):
 
@@ -69,30 +39,8 @@ class StopTimes(object):
 
         self.read_file()
 
-    # def get_stop_point(self, stop_id):
-    #     return self.stops.get_point(stop_id)
-    #
-    # def get_stop_name(self, stop_id):
-    #     return self.stops.get_name(stop_id)
-    #
-    # def get_route_name_from_id(self, route_id):
-    #     # return "name_%d" % route_id
-    #     return self.routes.get_route_name_from_id(route_id)
-    #
-    # def get_route_number_from_id(self, route_id):
-    #     # return "number_%d" % route_id
-    #     return self.routes.get_route_number_from_id(route_id)
-
     def get_data(self):
         return self._departure_dict
-
-    # def get_stop_ids(self):
-    #
-    #     stop_ids = [key for key in self._departure_dict.iterkeys()]
-    #     return stop_ids
-    #
-    # def get_route_ids(self):
-    #     return self.routes.get_route_ids()
 
     def get_stop_route_departures(self, stop_id, route_id, direction, service_type):
         departures = self.get_stop_departures(stop_id, service_type)
@@ -255,13 +203,6 @@ class StopTimes(object):
                     continue
 
                     # raise ValueError("Failed to get route for trip ID: %s" % repr(trip_id))
-
-                # if route_id is None:
-                #     if stop_id == 3432:
-                #         print "No route for stop %d trip %d" % (stop_id, trip_id)
-                #         print line
-                #         # raise ValueError("stop me")
-                #     continue
 
                 depart_time_str = parts[3].strip()
                 depart_time = timestr_to_int(depart_time_str)

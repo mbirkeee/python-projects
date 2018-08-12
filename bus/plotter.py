@@ -70,6 +70,25 @@ class Plotter(object):
         f = open(file_name, "w")
         f.write(MAP_TOP)
 
+        if len(self._polygon_list):
+            for item in self._polygon_list:
+                f.write("var polypoints = [\n")
+                points = item.get_points()
+
+                for point in points:
+                    f.write("{lat: %f, lng: %f},\n" % point.get_lat_lng())
+                f.write("];\n")
+
+                # fill_opacity = float(random.randint(0, 1000)/1000.0)
+
+                stroke_color = item.get_attribute(ATTR.STROKE_COLOR, default="#202020")
+                stroke_opacity = item.get_attribute(ATTR.STROKE_OPACITY, default=0.5)
+                stroke_weight = item.get_attribute(ATTR.STROKE_WEIGHT, default=1)
+                fill_color = item.get_attribute(ATTR.FILL_COLOR, default="#ff0000")
+                fill_opacity = item.get_attribute(ATTR.FILL_OPACITY, default=0.1)
+
+                f.write(POLYGON % (stroke_color, stroke_opacity, stroke_weight, fill_color, fill_opacity))
+
         if len(self._polyline_list):
             for item in self._polyline_list:
                 f.write("var polyline = [\n")
@@ -102,24 +121,6 @@ class Plotter(object):
                 radius = item.get_attribute(ATTR.RADIUS, default=50)
                 f.write(CIRCLE % (stroke_color, stroke_opacity, stroke_weight, fill_color, fill_opacity, radius))
 
-        if len(self._polygon_list):
-            for item in self._polygon_list:
-                f.write("var polypoints = [\n")
-                points = item.get_points()
-
-                for point in points:
-                    f.write("{lat: %f, lng: %f},\n" % point.get_lat_lng())
-                f.write("];\n")
-
-                # fill_opacity = float(random.randint(0, 1000)/1000.0)
-
-                stroke_color = item.get_attribute(ATTR.STROKE_COLOR, default="#202020")
-                stroke_opacity = item.get_attribute(ATTR.STROKE_OPACITY, default=0.5)
-                stroke_weight = item.get_attribute(ATTR.STROKE_WEIGHT, default=1)
-                fill_color = item.get_attribute(ATTR.FILL_COLOR, default="#ff0000")
-                fill_opacity = item.get_attribute(ATTR.FILL_OPACITY, default=0.1)
-
-                f.write(POLYGON % (stroke_color, stroke_opacity, stroke_weight, fill_color, fill_opacity))
 
         if len(self._marker_list) > 0:
 

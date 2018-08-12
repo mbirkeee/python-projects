@@ -189,7 +189,7 @@ class TransitShapefile(object):
                 parts = line.split()
 
                 part_count = len(parts)
-                print "PARTS: %d" % len(parts)
+                print "Total part count: %d" % len(parts)
 
                 for i, part in enumerate(parts):
                     if i == 0 : continue
@@ -416,9 +416,9 @@ class TransitRoutes(object):
                 stops = self.get_stops()
                 for stop in stops:
                     routes_ids = stop.get_route_ids()
-                    print stop.get_name(), routes_ids
+                    # print stop.get_name(), routes_ids
                     if len(routes_ids) > 0:
-                        self._active_stops .append(stop)
+                        self._active_stops.append(stop)
 
         print "Total stops:", len(self._stop_dict)
         print "Active stops:", len(self._active_stops)
@@ -472,15 +472,15 @@ class TransitRoutes(object):
                     item = parts[0].strip()
                     pos = item.find("_merged")
                     if pos > 0:
-                        item = item[:pos]
-                        print "ITEM!!!!!!!!!!!!!!", item
-                        # raise ValueError("STOP ID: %s" % repr(item))
+                        fixed = item[:pos]
+                        print "Fixed :%s -> %s" % (item, fixed)
+                        item = fixed
 
                     stop_id = int(item)
 
                 except Exception as err:
                     print "Exception processing line: %s" % repr(err), item
-                    print "line: %s" % line
+                    print "Line: %s" % line
                     stop_id = fake_stop_id
                     print "Assign fake stop ID: %d" % fake_stop_id
                     fake_stop_id += 1
@@ -626,17 +626,3 @@ class TransitRoutes(object):
             return self._shapefile.get_routes()
 
         return [route for route in self._route_dict.itervalues()]
-
-    # def make_service_type(self, input):
-    #
-    #     try:
-    #         service_type = int(input[0])
-    #
-    #         if service_type not in [SERVICE.MWF, SERVICE.SAT, SERVICE.SUN]:
-    #             raise ValueError("Invalid service type")
-    #
-    #     except Exception as err:
-    #         print "%s: Error getting service type from: %s" % (repr(err), repr(input))
-    #         service_type = SERVICE.UNKNOWN
-    #
-    #     return service_type

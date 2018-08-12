@@ -11,7 +11,7 @@ from transit_objects import TransitStop
 
 from constants import KEY
 
-class TransitStops(object):
+class TransitStopsObsolete(object):
 
     def __init__(self, base_path):
 

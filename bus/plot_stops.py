@@ -35,10 +35,11 @@ class Runner(object):
             routes = self._route_mgr.get_routes()
             for route in routes:
                 segments = route.get_segments()
+
                 for segment in segments:
                     segment.set_attribute(ATTR.STROKE_COLOR, "#0000ff")
                     segment.set_attribute(ATTR.STROKE_WEIGHT, 3)
-                    segment.set_attribute(ATTR.STROKE_OPACITY, 0.2)
+                    segment.set_attribute(ATTR.STROKE_OPACITY, 0.8)
                     plotter.add_polyline(segment)
 
             stops = self._route_mgr.get_active_stops()
@@ -46,8 +47,8 @@ class Runner(object):
             for stop in stops:
                  polypoint.add_point(stop.get_point())
 
-            polypoint.set_attribute(ATTR.FILL_OPACITY, 1)
-            polypoint.set_attribute(ATTR.RADIUS, 80)
+            polypoint.set_attribute(ATTR.FILL_OPACITY, 0.8)
+            polypoint.set_attribute(ATTR.RADIUS, 90)
             plotter.add_polypoint(polypoint)
 
             print "Active stops:", len(stops)
