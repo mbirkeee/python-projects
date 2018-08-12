@@ -1,15 +1,10 @@
 import argparse
-import my_utils
-import pyproj
-import random
-
-from constants import BASE
 from transit_routes import TransitRoutes
-from transit_shapes import TransitShapes
-from transit_stops import TransitStops
-from stop_times import TransitTrips
+
 
 from plotter import Plotter
+from plotter import ATTR
+
 from geometry import Polyline
 
 from my_utils import base_path_from_date
@@ -24,35 +19,42 @@ class Runner(object):
         try:
             self._stop_id = int(args.stop_id)
         except:
-            self._route_id = None
+            self._stop_id = None
 
         self._date = args.date
         self._base_path = base_path_from_date(args.date)
 
-        self._stop_mgr = TransitStops(self._base_path)
-
-
-        raise ValueError("temp stop")
+        self._route_mgr = TransitRoutes(self._base_path, link_stops=True, link_shapes=True)
 
     def run(self):
 
-        print self._stop_id
+        if self._stop_id is None:
+            plotter = Plotter()
+            polypoint = Polyline()
 
-        plotter = Plotter()
-        polypoint = Polyline()
+            routes = self._route_mgr.get_routes()
+            for route in routes:
+                segments = route.get_segments()
+                for segment in segments:
+                    segment.set_attribute(ATTR.STROKE_COLOR, "#0000ff")
+                    segment.set_attribute(ATTR.STROKE_WEIGHT, 3)
+                    segment.set_attribute(ATTR.STROKE_OPACITY, 0.2)
+                    plotter.add_polyline(segment)
 
-        stops = self._stop_mgr.get_stops()
+            stops = self._route_mgr.get_active_stops()
 
-        for stop_id in stop_ids:
-            print "Adding location for", stop_id
-            point = stop.get_point(stop_id)
-            print point
-            polypoint.add_point(stop.get_point(stop_id))
-        polypoint.set_attribute("fillOpacity", 0.8)
-        polypoint.set_attribute("radius", 50)
-        plotter.add_polypoint(polypoint)
-        plotter.plot("temp/maps/stop_locations.html")
+            for stop in stops:
+                 polypoint.add_point(stop.get_point())
 
+            polypoint.set_attribute(ATTR.FILL_OPACITY, 1)
+            polypoint.set_attribute(ATTR.RADIUS, 80)
+            plotter.add_polypoint(polypoint)
+
+            print "Active stops:", len(stops)
+
+            plotter.plot("temp/maps/stop_locations_%s.html" % self._date)
+        else:
+            print " one stop id?"
 
 
 if __name__ == "__main__":

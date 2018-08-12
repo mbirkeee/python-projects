@@ -249,6 +249,13 @@ class StopTimes(object):
 
                 route = self.route_mgr.get_route_from_trip_id(trip_id)
 
+                if route is None:
+                    # I think its perfectly valid to fail to get a route ID when there are
+                    # two sets of data in the OPEN dataset
+                    continue
+
+                    # raise ValueError("Failed to get route for trip ID: %s" % repr(trip_id))
+
                 # if route_id is None:
                 #     if stop_id == 3432:
                 #         print "No route for stop %d trip %d" % (stop_id, trip_id)
@@ -263,6 +270,9 @@ class StopTimes(object):
                 # print "LINE", line, trip_id, stop_id
 
                 stop = self.route_mgr.get_stop(stop_id)
+
+                if stop is None:
+                    raise ValueError("Failed to find stop for stop_id: %d" % stop_id)
 
                 # Cross link the stop / routes
                 stop.add_route_id(route.get_id())

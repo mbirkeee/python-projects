@@ -374,6 +374,8 @@ class TransitRoutes(object):
             self._stop_dict = {}
             self.read_file_stops()
 
+            self._active_stops = []
+
             self._trips = TransitTrips(base_path)
 
             if link_shapes:
@@ -399,6 +401,28 @@ class TransitRoutes(object):
                 # self._trip_dict = {}
                 # self._route_id_to_shape_id = {}
                 # self.read_file_trips()
+
+    def get_stops(self):
+        if self._shapefile_mode:
+            return self._shapefile.get_stops()
+        return [stop for stop in self._stop_dict.itervalues()]
+
+    def get_active_stops(self):
+        if self._shapefile_mode:
+            return self._shapefile.get_active_stops()
+
+        else:
+            if not self._active_stops:
+                stops = self.get_stops()
+                for stop in stops:
+                    routes_ids = stop.get_route_ids()
+                    print stop.get_name(), routes_ids
+                    if len(routes_ids) > 0:
+                        self._active_stops .append(stop)
+
+        print "Total stops:", len(self._stop_dict)
+        print "Active stops:", len(self._active_stops)
+        return self._active_stops
 
     def get_route_from_trip_id(self, trip_id):
 
@@ -431,6 +455,8 @@ class TransitRoutes(object):
         f = None
         fake_stop_id = 10000
 
+        print "Reading file %s..." % file_name
+
         try:
             f = open(file_name, 'r')
 
@@ -444,6 +470,12 @@ class TransitRoutes(object):
                 bad_id = None
                 try:
                     item = parts[0].strip()
+                    pos = item.find("_merged")
+                    if pos > 0:
+                        item = item[:pos]
+                        print "ITEM!!!!!!!!!!!!!!", item
+                        # raise ValueError("STOP ID: %s" % repr(item))
+
                     stop_id = int(item)
 
                 except Exception as err:
@@ -536,10 +568,10 @@ class TransitRoutes(object):
             print "%d ID: %s NAME: %s" % (i+1, item[1], item[0])
         # ---- END TEST -----
 
-    def get_stop_points(self, route_id):
-        if self._shapefile_mode:
-            return self._shapefile.get_stop_points(route_id)
-        raise ValueError("fixme")
+    # def get_stop_points(self, route_id):
+    #     if self._shapefile_mode:
+    #         return self._shapefile.get_stop_points(route_id)
+    #     raise ValueError("fixme")
 
     # def get_stops(self, route_id):
     #     if self._shapefile_mode:

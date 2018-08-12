@@ -141,6 +141,7 @@ class Runner(object):
             polypoint = Polyline()
             for stop in stops:
                 polypoint.add_point(stop.get_point())
+                plotter.add_marker(stop.get_point(), stop.get_id(), stop.get_id())
 
             polypoint.set_attribute(ATTR.RADIUS, 50)
             polypoint.set_attribute(ATTR.FILL_OPACITY, 0.8)
