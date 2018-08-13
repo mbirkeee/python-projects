@@ -1,46 +1,54 @@
 import math
 
-from my_utils import Weight
+from my_utils import Filter
 from stop_times import StopTimes
 from stop_times import SERVICE
 from stop_times import KEY
 
-DECAY = Weight()
+DECAY = Filter()
 
 class Score(object):
 
-    def __init__(self, base_path, stops=None):
+    # def __init__(self, base_path, stops=None):
+    #
+    #     self._base_path = base_path
+    #     self._stops = stops
+    #     self._brt_mode = False
+    #
+    #     if base_path.find("2018_05_04") > 0:
+    #         print "this is the JUNE data"
+    #
+    #     elif base_path.find('2018_08_05') > 0:
+    #         print "this is the JULY data"
+    #
+    #     else:
+    #         self._brt_mode = True
+    #
+    #     if not self._brt_mode:
+    #         self._stop_times = StopTimes(self._base_path, stops=stops)
 
-        self._base_path = base_path
-        self._stops = stops
-        self._brt_mode = False
+    def __init__(self):
+        pass
 
-        if base_path.find("2018_05_04") > 0:
-            print "this is the JUNE data"
-
-        elif base_path.find('2018_08_05') > 0:
-            print "this is the JULY data"
-
-        else:
-            self._brt_mode = True
-
-        if not self._brt_mode:
-            self._stop_times = StopTimes(self._base_path, stops=stops)
-
-    def get_score_simple(self, raster_p, stop_polygons):
+    def get_score_simple(self, raster, stop_tuples):
 
         score = 0
+        raster_p = raster.get_polygon()
         raster_point = raster_p.get_centroid()
 
         info = {}
 
-        for item in stop_polygons:
+        for item in stop_tuples:
             stop_id = item[1]
             stop_p = item[0]
+            stop = item[2]
+
+            if stop_id != stop.get_id():
+                raise ValueError("fixme")
 
             if raster_p.intersects(stop_p):
-                demand = self._stops.get_demand(stop_id)
-                a = 1 / demand
+                demand = stop.get_demand()
+                a = 1.0 / float(demand)
                 score += a
 
         return score

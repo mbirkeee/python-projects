@@ -228,13 +228,12 @@ class DaHeatmap(object):
     def get_score(self, da_id):
         return self._data.get(da_id)
 
-class Weight(object):
+class Filter(object):
 
-    def __init__(self):
-        # self._dpass = 250
-        self._dpass = 150
-        self._e = 1
-        self._n = 6
+    def __init__(self, dpass=250, e=1, n=6):
+        self._dpass = dpass
+        self._e = e
+        self._n = n
 
     def butterworth(self, distance):
 
@@ -242,6 +241,9 @@ class Weight(object):
         rp = math.pow(r, self._n)
         result = 1.0 / math.sqrt(1.0 + self._e * rp)
         return result
+
+    def run(self, distance):
+        return self.butterworth(distance)
 
 class DaCentroidsOld(object):
 

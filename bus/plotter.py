@@ -65,8 +65,8 @@ class Plotter(object):
         """
         helper function to add all DA polygons to the plot
         """
-        ps = das.get_polygons()
-        for p in ps:
+        for da in das:
+            p = da.get_polygon()
             p.set_attribute(ATTR.STROKE_COLOR, "#202020")
             p.set_attribute(ATTR.STROKE_WEIGHT, 1)
             p.set_attribute(ATTR.STROKE_OPACITY, 1)
@@ -74,6 +74,29 @@ class Plotter(object):
             p.set_attribute(ATTR.FILL_OPACITY, 0)
             self.add_polygon(p)
 
+    def add_route(self, route, strokeColor="#0000ff", strokeWeight=2, strokeOpacity=0.6):
+
+        segments = route.get_segments()
+        for segment in segments:
+            segment.set_attribute(ATTR.STROKE_COLOR, strokeColor)
+            segment.set_attribute(ATTR.STROKE_WEIGHT, strokeWeight)
+            segment.set_attribute(ATTR.STROKE_OPACITY, strokeOpacity)
+            self.add_polyline(segment)
+
+
+    def add_stops(self, stops, fillColor="#ff0000", radius=50.0, fillOpacity=0.8, strokeColor="#202020", strokeWeight=1, strokeOpacity=0.4):
+
+        polypoint = Polyline()
+        polypoint.set_attribute(ATTR.RADIUS, radius)
+        polypoint.set_attribute(ATTR.FILL_OPACITY, fillOpacity)
+        polypoint.set_attribute(ATTR.FILL_COLOR, fillColor)
+        polypoint.set_attribute(ATTR.STROKE_COLOR, strokeColor)
+        polypoint.set_attribute(ATTR.STROKE_WEIGHT, strokeWeight)
+        polypoint.set_attribute(ATTR.STROKE_OPACITY, strokeOpacity)
+        for stop in stops:
+            polypoint.add_point(stop.get_point())
+        
+        self.add_polypoint(polypoint)
 
     def plot(self, file_name):
         print "plot called", file_name

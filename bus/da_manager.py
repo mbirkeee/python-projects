@@ -1,6 +1,23 @@
 from geometry import Point
 from geometry import Polygon
 
+from intersect import Intersect
+
+class Raster(object):
+
+    def __init__(self, parent_id, my_id, polygon):
+
+        self._my_id = my_id
+        self._parent_id = parent_id
+        self._polygon = polygon
+
+    def get_id(self):
+        return self._my_id
+
+    def get_polygon(self):
+        return self._polygon
+
+
 class DA(object):
 
     def __init__(self, da_id):
@@ -8,6 +25,33 @@ class DA(object):
         self._point_dict = {}
         self._polygon = None
         self._population = None
+        self._rasters = []
+
+    # def get_raster_points(self, size):
+    #     polygon = self.get_polygon()
+    #     raster_points = polygon.get_raster_points(size)
+    #    return raster_points
+
+    def get_rasters(self, size):
+
+        index = 0
+
+        if not self._rasters:
+            temp = []
+            polygon = self.get_polygon()
+            raster_points = polygon.get_raster_points(size)
+            for point in raster_points:
+                p = point.get_square_buffer(size)
+                intersecting_polygons = p.intersect(polygon)
+                for clipped in intersecting_polygons:
+                    raster = Raster(self.get_id(), index, clipped)
+                    index += 1
+                    self._rasters.append(raster)
+        print "DA: %d got %d rasters" % (self.get_id(), len(self._rasters))
+        return self._rasters
+
+    def get_area(self):
+        return self._polygon.get_area()
 
     def get_id(self):
         return self._da_id
@@ -196,8 +240,6 @@ class DaData(object):
 
             point = Point(lat, lng)
 
-            # data = self._data.get(da_id, {})
-
             da = self._da_dict.get(da_id)
             if da is None:
                 da = DA(da_id)
@@ -205,65 +247,17 @@ class DaData(object):
             da.add_point(point_index, point)
             self._da_dict[da_id] = da
 
-            # data[point_index] = point
-            # self._data[da_id] = data
-
         f.close()
         print "DaData: loaded %d points from %s" % (count, file_name)
-
-    # def get_area(self, da_id):
-    #     polygon = self.get_polygon(da_id)
-    #     return polygon.get_area()
-
-    # def get_da_id_list(self):
-    #     result = [k for k in self._data.iterkeys()]
-    #     return result
-
 
     def get_das(self):
         return [da for da in self._da_dict.itervalues()]
 
-#    def get_polygons(self):
-#        return [da.get_polygon() for da in self._da_dict.itervalues()]
-
-        # result = {}
-        # for da_id in self._data.iterkeys():
-        #     result[da_id] = self.get_polygon(da_id)
-        # return result
-
-    # def get_polygon(self, da_id):
-    #
-    #     polygon = self._polygons.get(da_id)
-    #
-    #     if polygon is None:
-    #         points_dict = self._data.get(da_id)
-    #         polygon = Polygon()
-    #
-    #         point_index = 0
-    #         while True:
-    #             point = points_dict.get(point_index)
-    #             if point is None: break
-    #             polygon.add_point(point)
-    #             point_index += 1
-    #         self._polygons[da_id] = polygon
-    #
-    #     return polygon
-
-    # def get_population(self, da_id):
-    #     data = self._data.get(da_id)
-    #     return data.get('pop')
 
     def get_da(self, da_id):
         return self._da_dict.get(da_id)
 
-    # def get_centroid(self, da_id):
-    #     polygon = self._polygons.get(da_id)
-    #     return polygon.get_centroid()
-    #
-    #     # data = self._data.get(da_id)
-    #     # if data is None:
-    #     #     raise ValueError("No data for da_id: %s" % repr(da_id))
-    #     # return data.get('centroid')
+
 
     def load_file_centroids(self, file_name):
 

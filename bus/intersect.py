@@ -5,11 +5,20 @@ class Intersect(object):
         self.group1_data = {}
         self.group2_data = {}
 
+        if not isinstance(group1, list):
+            group1 = [group1]
+
+        if not isinstance(group2, list):
+            group2 = [group2]
+
         self.group1 = group1
         self.group2 = group2
 
         self._total_count = 0
         self._temp_count = 0
+
+        self._group1_id_map = {}
+        self._group2_id_map = {}
 
         self.process(group1, group2, limit=limit)
 
@@ -24,16 +33,19 @@ class Intersect(object):
 
         temp_count = 0
 #        for group1_id, polygon_1 in group1.iteritems():
-        for item in group1:
-            group1_id = item.get_id()
-            polygon_1 = item.get_polygon()
+        for item1 in group1:
+            group1_id = item1.get_id()
+            polygon_1 = item1.get_polygon()
+
+            self._group1_id_map[group1_id] = item1
 
             # print "finding intersections for group1 id:", group1_id
 
             # for group2_id, polygon_2 in group2.iteritems():
-            for item in group2:
-                group2_id = item.get_id()
-                polygon_2 = item.get_polygon()
+            for item2 in group2:
+                group2_id = item2.get_id()
+                polygon_2 = item2.get_polygon()
+                self._group2_id_map[group2_id] = item2
                 # print "    compare to group2 id:", group2_id, polygon_2.get_area()
                 # Do these polygons intersect?
 
@@ -64,9 +76,8 @@ class Intersect(object):
                 print "terminate early at limit", limit
                 break
 
-        print "Detected %d intersections" % self._total_count
-        print "len(group1)", len(group1)
-        print "len(group2)", len(group2)
+        print "Intersect: group_1: %d group_2: %d intersections: %d" % \
+              (len(group1), len(group2), self._total_count)
 
     def get_intersections(self, group=1, id=None):
         if group == 1:
@@ -80,8 +91,9 @@ class Intersect(object):
         data = self.group1_data.get(group1_id, {})
 
         for group2_id, polygons in data.iteritems():
+            item = self._group2_id_map.get(group2_id)
             for p in polygons:
-                result.append((p, group2_id))
+                result.append((p, group2_id, item))
         return result
 
     def get_intersections_for_group2_id(self, group2_id):
@@ -90,8 +102,9 @@ class Intersect(object):
         data = self.group2_data.get(group2_id, {})
 
         for group1_id, polygons in data.iteritems():
+            item = self._group1_id_map.get(group1_id)
             for p in polygons:
-                result.append((p, group1_id))
+                result.append((p, group1_id, item))
         return result
 
     def get_group1_ids(self):

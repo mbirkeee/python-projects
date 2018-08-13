@@ -3,6 +3,8 @@ import math
 from geometry import Polygon
 from geometry import Point
 
+from intersect import Intersect
+
 class TransitRoute(object):
     """
     A single transit route
@@ -74,8 +76,37 @@ class TransitStop(object):
         self._serves_route_ids = []
         self._buffer_p = None
         self._route_dict = None
+        self._demand = 1.0
 
         self._attributes = {}
+
+    def make_round_buffer(self, size):
+        point = self.get_point()
+        self._buffer_p = point.get_round_buffer(size)
+
+    def compute_demand(self, intersect, filter):
+
+        demand = 0
+        stop_point = self.get_point()
+
+        intersecting_das = intersect.get_intersections(group=1, id=self.get_id())
+        print "this stop intersects %d das" % len(intersecting_das)
+        for item in intersecting_das:
+            p = item[0]
+            da = item[2]
+            area_factor = p.get_area() / da.get_area()
+            population = da.get_population()
+            intersect_centroid = p.get_centroid()
+            intersect_distance = stop_point.get_distance(intersect_centroid)
+            intersect_population = population * area_factor
+            weight = filter.run(intersect_distance)
+            demand += weight * intersect_population
+
+        self._demand = demand
+        print "Demand for stop %d: %f" % (self.get_id(), demand)
+
+    def get_demand(self):
+        return self._demand
 
     def get_polygon(self):
         return self._buffer_p
@@ -109,18 +140,6 @@ class TransitStop(object):
 
     def get_route_ids(self):
         return self._serves_route_ids
-
-    def make_round_buffer(self, size):
-
-        x = self._point.get_x()
-        y = self._point.get_y()
-
-        p = Polygon()
-        for i in xrange(360/10):
-            r = math.radians(i * 10)
-            p.add_point(Point(x + size * math.sin(r), y + size * math.cos(r)))
-
-        self._buffer_p = p
 
     def get_buffer(self):
         return self._buffer_p

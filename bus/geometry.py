@@ -62,6 +62,18 @@ class Point(object):
 
         return p
 
+    def get_round_buffer(self, size):
+
+        x = self.get_x()
+        y = self.get_y()
+
+        p = Polygon()
+        for i in xrange(360/10):
+            r = math.radians(i * 10)
+            p.add_point(Point(x + size * math.sin(r), y + size * math.cos(r)))
+
+        return p
+
     def get_distance(self, point, method='crow'):
 
         x1 = self.get_x()
@@ -104,6 +116,8 @@ class Polygon(object):
         self._ogr_poly = None
         self._depth_count = 0
         self._temp_intersect = []
+        self._raster_points = None
+        self._raster_index = 0
 
     def set_area(self, area):
         """
@@ -279,32 +293,38 @@ class Polygon(object):
         # print "intersection.GetGeometryCount()", intersection.GetGeometryCount()
         # print "intersection.GetGeometryName()", intersection.GetGeometryName()
 
-    def get_raster(self, size):
+    def get_raster_points(self, size):
 
-        result = []
+        if self._raster_points is None:
 
-        ogr_poly = self.get_ogr_poly()
-        envelope = ogr_poly.GetEnvelope()
-        half = size / 2.0
+            self._raster_points = []
 
-        start_x = envelope[0] + half
-        start_y = envelope[2] + half
+            ogr_poly = self.get_ogr_poly()
+            envelope = ogr_poly.GetEnvelope()
 
-        end_x = envelope[1] + half
-        end_y = envelope[3] + half
+            start_x = 100 * int( envelope[0] / 100.0 ) - size
+            start_y = 100 * int( envelope[2] / 100.0 ) - size
 
-        i = 0
-        while True:
-            x = start_x + i * size
-            if x >= end_x: break
+            end_x = 100 * int( envelope[1] / 100.0 ) + 2 * size
+            end_y = 100 * int( envelope[3] / 100.0 ) + 2 * size
 
-            j = 0
+            # print "GET RASTER", start_x, start_y, end_x, end_y
+
+            i = 0
             while True:
-                y = start_y + j * size
-                if y > end_y : break
-                result.append(Point(x, y))
-                j += 1
+                x = start_x + i * size
+                if x >= end_x: break
 
-            i += 1
+                j = 0
+                while True:
+                    y = start_y + j * size
+                    if y > end_y : break
 
-        return result
+                    self._raster_points.append(Point(x, y))
+
+                    j += 1
+
+                i += 1
+
+        return self._raster_points
+

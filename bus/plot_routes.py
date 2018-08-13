@@ -79,6 +79,7 @@ class Runner(object):
         except:
             self._route_id = None
 
+        self._markers = args.markers
         self._date = args.date
         self._base_path = base_path_from_date(args.date)
         self._route_mgr = None
@@ -138,23 +139,12 @@ class Runner(object):
 
             stops = route.get_stops()
 
-            polypoint = Polyline()
-            for stop in stops:
-                polypoint.add_point(stop.get_point())
-                plotter.add_marker(stop.get_point(), stop.get_id(), stop.get_id())
+            if self._markers:
+                for stop in stops:
+                    plotter.add_marker(stop.get_point(), stop.get_id(), stop.get_id())
 
-            polypoint.set_attribute(ATTR.RADIUS, 50)
-            polypoint.set_attribute(ATTR.FILL_OPACITY, 0.8)
-            polypoint.set_attribute(ATTR.FILL_COLOR, "#ff0000")
-
-            plotter.add_polypoint(polypoint)
-
-            for segment_id, segment in segments.iteritems():
-                print "Plotting segment", segment_id
-                color = "#0000ff"
-                segment.set_attribute(ATTR.STROKE_COLOR, color)
-                segment.set_attribute(ATTR.STROKE_WEIGHT, 2)
-                plotter.add_polyline(segment)
+            plotter.add_stops(stops)
+            plotter.add_route(route)
 
             plotter.plot("temp/maps/route_%d.html" % int(self._route_id))
 
@@ -166,56 +156,12 @@ class Runner(object):
                 plotter.add_polyline(segment)
                 plotter.plot("temp/maps/segment_%d.html" % segment_id)
 
-            # raise ValueError("DONE")
-            #
-            # trips = TransitTrips(self._base_path)
-            # shapes = TransitShapes(self._base_path)
-            #
-            # # This just tests that all routes have shapes
-            # route_ids = self._route_mgr.get_route_ids()
-            # for test_route_id in route_ids:
-            #     shape_ids = trips.get_shape_ids(test_route_id)
-            #     points = shapes.get_points(shape_ids)
-            #     if len(points) == 0:
-            #         raise ValueError("fixme")
-            #
-            # shape_ids = trips.get_shape_ids(self._route_id)
-            # points = shapes.get_points(shape_ids)
-            #
-            # plotter = Plotter()
-            #
-            # colorlist = [
-            #     "#330000",
-            #     "#660000"
-            #     "#990000",
-            #     "#003300",
-            #     "#006600",
-            #     "#009900",
-            #     "#000033"
-            # ]
-            #
-            # for i, shape_id in enumerate(shape_ids):
-            #     polyline = Polyline()
-            #     points = shapes.get_points(shape_id)
-            #     for point in points:
-            #         polyline.add_point(point)
-            #
-            #     color = colorlist[i]
-            # #    color = "#%6x" % random.randint(0, 10000000)
-            #     #color = "#0000ff"
-            #     polyline.set_attribute("strokeColor", color)
-            #     polyline.set_attribute("strokeWeight", i+2)
-            #     plotter.add_polyline(polyline)
-            #
-            # plotter.plot("temp/maps/route_%d.html" % int(self._route_id))
-
-
-
 if __name__ == "__main__":
 
    parser = argparse.ArgumentParser(description='Plop routes and stops per route')
-   parser.add_argument("--route_id", help="Route ID", type=int)
-   parser.add_argument("--date", help="june/july/brt", type=str, required=True)
+   parser.add_argument("-r", "--route_id", help="Route ID", type=int)
+   parser.add_argument("-d", "--date", help="june/july/brt", type=str, required=True)
+   parser.add_argument("-m", "--markers", help="Include stop markers (slow and messy)", required=False, action='store_true')
 
    args = parser.parse_args()
 

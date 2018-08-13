@@ -93,7 +93,7 @@ class TransitTrips(object):
                 # print "WANT TO MAP SHAPE_ID", shape_id, "TO ROUTE ID", route_id
                 bad_shapes = BAD_SHAPES.get(route_id, [])
                 if shape_id in bad_shapes:
-                    print "punt bad shape_id %s for route_id %s (trip_id: %s)" % \
+                    print "TransitTrips: punt bad shape_id %s for route_id %s (trip_id: %s)" % \
                           (repr(shape_id), repr(route_id), repr(trip_id))
                     continue
 
@@ -102,9 +102,9 @@ class TransitTrips(object):
                 shape_id_list = list(set(shape_id_list))
                 self._route_id_to_shape_id[route_id] = shape_id_list
 
-            print "read %d lines" % line_count
+            print "TransitTrips: read %d lines" % line_count
             read_time = time.time() - start_time
-            print "%s: read time: %.2f" % (file_name, read_time)
+            print "TransitTrips: %s: read time: %.2f" % (file_name, read_time)
 
             # For testing/debugging
             # for key, value in self._route_id_to_shape_id.iteritems():
