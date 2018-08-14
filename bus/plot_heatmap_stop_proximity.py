@@ -17,6 +17,7 @@ from plotter import ATTR
 from geometry import Polyline
 from geometry import Polypoint
 
+from shapefile_writer import ShapeFileWriter
 from score import Score
 
 from my_utils import base_path_from_date
@@ -40,6 +41,18 @@ class Runner(object):
 
         da_mgr = DaData()
         das = da_mgr.get_das()
+
+        if False:
+            da_id_list = [
+                47110049,
+                47110045,
+                47110046,
+            ]
+
+            das = []
+            for da_id in da_id_list:
+                das.append(da_mgr.get_da(da_id))
+
 
         print "Plotting Proximity heatmap --------------------------------------"
 
@@ -70,8 +83,6 @@ class Runner(object):
 
         filter = Filter()
 
-
-
         stops = []
         for stop_id in stop_ids:
             stop = self._dataman.get_stop(stop_id)
@@ -88,11 +99,12 @@ class Runner(object):
 
         plotter = Plotter()
 
+        shapefile = ShapeFileWriter()
+
         judge = Score()
 
         plot_rasters = []
         for da in das:
-            # raster_points = da.get_raster_points(100)
             rasters = da.get_rasters(100)
             for raster in rasters:
                 stop_tuples = intersect.get_intersections(group=2, id=da.get_id())
@@ -110,6 +122,11 @@ class Runner(object):
         for item in plot_rasters:
             score = item[0]
             raster = item[1]
+            print "Raster ID", raster.get_id()
+            print "Raster Parent", raster.get_parent_id()
+
+            shapefile.add_raster(raster, score)
+
             p = raster.get_polygon()
             opacity = score / max_score
             p.set_attribute(ATTR.FILL_OPACITY, opacity)
@@ -122,6 +139,7 @@ class Runner(object):
         plotter.add_das(da_mgr.get_das())
 
         plotter.plot("temp/maps/stop_proximity_%s.html" % self._date)
+        shapefile.write("temp/shapefiles/stop_proximity_%s.shp" % self._date)
 
 if __name__ == "__main__":
 

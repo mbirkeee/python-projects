@@ -1,6 +1,7 @@
 import pyproj
 import random
 import math
+import ogr
 
 from plotter import Plotter
 
@@ -12,7 +13,7 @@ from geometry import Point
 from da_manager import DaData
 
 from my_utils import DaHeatmap
-from my_utils import Weight
+from my_utils import Filter
 # from transit_stops import TransitStops
 from transit_routes import TransitRoutes
 
@@ -21,7 +22,7 @@ from score import Score
 from constants import BASE
 
 PROJ = pyproj.Proj("+init=EPSG:32613")
-DECAY = Weight()
+DECAY = Filter()
 
 print "import finished"
 
@@ -67,7 +68,7 @@ class Runner(object):
         return p
 
 
-    def make_test_poly_2(self):
+    def make_test_poly_star(self):
 
         center_lat = 52.125
         center_lng = -106.650
@@ -113,7 +114,7 @@ class Runner(object):
         poly = []
         for i in xrange(2):
             # p = self.make_test_polygon()
-            p = self.make_test_poly_2()
+            p = self.make_test_poly_star()
             plotter.add_polygon(p)
             poly.append(p)
 
@@ -134,7 +135,7 @@ class Runner(object):
         poly = []
         for i in xrange(4):
             # p = self.make_test_polygon()
-            p = self.make_test_poly_2()
+            p = self.make_test_poly_star()
             plotter.add_polygon(p)
             poly.append(p)
 
@@ -244,6 +245,7 @@ class Runner(object):
         plotter.plot("temp/maps/%s" % file_name_out)
 
     def plot_heatmap_change(self):
+
         das = DaData()
         plotter = Plotter()
 
@@ -616,7 +618,44 @@ class Runner(object):
 
         plotter.plot("temp/maps/da_stop_intersect_47110114.html")
 
+    def test_make_shapefile(self):
 
+        test_polygons = []
+
+        for i in xrange(5):
+            test_polygons.append(self.make_test_poly_star())
+
+        print len(test_polygons)
+
+
+        driver = ogr.GetDriverByName('Esri Shapefile')
+        ds = driver.CreateDataSource('my.shp')
+        layer = ds.CreateLayer('', None, ogr.wkbPolygon)
+
+        # Add one attribute
+        layer.CreateField(ogr.FieldDefn('id', ogr.OFTInteger))
+        defn = layer.GetLayerDefn()
+
+        ## If there are multiple geometries, put the "for" loop here
+
+        for i, p in enumerate(test_polygons):
+
+            # Create a new feature (attribute and geometry)
+            feat = ogr.Feature(defn)
+            feat.SetField('id', i)
+
+            # Make a geometry, from Shapely object
+            # geom = ogr.CreateGeometryFromWkb(poly.wkb)
+            geom = p.get_ogr_poly()
+            feat.SetGeometry(geom)
+
+            layer.CreateFeature(feat)
+            feat = geom = None  # destroy these
+
+        # Save and close everything
+        ds = layer = feat = geom = None
+
+        print "Done!!"
 
 if __name__ == "__main__":
 
@@ -633,12 +672,13 @@ if __name__ == "__main__":
 #    runner.plot_heatmap_change()
 #    runner.plot_stop_buffers()
 
-    runner.plot_stop_da_intersections()
+#    runner.plot_stop_da_intersections()
 
 #    runner.plot_test_raster()
 
 
 #    runner.test_plot_da_pop_dens()
 
+    runner.test_make_shapefile()
 
 

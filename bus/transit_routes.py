@@ -618,7 +618,7 @@ class TransitRoutes(object):
 
     def get_stop(self, stop_id):
         if self._shapefile_mode:
-            return self._shapefile.get_stop()
+            return self._shapefile.get_stop(stop_id)
         return self._stop_dict.get(stop_id)
 
     def get_route(self, route_id):

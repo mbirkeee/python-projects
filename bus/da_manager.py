@@ -14,6 +14,9 @@ class Raster(object):
     def get_id(self):
         return self._my_id
 
+    def get_parent_id(self):
+        return self._parent_id
+
     def get_polygon(self):
         return self._polygon
 
@@ -34,10 +37,9 @@ class DA(object):
 
     def get_rasters(self, size):
 
-        index = 0
+        index = 1000
 
         if not self._rasters:
-            temp = []
             polygon = self.get_polygon()
             raster_points = polygon.get_raster_points(size)
             for point in raster_points:

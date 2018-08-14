@@ -671,7 +671,7 @@ if __name__ == "__main__":
 #    runner.read_direction_stops()
 
 #    runner.plot_brt_routes()
-    runner.plot_brt_all()
+#    runner.plot_brt_all()
 
     # runner.read_test()
 
