@@ -2,6 +2,7 @@ import argparse
 import my_utils
 import pyproj
 import random
+import time
 
 from constants import BASE
 from da_manager import DaData
@@ -11,6 +12,7 @@ from transit_routes import TransitRoutes
 from intersect import Intersect
 from my_utils import Filter
 
+from heatmap import Heatmap
 from plotter import Plotter
 from plotter import ATTR
 
@@ -35,10 +37,10 @@ class Runner(object):
 
         self._date = args.date
         self._base_path = base_path_from_date(args.date)
-        self._dataman = TransitRoutes(self._base_path)
 
     def run(self):
 
+        dataman = TransitRoutes(self._base_path)
         da_mgr = DaData()
         das = da_mgr.get_das()
 
@@ -53,12 +55,13 @@ class Runner(object):
             for da_id in da_id_list:
                 das.append(da_mgr.get_da(da_id))
 
+        heatmap = Heatmap()
 
         print "Plotting Proximity heatmap --------------------------------------"
 
         # Make a list of all routes to plot
         plot_routes = []
-        routes = self._dataman.get_routes()
+        routes = dataman.get_routes()
         for route in routes:
             consider = False
             if not self._plot_route_ids:
@@ -85,8 +88,8 @@ class Runner(object):
 
         stops = []
         for stop_id in stop_ids:
-            stop = self._dataman.get_stop(stop_id)
-            stop.make_round_buffer(400)
+            stop = dataman.get_stop(stop_id)
+            stop.make_square_buffer(700)
             stops.append(stop)
 
         # Even though logically I would like to perform the intersection in the
@@ -97,9 +100,9 @@ class Runner(object):
         # for stop in stops:
         #     stop.compute_demand(intersect, filter)
 
-        plotter = Plotter()
+        #plotter = Plotter()
 
-        shapefile = ShapeFileWriter()
+        #shapefile = ShapeFileWriter()
 
         judge = Score()
 
@@ -110,45 +113,53 @@ class Runner(object):
                 stop_tuples = intersect.get_intersections(group=2, id=da.get_id())
                 score = judge.get_score_simple(raster, stop_tuples)
                 if score > 0:
-                    plot_rasters.append((score, raster))
-
-                # plotter.add_polygon(raster.get_polygon())
-        # Add DAs to the plot
-        max_score = 0
-        for item in plot_rasters:
-            if item[0] > max_score:
-                max_score = item[0]
-
-        for item in plot_rasters:
-            score = item[0]
-            raster = item[1]
-            print "Raster ID", raster.get_id()
-            print "Raster Parent", raster.get_parent_id()
-
-            shapefile.add_raster(raster, score)
-
-            p = raster.get_polygon()
-            opacity = score / max_score
-            p.set_attribute(ATTR.FILL_OPACITY, opacity)
-            p.set_attribute(ATTR.STROKE_WEIGHT, 0)
-            p.set_attribute(ATTR.STROKE_COLOR, "#202020")
-            p.set_attribute(ATTR.STROKE_OPACITY, 0)
-            plotter.add_polygon(p)
+                    raster.set_score(score)
+                    plot_rasters.append(raster)
+                    heatmap.add_raster(raster)
 
 
-        plotter.add_das(da_mgr.get_das())
+        shapefile_name = "temp/shapefiles/stop_proximity_sq_wd_%s.shp" % self._date
+        heatmap.to_shapefile(shapefile_name)
+        heatmap.plot("temp/maps/stop_proximity_sq_wd_%s.html" % self._date, das=das)
 
-        plotter.plot("temp/maps/stop_proximity_%s.html" % self._date)
-        shapefile.write("temp/shapefiles/stop_proximity_%s.shp" % self._date)
+    def test1(self):
+
+        shapefile_name = "temp/shapefiles/stop_proximity_sq_wd_jun.shp"
+        heatmap1 = Heatmap()
+        heatmap1.from_shapefile(shapefile_name)
+        # heatmap1.plot("temp/maps/stop_proximity_jun.html")
+
+        shapefile_name = "temp/shapefiles/stop_proximity_jun.shp"
+        heatmap2 = Heatmap()
+        heatmap2.from_shapefile(shapefile_name)
+        # heatmap2.plot("temp/maps/stop_proximity_jul.html")
+
+        da_mgr = DaData()
+
+        heatmap3 = heatmap2 - heatmap1
+        heatmap3.plot("temp/maps/stop_proximity_jun_cir_sq_decay.html", das=da_mgr.get_das())
+
+    def test2(self):
+
+        da_mgr = DaData()
+
+        start_time = time.time()
+        for da in da_mgr.get_das():
+            rasters = da.get_rasters(100)
+            print "DA id: %d len(rasters): %d" % (da.get_id(), len(rasters))
+
+        print "Elapsed time:", time.time() - start_time
 
 if __name__ == "__main__":
 
-   parser = argparse.ArgumentParser(description='Heatmap - Proximity to stops')
-   parser.add_argument("--route_id", help="Route ID", type=int)
-   parser.add_argument("--date", help="june/july/brt", type=str, required=True)
+    parser = argparse.ArgumentParser(description='Heatmap - Proximity to stops')
+    parser.add_argument("--route_id", help="Route ID", type=int)
+    parser.add_argument("--date", help="june/july/brt", type=str, required=True)
 
-   args = parser.parse_args()
+    args = parser.parse_args()
 
-   runner = Runner(args)
-   runner.run()
+    runner = Runner(args)
+    #runner.run()
+
+    runner.test1()
 

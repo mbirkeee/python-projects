@@ -1,7 +1,10 @@
+import os
+import shapefile
+
 from geometry import Point
 from geometry import Polygon
 
-from intersect import Intersect
+from shapefile_writer import ShapeFileWriter
 
 class Raster(object):
 
@@ -10,6 +13,13 @@ class Raster(object):
         self._my_id = my_id
         self._parent_id = parent_id
         self._polygon = polygon
+        self._score = 0
+
+    def set_score(self, score):
+        self._score = score
+
+    def get_score(self):
+        return self._score
 
     def get_id(self):
         return self._my_id
@@ -27,28 +37,77 @@ class DA(object):
         self._da_id = da_id
         self._point_dict = {}
         self._polygon = None
+        self._clipped_polygon = None
         self._population = None
         self._rasters = []
 
-    # def get_raster_points(self, size):
-    #     polygon = self.get_polygon()
-    #     raster_points = polygon.get_raster_points(size)
-    #    return raster_points
+    def set_clipped_polygon(self, polygon):
+        self._clipped_polygon = polygon
+
+    def get_clipped_polygon(self):
+        if self._clipped_polygon:
+            return self._clipped_polygon
+        return self.get_polygon()
+
+    def _rasters_from_shapefile(self, file_name):
+        result = []
+
+        sf = shapefile.Reader(file_name)
+        records = sf.records()
+        shapes = sf.shapes()
+
+        if len(records) != len(shapes):
+            raise ValueError("len records != len shapes")
+
+        print "len(records)", len(records)
+        print "len(shapes)", len(shapes)
+
+        for i, record in enumerate(records):
+            fid = record[0]
+            da_id = record[1]
+            raster_id = record[2]
+            score = record[3]
+
+            shape = shapes[i]
+
+            polygon = Polygon()
+            for index in xrange(len(shape.points)-1):
+                item = shape.points[index]
+                polygon.add_point(Point(item[0], item[1]))
+
+            raster = Raster(da_id, raster_id, polygon)
+            result.append(raster)
+
+        return result
 
     def get_rasters(self, size):
 
-        index = 1000
-
         if not self._rasters:
-            polygon = self.get_polygon()
-            raster_points = polygon.get_raster_points(size)
-            for point in raster_points:
-                p = point.get_square_buffer(size)
-                intersecting_polygons = p.intersect(polygon)
-                for clipped in intersecting_polygons:
-                    raster = Raster(self.get_id(), index, clipped)
-                    index += 1
-                    self._rasters.append(raster)
+
+            shape_file = "temp/shapefiles/raster_cache/%s/raster_%d.shp" % (size, self.get_id())
+
+            if os.path.exists(shape_file):
+                self._rasters = self._rasters_from_shapefile(shape_file)
+            else:
+                index = 1000
+                # Use clipped polygon for rasters... should make things a little faster
+                polygon = self.get_clipped_polygon()
+                raster_points = polygon.get_raster_points(size)
+
+
+                for point in raster_points:
+                    p = point.get_square_buffer(size)
+                    intersecting_polygons = p.intersect(polygon)
+                    for clipped in intersecting_polygons:
+                        raster = Raster(self.get_id(), index, clipped)
+                        index += 1
+                        self._rasters.append(raster)
+
+                writer = ShapeFileWriter()
+                for raster in self._rasters:
+                    writer.add_raster(raster)
+
+                writer.write(shape_file)
         print "DA: %d got %d rasters" % (self.get_id(), len(self._rasters))
         return self._rasters
 
@@ -179,10 +238,12 @@ class DaData(object):
             da = self.get_da(da_id)
             da_p = da.get_polygon()
 
-            # da_p = self.get_polygon(da_id)
             old_area = da_p.get_area()
             da_p.set_area(p.get_area())
             new_area = da_p.get_area()
+
+            da.set_clipped_polygon(p)
+
             f = 100.0 * new_area/old_area
             print "DaData: Clipping DA %d area %.2f ---> %.2f ( %.2f%% )" % (da_id, old_area, new_area, f)
 

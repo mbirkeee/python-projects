@@ -6,9 +6,9 @@ class ShapeFileWriter(object):
 
         self._raster_list = []
 
-    def add_raster(self, raster, score):
+    def add_raster(self, raster):
 
-        self._raster_list.append((raster, score))
+        self._raster_list.append(raster)
 
     def write(self, file_name):
 
@@ -26,12 +26,11 @@ class ShapeFileWriter(object):
 
         ## If there are multiple geometries, put the "for" loop here
 
-        for i, item in enumerate(self._raster_list):
+        for i, raster in enumerate(self._raster_list):
 
             fid = i + 1
-            raster = item[0]
-            score = item[1]
 
+            score = raster.get_score()
             da_id = raster.get_parent_id()
             raster_id= raster.get_id()
 

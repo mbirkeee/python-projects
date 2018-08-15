@@ -31,8 +31,9 @@ class Intersect(object):
 
     def process(self, group1, group2, limit=None):
 
+        test_shapefile_list = []
+
         temp_count = 0
-#        for group1_id, polygon_1 in group1.iteritems():
         for item1 in group1:
             group1_id = item1.get_id()
             polygon_1 = item1.get_polygon()
@@ -41,7 +42,6 @@ class Intersect(object):
 
             # print "finding intersections for group1 id:", group1_id
 
-            # for group2_id, polygon_2 in group2.iteritems():
             for item2 in group2:
                 group2_id = item2.get_id()
                 polygon_2 = item2.get_polygon()
@@ -66,7 +66,7 @@ class Intersect(object):
                     data2 = data.get(group1_id, [])
                     for p in intersection:
                         data2.append(p)
-                        self._count()
+                        # self._count()
                     data[group1_id] = data2
                     self.group2_data[group2_id] = data
 

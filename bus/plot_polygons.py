@@ -67,6 +67,16 @@ class Runner(object):
 
         return p
 
+    def make_test_point(self):
+
+        center_lat = 52.125
+        center_lng = -106.650
+
+        center_x, center_y = PROJ(center_lng, center_lat)
+
+        point = Point(center_x, center_y)
+
+        return point
 
     def make_test_poly_star(self):
 
@@ -111,6 +121,8 @@ class Runner(object):
         """
         plotter = Plotter()
 
+        point = self.make_test_point()
+
         poly = []
         for i in xrange(2):
             # p = self.make_test_polygon()
@@ -124,6 +136,18 @@ class Runner(object):
             p.set_attribute("fill_opacity", 1.0)
             plotter.add_polygon(p)
 
+        polypoint = Polypoint()
+        polypoint.add_point(point)
+        polypoint.set_attribute("radius", 50)
+        polypoint.set_attribute("fillOpacity", 1)
+
+        plotter.add_polypoint(polypoint)
+
+        print "intersects", poly[0].intersects(poly[1])
+
+        print "point intersect", poly[0].intersects(point)
+        print "point intersect", poly[1].intersects(point)
+
         plotter.plot("temp/maps/test_random_intersect.html")
 
     def test_plot_random2(self):
@@ -133,7 +157,7 @@ class Runner(object):
         plotter = Plotter()
 
         poly = []
-        for i in xrange(4):
+        for i in xrange(3):
             # p = self.make_test_polygon()
             p = self.make_test_poly_star()
             plotter.add_polygon(p)
@@ -657,11 +681,12 @@ class Runner(object):
 
         print "Done!!"
 
+
 if __name__ == "__main__":
 
 
     runner = Runner()
-#    runner.test_plot_random()
+    runner.test_plot_random()
 #    runner.test_plot_random2()
 
 #    runner.test_plot_das()
@@ -679,6 +704,8 @@ if __name__ == "__main__":
 
 #    runner.test_plot_da_pop_dens()
 
-    runner.test_make_shapefile()
+#    runner.test_point()
+
+    # runner.test_make_shapefile()
 
 

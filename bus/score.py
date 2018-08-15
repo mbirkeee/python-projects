@@ -46,9 +46,15 @@ class Score(object):
             if stop_id != stop.get_id():
                 raise ValueError("fixme")
 
-            if raster_p.intersects(stop_p):
+            if stop_p.intersects(raster_point):
+#             if raster_p.intersects(stop_p):
                 demand = stop.get_demand()
                 a = 1.0 / float(demand)
+
+                distance = raster_point.get_distance(stop.get_point())
+                # # print "the distance is", distance
+                a = a * DECAY.butterworth(distance)
+
                 score += a
 
         return score

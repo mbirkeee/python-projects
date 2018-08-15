@@ -28,6 +28,13 @@ class Point(object):
             self._utm_x = utm_x
             self._utm_y = utm_y
 
+    def get_ogr_poly(self):
+
+        ogr_point = ogr.Geometry(ogr.wkbPoint)
+        ogr_point.AddPoint(self.get_x(), self.get_y())
+
+        return ogr_point
+
     def get_lat(self):
         return self._lat
 
@@ -152,6 +159,8 @@ class Polygon(object):
 
         # print "Area test", self._area, area2
         return self._area
+
+
 
     def get_ogr_poly(self):
 
