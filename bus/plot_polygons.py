@@ -15,7 +15,7 @@ from da_manager import DaData
 from my_utils import DaHeatmap
 from my_utils import Filter
 # from transit_stops import TransitStops
-from transit_routes import TransitRoutes
+from data_manager import DataManager
 
 from intersect import Intersect
 from score import Score
@@ -584,7 +584,7 @@ class Runner(object):
 
     def plot_stop_da_intersections(self):
 
-        dataman = TransitRoutes(BASE.JULY, link_stops=False, link_shapes=False)
+        dataman = DataManager(BASE.JULY, link_stops=False, link_shapes=False)
 
         dataman.make_round_buffers(400)
         group1 = dataman.get_stops()

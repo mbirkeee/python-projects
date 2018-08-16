@@ -5,8 +5,12 @@ import random
 import time
 
 from constants import BASE
+from constants import DATASET
+from constants import MODE
+
 from da_manager import DaData
-from transit_routes import TransitRoutes
+from data_manager import DataManager
+
 # from transit_shapes import TransitShapes
 # from stop_times import TransitTrips
 from intersect import Intersect
@@ -40,15 +44,16 @@ class Runner(object):
 
     def run(self):
 
-        dataman = TransitRoutes(self._base_path)
+        dataman = DataManager(self._base_path)
         da_mgr = DaData()
         das = da_mgr.get_das()
 
-        if False:
+        if True:
             da_id_list = [
                 47110049,
                 47110045,
                 47110046,
+                47110065,
             ]
 
             das = []
@@ -71,9 +76,9 @@ class Runner(object):
                     consider = True
             if consider:
                 plot_routes.append(route)
-                print "PROCESSING ROUTE", route.get_id(), route.get_name()
+                print "Including route", route.get_id(), route.get_name()
             else:
-                print "SKIPPING ROUTE", route.get_id(), route.get_name()
+                print "Skipping route", route.get_id(), route.get_name()
 
         # Make a list of stops to consider
         stop_ids = []
@@ -84,45 +89,57 @@ class Runner(object):
         stop_ids = list(set(stop_ids))
         print "Stop list len (no duplicates)", len(stop_ids)
 
-        filter = Filter()
-
+        mode = MODE.ONE
         stops = []
         for stop_id in stop_ids:
             stop = dataman.get_stop(stop_id)
-            stop.make_square_buffer(700)
+            stop.make_round_buffer(400)
             stops.append(stop)
 
         # Even though logically I would like to perform the intersection in the
         # call to compute demand, it is more efficient to do it here because the
         # results are used again later on
 
-        intersect = Intersect(stops, das)
-        # for stop in stops:
-        #     stop.compute_demand(intersect, filter)
+        intersect = Intersect()
+        intersect.load(mode, DATASET.JUNE)
 
-        #plotter = Plotter()
+        # try:
+        #     print "Successfully read intersections from shapefile"
+        #
+        # except Exception as err:
+        #     print "Exception: %s" % repr(err)
+        #     intersect.process(stops, das)
+        #     intersect.to_shapefile(mode, DATASET.JUNE)
 
-        #shapefile = ShapeFileWriter()
-
-        judge = Score()
+        judge = Score(dataman)
 
         plot_rasters = []
         for da in das:
             rasters = da.get_rasters(100)
+            stop_tuples = intersect.get_intersections(group=2, id=da.get_id())
+            print "Got %d stops for da_id: %d" % (len(stop_tuples), da.get_id())
+
             for raster in rasters:
-                stop_tuples = intersect.get_intersections(group=2, id=da.get_id())
-                score = judge.get_score_simple(raster, stop_tuples)
+                score = judge.get_score_stop_count(raster, stop_tuples)
                 if score > 0:
                     raster.set_score(score)
                     plot_rasters.append(raster)
                     heatmap.add_raster(raster)
 
-
-        shapefile_name = "temp/shapefiles/stop_proximity_sq_wd_%s.shp" % self._date
+        shapefile_name = "temp/shapefiles/stop_proximity_mode_%s_%s.shp" % (mode, self._date)
         heatmap.to_shapefile(shapefile_name)
-        heatmap.plot("temp/maps/stop_proximity_sq_wd_%s.html" % self._date, das=das)
+        heatmap.plot("temp/maps/stop_proximity_mode_%s_date_%s.html" % (mode, self._date), das=das)
 
-    def test1(self):
+    def test3(self):
+
+        heatmap = Heatmap()
+        heatmap.set_mode(MODE.ONE)
+        heatmap.set_dataset(DATASET.JUNE)
+        heatmap.run()
+        heatmap.plot()
+        heatmap.to_shapefile("temp/temp_heatmap.shp")
+
+    def test_heatmap_subtraction(self):
 
         shapefile_name = "temp/shapefiles/stop_proximity_sq_wd_jun.shp"
         heatmap1 = Heatmap()
@@ -153,13 +170,14 @@ class Runner(object):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Heatmap - Proximity to stops')
-    parser.add_argument("--route_id", help="Route ID", type=int)
-    parser.add_argument("--date", help="june/july/brt", type=str, required=True)
-
+    parser.add_argument("-r", "--route_id", help="Route ID", type=int)
+    parser.add_argument("-d", "--date", help="june/july/brt", type=str, required=True)
+    parser.add_argument("-m", "--mode", help="score mode", type=str, required=True)
     args = parser.parse_args()
 
     runner = Runner(args)
-    #runner.run()
+    # runner.run()
+    runner.test3()
 
-    runner.test1()
+    # runner.test1()
 

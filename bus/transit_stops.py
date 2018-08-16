@@ -6,7 +6,7 @@ from my_utils import is_shapefile
 from geometry import Point
 from geometry import Polygon
 
-from transit_routes import TransitShapefile
+from data_manager import TransitShapefile
 from transit_objects import TransitStop
 
 from constants import KEY

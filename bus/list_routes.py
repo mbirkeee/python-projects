@@ -1,6 +1,6 @@
 import argparse
 
-from transit_routes import TransitRoutes
+from data_manager import DataManager
 from my_utils import base_path_from_date
 
 class Runner(object):
@@ -23,7 +23,7 @@ class Runner(object):
         result = []
         if self._route_id is None:
 
-            self._route_mgr = TransitRoutes(self._base_path, link_stops=False)
+            self._route_mgr = DataManager(self._base_path, link_stops=False)
 
             routes = self._route_mgr.get_routes()
             for route in routes:
@@ -40,7 +40,7 @@ class Runner(object):
                 # print "|| %s || %s || %s || PDF || Map || Notes ||" % (repr(item[0]), item[1], repr(item[2]))
 
         else:
-            self._route_mgr = TransitRoutes(self._base_path)
+            self._route_mgr = DataManager(self._base_path)
             route = self._route_mgr.get_route(self._route_id)
             stops = route.get_stops()
 

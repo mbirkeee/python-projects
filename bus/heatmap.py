@@ -3,12 +3,22 @@ import shapefile
 
 from shapefile_writer import ShapeFileWriter
 from da_manager import Raster
+from da_manager import DaData
+
+from data_manager import DataManager
+from intersect import Intersect
 
 from plotter import Plotter
 from plotter import ATTR
 
+from score import Score
+
 from geometry import Point
 from geometry import Polygon
+
+from constants import DATASET
+from constants import MODE
+from constants import BASE
 
 class Heatmap(object):
 
@@ -21,6 +31,72 @@ class Heatmap(object):
         # Used for performing subtraction etc.
         self._raster_dict = {}
 
+        self._mode = None
+        self._dataset = None
+        self._base_path = None
+        self._data_man = None
+        self._da_man = None
+
+        self._run_flag = False
+        self._dataset_to_base_map = {
+            DATASET.JUNE        : BASE.JUNE,
+            DATASET.JULY        : BASE.JULY,
+            DATASET.BRT_ORIG    : BASE.BRT
+        }
+
+    def set_mode(self, mode):
+        self._mode = mode
+
+    def set_dataset(self, dataset):
+        self._dataset = dataset
+
+    def run(self):
+
+        if self._run_flag:
+            print "heatmap already generated, cannot run again"
+            return
+
+        self._run_flag = True
+        self._base_path = self._dataset_to_base_map.get(self._dataset)
+        if self._base_path is None:
+            raise ValueError("Cannot determine base path from %s" % self._dataset)
+
+        self._data_man = DataManager(self._base_path)
+        self._da_man = DaData()
+        das = self._da_man.get_das()
+        stops = self._data_man.get_stops()
+
+        for stop in stops:
+            if self._mode == MODE.ONE:
+                stop.make_round_buffer(400)
+            else:
+                raise ValueError("mode not supported")
+
+        intersect = Intersect()
+        try:
+            intersect.load(self._mode, self._dataset)
+        except Exception as err:
+            print "Exception: %s" % repr(err)
+            intersect.process(stops, das)
+            intersect.to_shapefile(self._mode, self._dataset)
+
+        judge = Score(self._data_man)
+
+
+        for da in das:
+            rasters = da.get_rasters(100)
+            stop_tuples = intersect.get_intersections(group=2, id=da.get_id())
+            print "Got %d stops for da_id: %d" % (len(stop_tuples), da.get_id())
+
+            for raster in rasters:
+                if self._mode == MODE.ONE:
+                    score = judge.get_score_stop_count(raster, stop_tuples)
+                else:
+                    raise ValueError("not supported")
+
+                if score > 0:
+                    raster.set_score(score)
+                    self.add_raster(raster)
 
     def add_raster(self, raster):
 
@@ -31,6 +107,13 @@ class Heatmap(object):
         """
         Load this heatmap from a file
         """
+
+        if self._run_flag:
+            print "heatmap already loaded"
+            return
+
+        self._run_flag = True
+
         self._load_file_name = file_name
 
         sf = shapefile.Reader(file_name)
@@ -66,7 +149,10 @@ class Heatmap(object):
 
             self._raster_list.append(raster)
 
-    def plot(self, file_name, plotter=None, das=None, max_score=None, min_score=None):
+    def plot(self, file_name=None, plotter=None, include_das=True, max_score=None, min_score=None):
+
+        if file_name is None:
+            file_name = "temp/maps/heatmap_mode_%s_%s.html" % (self._mode, self._dataset)
 
         if plotter is None:
             write_file = True
@@ -116,8 +202,10 @@ class Heatmap(object):
             p.set_attribute(ATTR.STROKE_OPACITY, 0)
             plotter.add_polygon(p)
 
-        if das:
-            plotter.add_das(das)
+        if include_das:
+            if self._da_man is None:
+                self._da_man = DaData()
+            plotter.add_das(self._da_man.get_das())
 
         if write_file:
             plotter.plot(file_name)

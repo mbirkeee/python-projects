@@ -59,14 +59,11 @@ class DA(object):
         if len(records) != len(shapes):
             raise ValueError("len records != len shapes")
 
-        print "len(records)", len(records)
-        print "len(shapes)", len(shapes)
-
         for i, record in enumerate(records):
             fid = record[0]
             da_id = record[1]
             raster_id = record[2]
-            score = record[3]
+            score = record[3] # These rasters dont nhave/need a score from shapefile
 
             shape = shapes[i]
 
@@ -78,6 +75,7 @@ class DA(object):
             raster = Raster(da_id, raster_id, polygon)
             result.append(raster)
 
+        print "Read %d rasters from file: %s" % (len(records), file_name)
         return result
 
     def get_rasters(self, size):

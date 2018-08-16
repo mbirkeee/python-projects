@@ -27,34 +27,50 @@ class Score(object):
     #     if not self._brt_mode:
     #         self._stop_times = StopTimes(self._base_path, stops=stops)
 
-    def __init__(self):
-        pass
+    def __init__(self, dataman):
+        self._dataman = dataman
 
-    def get_score_simple(self, raster, stop_tuples):
+    def get_score_stop_count_with_decay(self, raster, stop_tuples):
 
         score = 0
         raster_p = raster.get_polygon()
         raster_point = raster_p.get_centroid()
 
-        info = {}
-
         for item in stop_tuples:
             stop_id = item[1]
             stop_p = item[0]
-            stop = item[2]
+            stop = self._dataman.get_stop(stop_id)
 
             if stop_id != stop.get_id():
                 raise ValueError("fixme")
 
-            if stop_p.intersects(raster_point):
-#             if raster_p.intersects(stop_p):
-                demand = stop.get_demand()
-                a = 1.0 / float(demand)
+            if raster_p.intersects(stop_p):
+                a = 1.0
 
                 distance = raster_point.get_distance(stop.get_point())
                 # # print "the distance is", distance
                 a = a * DECAY.butterworth(distance)
 
+                score += a
+
+        return score
+
+    def get_score_stop_count(self, raster, stop_tuples):
+
+        score = 0
+        raster_p = raster.get_polygon()
+        raster_point = raster_p.get_centroid()
+
+        for item in stop_tuples:
+            stop_id = item[1]
+            stop_p = item[0]
+            stop = self._dataman.get_stop(stop_id)
+
+            if stop_id != stop.get_id():
+                raise ValueError("fixme")
+
+            if raster_p.intersects(stop_p):
+                a = 1.0
                 score += a
 
         return score

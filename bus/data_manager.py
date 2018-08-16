@@ -4,6 +4,8 @@ import time
 
 from constants import KEY
 from constants import SERVICE
+from constants import MODE
+from constants import BUFFER
 
 from geometry import Polyline
 from geometry import Point
@@ -19,6 +21,13 @@ from transit_shapes import TransitShapes
 from transit_objects import TransitStop
 from transit_objects import TransitRoute
 from stop_times import StopTimes
+
+
+MODE_DICT = {
+    MODE.ONE : {
+        KEY.BUFFER     : BUFFER.CIRCLE_400
+    }
+}
 
 class TransitShapefile(object):
     """
@@ -96,11 +105,14 @@ class TransitShapefile(object):
     def get_routes(self):
         return [route for route in self._route_dict.itervalues()]
 
-    def get_stops(self, route_id):
+    def get_route_stops(self, route_id):
         route = self.get_route(route_id)
         stop_ids = route.get_stop_ids()
         result = [self.get_stop(stop_id) for stop_id in stop_ids]
         return result
+
+    def get_stops(self):
+        return self.get_active_stops()
 
     def get_route_ids(self):
         result = [k for k in self._route_dict.iterkeys()]
@@ -346,9 +358,15 @@ class TransitShapefile(object):
             result.append(point)
         return result
 
-class TransitRoutes(object):
+class DataManager(object):
+    """
+    link_route_shapes : Get route shapes for plotting.  Not required for heatmap.
+                        Speeds things up a little bit if skipped (OpenData only)
 
-    def __init__(self, base_path, link_shapes=False, link_stops=True):
+    link_stops        : Link stops to routes.  Required for heatmap but not for just
+                        plotting the routes.  Speeds things up if skipped (OpenData only)
+    """
+    def __init__(self, base_path, link_route_shapes=False, link_stops=True):
 
         self._shapefile_mode = False
 
@@ -378,7 +396,7 @@ class TransitRoutes(object):
 
             self._trips = TransitTrips(base_path)
 
-            if link_shapes:
+            if link_route_shapes:
                 self._shapes = TransitShapes(base_path)
 
                 for route in self.get_routes():

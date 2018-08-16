@@ -9,6 +9,18 @@ class SERVICE(object):
     SAT         = 2
     SUN         = 3
 
+class DATASET(object):
+    JUNE        = 'june'
+    JULY        = 'july'
+    BRT_ORIG    = 'brt'
+
+class MODE(object):
+    ONE         = "1"
+    TWO         = "2"
+
+class BUFFER(object):
+    CIRCLE_400 = "circle_400"
+
 class KEY(object):
     SERVICE_TYPE        = 'serv_type'
     DEPART_TIME         = 'depart_time'
@@ -26,3 +38,6 @@ class KEY(object):
     BAD_ID              = 'bad_id'
     POINT               = 'point'
     NAME                = 'name'
+
+    STOP_SET            = 'stop_set'
+    BUFFER              = 'buffer'

@@ -1,26 +1,92 @@
+import os
+import shapefile
+from shapefile_writer import ShapeFileWriter
+from geometry import Polygon
+from geometry import Point
+
 class Intersect(object):
 
-    def __init__(self, group1, group2, limit=None):
+    def __init__(self):
 
         self.group1_data = {}
         self.group2_data = {}
 
-        if not isinstance(group1, list):
-            group1 = [group1]
-
-        if not isinstance(group2, list):
-            group2 = [group2]
-
-        self.group1 = group1
-        self.group2 = group2
+        self.group1 = None
+        self.group2 = None
 
         self._total_count = 0
         self._temp_count = 0
 
-        self._group1_id_map = {}
-        self._group2_id_map = {}
+        # self._group1_id_map = {}
+        # self._group2_id_map = {}
 
-        self.process(group1, group2, limit=limit)
+        self._file_name = None
+        self._shapefile_name_template = \
+            "temp/shapefiles/intersect_cache/stop_da_mode_%s_dataset_%s.shp"
+
+    def load(self, mode, dataset):
+
+        file_name = self._shapefile_name_template % (mode, dataset)
+        self.from_shapefile(file_name)
+
+    def from_shapefile(self, file_name):
+
+        if not os.path.exists(file_name):
+            raise ValueError("File does not exist: %s" % file_name)
+
+        sf = shapefile.Reader(file_name)
+        records = sf.records()
+        shapes = sf.shapes()
+
+        if len(records) != len(shapes):
+            raise ValueError("len records != len shapes")
+
+        # print "len(records)", len(records)
+        # print "len(shapes)", len(shapes)
+
+        for i, record in enumerate(records):
+            fid = record[0]
+            group1_id = record[1]
+            group2_id = record[2]
+
+            shape = shapes[i]
+
+            polygon = Polygon()
+            for index in xrange(len(shape.points)-1):
+                item = shape.points[index]
+                polygon.add_point(Point(item[0], item[1]))
+
+            # Add to group 1
+            data = self.group1_data.get(group1_id, {})
+            data2 = data.get(group2_id, [])
+            data2.append(polygon)
+            data[group2_id] = data2
+            self.group1_data[group1_id] = data
+
+            # Add to group 2
+            data = self.group2_data.get(group2_id, {})
+            data2 = data.get(group1_id, [])
+            data2.append(polygon)
+            data[group1_id] = data2
+            self.group2_data[group2_id] = data
+
+        print "Read %d intersections from %s" % (len(records), file_name)
+
+    def to_shapefile(self, mode, dataset):
+
+        file_name = self._shapefile_name_template % (mode, dataset)
+
+        writer = ShapeFileWriter()
+
+        intersection_list = []
+        print "Want to save intersection to file: %s" % file_name
+        for group1_id, data in self.group1_data.iteritems():
+            for group2_id, intersecting_polygons in data.iteritems():
+                for p in intersecting_polygons:
+                    # print "write to shapefile:", group1_id, group2_id, p.get_area()
+                    intersection_list.append((group1_id, group2_id, p))
+
+        writer.write_stop_da_intersections(intersection_list, file_name)
 
     def _count(self):
         self._total_count += 1
@@ -31,6 +97,12 @@ class Intersect(object):
 
     def process(self, group1, group2, limit=None):
 
+        if not isinstance(group1, list):
+            group1 = [group1]
+
+        if not isinstance(group2, list):
+            group2 = [group2]
+
         test_shapefile_list = []
 
         temp_count = 0
@@ -38,14 +110,17 @@ class Intersect(object):
             group1_id = item1.get_id()
             polygon_1 = item1.get_polygon()
 
-            self._group1_id_map[group1_id] = item1
+            # self._group1_id_map[group1_id] = item1
 
             # print "finding intersections for group1 id:", group1_id
 
             for item2 in group2:
                 group2_id = item2.get_id()
                 polygon_2 = item2.get_polygon()
-                self._group2_id_map[group2_id] = item2
+
+                # self._group2_id_map[group2_id] = item2
+
+
                 # print "    compare to group2 id:", group2_id, polygon_2.get_area()
                 # Do these polygons intersect?
 
@@ -91,9 +166,9 @@ class Intersect(object):
         data = self.group1_data.get(group1_id, {})
 
         for group2_id, polygons in data.iteritems():
-            item = self._group2_id_map.get(group2_id)
+            # item = self._group2_id_map.get(group2_id)
             for p in polygons:
-                result.append((p, group2_id, item))
+                result.append((p, group2_id))
         return result
 
     def get_intersections_for_group2_id(self, group2_id):
@@ -102,9 +177,9 @@ class Intersect(object):
         data = self.group2_data.get(group2_id, {})
 
         for group1_id, polygons in data.iteritems():
-            item = self._group1_id_map.get(group1_id)
+            # item = self._group1_id_map.get(group1_id)
             for p in polygons:
-                result.append((p, group1_id, item))
+                result.append((p, group1_id))
         return result
 
     def get_group1_ids(self):

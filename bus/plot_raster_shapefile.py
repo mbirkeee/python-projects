@@ -42,9 +42,7 @@ class Runner(object):
 
             plotter.add_polygon(polygon)
 
-
         plotter.plot("temp/maps/raster_test_read.html")
-
 
 
 if __name__ == "__main__":

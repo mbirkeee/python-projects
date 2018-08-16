@@ -4,7 +4,7 @@ import pyproj
 import random
 
 from constants import BASE
-from transit_routes import TransitRoutes
+from data_manager import DataManager
 # from transit_shapes import TransitShapes
 # from stop_times import TransitTrips
 
@@ -41,7 +41,7 @@ class OverlayRunner():
 
     def plot_route(self, base, plotter, route_id, color, thickness):
 
-            routes = TransitRoutes(base, link_stops=False)
+            routes = DataManager(base, link_stops=False)
 
             polylines = routes.get_polylines(route_id)
 
@@ -101,7 +101,7 @@ class Runner(object):
 
         result = []
         if self._route_id is None:
-            self._route_mgr = TransitRoutes(self._base_path, link_shapes=True, link_stops=False)
+            self._route_mgr = DataManager(self._base_path, link_shapes=True, link_stops=False)
 
             raise ValueError("plot all routes!!!")
 
@@ -120,7 +120,7 @@ class Runner(object):
             #     # print "|| %s || %s || %s || PDF || Map || Notes ||" % (repr(item[0]), item[1], repr(item[2]))
 
         else:
-            self._route_mgr = TransitRoutes(self._base_path, link_shapes=True, link_stops=True)
+            self._route_mgr = DataManager(self._base_path, link_shapes=True, link_stops=True)
 
             # Plot this route and it's s
 

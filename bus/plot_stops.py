@@ -1,5 +1,5 @@
 import argparse
-from transit_routes import TransitRoutes
+from data_manager import DataManager
 
 
 from plotter import Plotter
@@ -25,7 +25,7 @@ class Runner(object):
         self._date = args.date
         self._base_path = base_path_from_date(args.date)
 
-        self._route_mgr = TransitRoutes(self._base_path, link_stops=True, link_shapes=True)
+        self._route_mgr = DataManager(self._base_path, link_stops=True, link_shapes=True)
 
     def run(self):
 
