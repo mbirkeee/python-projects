@@ -17,14 +17,20 @@ from geometry import Point
 from geometry import Polygon
 
 from constants import DATASET
-from constants import MODE
+from constants import KEY
+
+from modes import MODE
+from modes import MODE_DICT
+from modes import BUFFER_METHOD
+from modes import SCORE_METHOD
+
 from constants import BASE
 
 class Heatmap(object):
 
     def __init__(self):
 
-        print "Heatmap object instantiated"
+        print "Heatmap object created"
         self._raster_list = []
         self._load_file_name = None
 
@@ -36,24 +42,116 @@ class Heatmap(object):
         self._base_path = None
         self._data_man = None
         self._da_man = None
-
         self._run_flag = False
+        self._mode_dict = MODE_DICT
+        self._max_score = None
+        self._min_score = None
+        self._ave_score = None
+
         self._dataset_to_base_map = {
             DATASET.JUNE        : BASE.JUNE,
             DATASET.JULY        : BASE.JULY,
             DATASET.BRT_ORIG    : BASE.BRT
         }
 
+        self.validate_mode_dict()
+
+    def validate_mode_dict(self):
+        print "Must validate mode dict"
+
+    def get_max_score(self):
+        if self._max_score is None:
+            self.get_scores()
+
+        return self._max_score
+
+    def get_min_score(self):
+        if self._min_score is None:
+            self.get_scores()
+
+        return self._min_score
+
+    def get_ave_score(self):
+        if self._ave_score is None:
+            self.get_scores()
+
+        return self._ave_score
+
+    def get_scores(self):
+
+        min_score = None
+        max_score = None
+        ave_score = 0
+
+        for raster in self._raster_list:
+            # print raster_id
+            score = raster.get_score()
+
+            if max_score is None or score > max_score:
+                max_score = score
+
+            if min_score is None or score < min_score:
+                min_score = score
+
+            ave_score += score
+        ave_score = ave_score / len(self._raster_list)
+
+        self._max_score = max_score
+        self._min_score = min_score
+        self._ave_score = ave_score
+
+    def dump_score_csv(self, file_name=None):
+
+        x = []
+        for raster in self._raster_list:
+            x.append((raster.get_score(), raster.get_parent_id(), raster.get_id()))
+
+        x = sorted(x)
+        x.reverse()
+
+        if file_name is None:
+            file_name = "temp/csv/score_mode_%s_%s.csv" % (self._mode, self._dataset)
+
+        f = open(file_name, "w")
+        f.write("index,score,da_id,raster_id\n")
+        for i, item in enumerate(x):
+            score = item[0]
+            da_id = item[1]
+            raster_id = item[2]
+            f.write("%d,%f,%d,%d\n" % (i, score, da_id, raster_id) )
+        f.close()
+
+        print "Wrote %d scores to: %s" % (len(x), file_name)
+
+
     def set_mode(self, mode):
+        if self._mode is not None:
+            print "Mode %d cannot be changed" % self._mode
+
+        mode = int(mode)
+
+        if not self._mode_dict.has_key(mode):
+            print "Invalid mode. Supported modes are:"
+            for mode, data in self._mode_dict.iteritems():
+                print "  %d: %s" % (mode, repr(data))
+
         self._mode = mode
 
     def set_dataset(self, dataset):
         self._dataset = dataset
 
+    def get_buffer_method(self):
+        mode_data = self._mode_dict.get(self._mode)
+        return mode_data.get(KEY.BUFFER_METHOD)
+
+    def get_score_method(self):
+        mode_data = self._mode_dict.get(self._mode)
+        return mode_data.get(KEY.SCORE_METHOD)
+
     def run(self):
 
         if self._run_flag:
-            print "heatmap already generated, cannot run again"
+            print "Heatmap already generated, cannot run again"
             return
 
         self._run_flag = True
@@ -66,22 +164,33 @@ class Heatmap(object):
         das = self._da_man.get_das()
         stops = self._data_man.get_stops()
 
+        buffer_method = self.get_buffer_method()
+        if buffer_method is None:
+            raise ValueError("Cannot determine buffer method for mode: %d" % self._mode)
+
         for stop in stops:
-            if self._mode == MODE.ONE:
+            if buffer_method == BUFFER_METHOD.CIRCLE_400:
                 stop.make_round_buffer(400)
+            elif buffer_method == BUFFER_METHOD.SQUARE_709:
+                stop.make_square_buffer(709)
+            elif buffer_method == BUFFER_METHOD.DIAMOND_500:
+                stop.make_diamond_buffer(500)
             else:
-                raise ValueError("mode not supported")
+                raise ValueError("mode %d buffer %s not supported" % (self._mode, buffer_method))
 
         intersect = Intersect()
+
         try:
-            intersect.load(self._mode, self._dataset)
+            intersect.load(buffer_method, self._dataset)
+
         except Exception as err:
-            print "Exception: %s" % repr(err)
+            print "Intersect().load() Exception: %s" % repr(err)
             intersect.process(stops, das)
-            intersect.to_shapefile(self._mode, self._dataset)
+            intersect.to_shapefile(buffer_method, self._dataset)
 
         judge = Score(self._data_man)
 
+        score_method = self.get_score_method()
 
         for da in das:
             rasters = da.get_rasters(100)
@@ -89,10 +198,10 @@ class Heatmap(object):
             print "Got %d stops for da_id: %d" % (len(stop_tuples), da.get_id())
 
             for raster in rasters:
-                if self._mode == MODE.ONE:
+                if score_method == SCORE_METHOD.STOP_COUNT:
                     score = judge.get_score_stop_count(raster, stop_tuples)
                 else:
-                    raise ValueError("not supported")
+                    raise ValueError("Score method not supported")
 
                 if score > 0:
                     raster.set_score(score)
@@ -175,7 +284,6 @@ class Heatmap(object):
                     min_score = score
 
         max_score_abs = max(abs(min_score), abs(max_score))
-
 
         for raster in self._raster_list:
 
@@ -276,3 +384,27 @@ class Heatmap(object):
             result.add_raster(result_raster)
 
         return result
+
+if __name__ == "__main__":
+
+    h1 = Heatmap()
+    h1.set_mode(1)
+    h1.set_dataset("june")
+    h1.run()
+
+    # h2 = Heatmap()
+    # h2.set_mode(3)
+    # h2.set_dataset("june")
+    # h2.run()
+    #
+    # h3 = h2-h1
+    # h3.plot("temp/maps/circle_diamond_diff.html")
+
+    print "h1 max_score", h1.get_max_score()
+    print "h1 min_score", h1.get_min_score()
+    print "h1 ave_score", h1.get_ave_score()
+
+    h1.dump_score_csv()
+
+
+    # print "h2 max_score", h2.get_max_score()

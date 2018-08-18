@@ -53,6 +53,21 @@ class Point(object):
     def get_utm(self):
         return (self._utm_x, self._utm_y)
 
+    def get_diamond_buffer(self, size):
+
+        corners = [
+            (size,  0),
+            (0,     size),
+            (-size, 0),
+            (0,    -size),
+        ]
+
+        p = Polygon()
+        for corner in corners:
+            p.add_point(Point(self.get_x() + corner[0], self.get_y() + corner[1]))
+
+        return p
+
     def get_square_buffer(self, size):
 
         half = float(size)/2.0

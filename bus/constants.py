@@ -14,12 +14,7 @@ class DATASET(object):
     JULY        = 'july'
     BRT_ORIG    = 'brt'
 
-class MODE(object):
-    ONE         = "1"
-    TWO         = "2"
 
-class BUFFER(object):
-    CIRCLE_400 = "circle_400"
 
 class KEY(object):
     SERVICE_TYPE        = 'serv_type'
@@ -40,4 +35,7 @@ class KEY(object):
     NAME                = 'name'
 
     STOP_SET            = 'stop_set'
-    BUFFER              = 'buffer'
+    BUFFER_METHOD       = 'buffer_method'
+    SCORE_METHOD        = 'score_method'
+    DISTANCE_DECAY      = 'distance_decay'
+    STOP_DEMAND         = 'stop_demand'

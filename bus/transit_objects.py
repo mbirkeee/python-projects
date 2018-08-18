@@ -88,6 +88,10 @@ class TransitStop(object):
         point = self.get_point()
         self._buffer_p = point.get_square_buffer(size)
 
+    def make_diamond_buffer(self, size):
+        point = self.get_point()
+        self._buffer_p = point.get_diamond_buffer(size)
+
     def compute_demand(self, intersect, filter):
 
         demand = 0

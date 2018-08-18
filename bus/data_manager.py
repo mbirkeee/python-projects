@@ -4,8 +4,7 @@ import time
 
 from constants import KEY
 from constants import SERVICE
-from constants import MODE
-from constants import BUFFER
+
 
 from geometry import Polyline
 from geometry import Point
@@ -13,7 +12,6 @@ from geometry import Point
 from route_id_names import ROUTE_IDS_05_04
 from route_id_names import ROUTE_IDS_06_21
 from route_id_names import BAD_STOP_IDS_BRT
-from route_id_names import BAD_SHAPES
 
 from transit_trips import TransitTrips
 from transit_shapes import TransitShapes
@@ -22,12 +20,6 @@ from transit_objects import TransitStop
 from transit_objects import TransitRoute
 from stop_times import StopTimes
 
-
-MODE_DICT = {
-    MODE.ONE : {
-        KEY.BUFFER     : BUFFER.CIRCLE_400
-    }
-}
 
 class TransitShapefile(object):
     """
