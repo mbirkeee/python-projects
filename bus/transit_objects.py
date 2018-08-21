@@ -16,6 +16,7 @@ class TransitRoute(object):
         self._stop_ids = []
         self._attributes = {}
         self._stop_dict = None
+        self._manually_removed_stops = []
 
         # The segments must be a list because the open data format currently
         # uses multiple segments to illustrate a route
@@ -32,6 +33,32 @@ class TransitRoute(object):
         result = []
         for stop_id in self._stop_ids:
             result.append(self._stop_dict.get(stop_id))
+        return result
+
+    def manually_add_stop(self, stop_id):
+        self.add_stop_id(stop_id)
+
+    def manually_remove_stop(self, stop_id):
+        self._stop_ids.remove(stop_id)
+        self._manually_removed_stops.append(stop_id)
+        self._manually_removed_stops = list(set(self._manually_removed_stops))
+
+    def get_stops_removed(self):
+        result = []
+        for stop_id in self._manually_removed_stops:
+            stop = self._stop_dict.get(stop_id)
+            result.append(stop)
+        return result
+
+    def get_stops_added(self):
+        """
+        Only return the stops that were manually added
+        """
+        result = []
+        for stop_id in self._stop_ids:
+            stop = self._stop_dict.get(stop_id)
+            if stop.was_manually_added(self._route_id):
+                result.append(stop)
         return result
 
     def get_id(self):
@@ -76,9 +103,30 @@ class TransitStop(object):
         self._serves_route_ids = []
         self._buffer_p = None
         self._route_dict = None
+
+        # Record which routes this stop was manually added to
+        self._manually_added_to_routes = []
+
         self._demand = 1.0
 
         self._attributes = {}
+
+    def was_manually_added(self, route_id):
+        if route_id in self._manually_added_to_routes:
+            return True
+        return False
+
+    def manually_add_route(self, route_id):
+        self.add_route_id(route_id)
+        self._manually_added_to_routes.append(route_id)
+        self._manually_added_to_routes = list(set(self._manually_added_to_routes))
+
+    def manually_remove_route(self, route_id):
+        self._serves_route_ids.remove(route_id)
+        try:
+            self._manually_added_to_routes.remove(route_id)
+        except:
+            pass
 
     def make_round_buffer(self, size):
         point = self.get_point()
@@ -141,6 +189,17 @@ class TransitStop(object):
     def get_point(self):
         return self._point
 
+    def get_lat(self):
+        return self._point.get_lat()
+
+    def get_lng(self):
+        return self._point.get_lng()
+
+    def get_distance(self, stop, method="crow"):
+
+        point = self.get_point()
+        return point.get_distance(stop.get_point(), method=method)
+
     def add_route_id(self, route_id):
 
         self._serves_route_ids.append(route_id)
@@ -151,3 +210,9 @@ class TransitStop(object):
 
     def get_buffer(self):
         return self._buffer_p
+
+    def __repr__(self):
+        result = []
+        result.append("ID: %d: Serves routes: %s" % (self._stop_id, repr(self._serves_route_ids)))
+        result.append("ID: %s Manually added to routes: %s" % (self._stop_id, repr(self._manually_added_to_routes)))
+        return "\n".join(result)

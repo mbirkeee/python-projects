@@ -2,7 +2,7 @@ import os
 from geometry import Point
 from geometry import Polyline
 
-from route_id_names import BAD_SHAPES
+from dataset import BAD_SHAPES
 
 class TransitShapes(object):
 

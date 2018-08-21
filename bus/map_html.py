@@ -31,8 +31,13 @@ TOP = """
           center: {lat: 52.125, lng: -106.65},
           mapTypeId: 'terrain'
         });
-/*
+
+    /*
       google.maps.event.addListener(map, 'mousemove', function (event) {
+              displayCoordinates(event.latLng);
+          });
+    */
+      google.maps.event.addListener(map, 'click', function (event) {
               displayCoordinates(event.latLng);
           });
 
@@ -41,40 +46,9 @@ TOP = """
           lat = lat.toFixed(6);
           var lng = pnt.lng();
           lng = lng.toFixed(6);
-          console.log("Latitude: " + lat + "  Longitude: " + lng);
+          console.log("{ KEY.LAT : " + lat + ", KEY.LNG : " + lng + " },");
       }
-*/
 """
-
-# CIRCLE_RED_20 = """
-# for (var point in circle) {
-#   var circ = new google.maps.Circle({
-#     strokeColor: '#FF0000',
-#     strokeOpacity: 0.25,
-#     strokeWeight: 1,
-#     fillColor: '#FF0000',
-#     fillOpacity: 0.25,
-#     map: map,
-#     center: circle[point].center,
-#     radius: 20,
-#   });
-# }
-# """
-
-# CIRCLE_RED_5 = """
-# for (var point in circle) {
-#   var circ = new google.maps.Circle({
-#     strokeColor: '#FF0000',
-#     strokeOpacity: 0.25,
-#     strokeWeight: 1,
-#     fillColor: '#FF0000',
-#     fillOpacity: 0.5,
-#     map: map,
-#     center: circle[point].center,
-#     radius: 5,
-#   });
-# }
-# """
 
 CIRCLE = """
 for (var point in circle) {
@@ -88,6 +62,16 @@ for (var point in circle) {
     center: circle[point].center,
     radius: %d,
   });
+  circ.setMap(map);
+
+   /*
+  google.maps.event.addListener(circ, 'mousemove', function (event) {
+    displayCoordinates(event.latLng);
+  });
+  */
+  google.maps.event.addListener(circ, 'click', function (event) {
+    displayCoordinates(event.latLng);
+  });
 }
 """
 
@@ -100,6 +84,17 @@ for (var point in marker) {
     label: marker[point].label,
   });
 }
+
+/*
+google.maps.event.addListener(mark, 'mousemove', function (event) {
+    displayCoordinates(event.latLng);
+});
+*/
+
+google.maps.event.addListener(mark, 'click', function (event) {
+    displayCoordinates(event.latLng);
+  });
+
 """
 
 # MARKER1 = """
@@ -170,12 +165,23 @@ var my_polygon = new google.maps.Polygon({
 });
 my_polygon.setMap(map);
 
-google.maps.event.addListener(my_polygon, 'mousemove', function (event) {
-              displayCoordinates(event.latLng);
-          });
-
 """
 
+POLYGON_LATLON = """
+var my_polygon = new google.maps.Polygon({
+  paths: polypoints,
+  strokeColor: '%s',
+  strokeOpacity: %f,
+  strokeWeight: %d,
+  fillColor: '%s',
+  fillOpacity: %f
+});
+my_polygon.setMap(map);
+
+google.maps.event.addListener(my_polygon, 'mousemove', function (event) {
+    displayCoordinates(event.latLng);
+});
+"""
 
 BOTTOM = """
     }
@@ -188,40 +194,40 @@ BOTTOM = """
 """ % GOOGLE_MAPS_KEY
 
 
-ROUTE_TOP = """
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
-    <meta charset="utf-8">
-    <title>Trip Map</title>
-    <style>
-      /* Always set the map height explicitly to define the size of the div
-       * element that contains the map. */
-      #map {
-        height: 100%;
-      }
-      /* Optional: Makes the sample page fill the window. */
-      html, body {
-        height: 100%;
-        margin: 0;
-        padding: 0;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="map"></div>
-    <script>
-
-      function initMap() {
-        var map = new google.maps.Map(document.getElementById('map'), {
-          zoom: 13,
-          center: {lat: 52.10, lng: -106.65},
-          mapTypeId: 'terrain'
-        });
-
-        var flightPlanCoordinates = [
-"""
+# ROUTE_TOP = """
+# <!DOCTYPE html>
+# <html>
+#   <head>
+#     <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+#     <meta charset="utf-8">
+#     <title>Trip Map</title>
+#     <style>
+#       /* Always set the map height explicitly to define the size of the div
+#        * element that contains the map. */
+#       #map {
+#         height: 100%;
+#       }
+#       /* Optional: Makes the sample page fill the window. */
+#       html, body {
+#         height: 100%;
+#         margin: 0;
+#         padding: 0;
+#       }
+#     </style>
+#   </head>
+#   <body>
+#     <div id="map"></div>
+#     <script>
+#
+#       function initMap() {
+#         var map = new google.maps.Map(document.getElementById('map'), {
+#           zoom: 13,
+#           center: {lat: 52.10, lng: -106.65},
+#           mapTypeId: 'terrain'
+#         });
+#
+#         var flightPlanCoordinates = [
+# """
 
 # ROUTE_MIDDLE = """
 #         ];

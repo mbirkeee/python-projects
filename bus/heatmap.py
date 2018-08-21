@@ -16,15 +16,11 @@ from score import Score
 from geometry import Point
 from geometry import Polygon
 
-from constants import DATASET
 from constants import KEY
 
-from modes import MODE
 from modes import MODE_DICT
 from modes import BUFFER_METHOD
 from modes import SCORE_METHOD
-
-from constants import BASE
 
 class Heatmap(object):
 
@@ -48,11 +44,11 @@ class Heatmap(object):
         self._min_score = None
         self._ave_score = None
 
-        self._dataset_to_base_map = {
-            DATASET.JUNE        : BASE.JUNE,
-            DATASET.JULY        : BASE.JULY,
-            DATASET.BRT_ORIG    : BASE.BRT
-        }
+        # self._dataset_to_base_map = {
+        #     DATASET.JUNE        : BASE.JUNE,
+        #     DATASET.JULY        : BASE.JULY,
+        #     DATASET.BRT_ORIG    : BASE.BRT
+        # }
 
         self.validate_mode_dict()
 
@@ -155,11 +151,7 @@ class Heatmap(object):
             return
 
         self._run_flag = True
-        self._base_path = self._dataset_to_base_map.get(self._dataset)
-        if self._base_path is None:
-            raise ValueError("Cannot determine base path from %s" % self._dataset)
-
-        self._data_man = DataManager(self._base_path)
+        self._data_man = DataManager(self._dataset)
         self._da_man = DaData()
         das = self._da_man.get_das()
         stops = self._data_man.get_stops()
@@ -389,22 +381,32 @@ if __name__ == "__main__":
 
     h1 = Heatmap()
     h1.set_mode(1)
-    h1.set_dataset("june")
+    h1.set_dataset("brt")
     h1.run()
 
-    # h2 = Heatmap()
-    # h2.set_mode(3)
-    # h2.set_dataset("june")
-    # h2.run()
+    h2 = Heatmap()
+    h2.set_mode(1)
+    h2.set_dataset("brt1")
+    h2.run()
     #
-    # h3 = h2-h1
-    # h3.plot("temp/maps/circle_diamond_diff.html")
+    h3 = h2-h1
+    h3.plot("temp/maps/june_brt_mode_1_diff.html")
+
+    h1.dump_score_csv()
+    h2.dump_score_csv()
+    h3.dump_score_csv()
 
     print "h1 max_score", h1.get_max_score()
     print "h1 min_score", h1.get_min_score()
     print "h1 ave_score", h1.get_ave_score()
 
-    h1.dump_score_csv()
+    print "h2 max_score", h2.get_max_score()
+    print "h2 min_score", h2.get_min_score()
+    print "h2 ave_score", h2.get_ave_score()
+
+    print "h3 max_score", h3.get_max_score()
+    print "h3 min_score", h3.get_min_score()
+    print "h3 ave_score", h3.get_ave_score()
 
 
     # print "h2 max_score", h2.get_max_score()

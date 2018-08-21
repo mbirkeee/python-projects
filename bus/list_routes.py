@@ -1,7 +1,6 @@
 import argparse
 
 from data_manager import DataManager
-from my_utils import base_path_from_date
 
 class Runner(object):
     """
@@ -14,18 +13,19 @@ class Runner(object):
         except:
             self._route_id = None
 
-        self._date = args.date
-        self._base_path = base_path_from_date(args.date)
-        self._route_mgr = None
+        self._route_id = args.route_id
+        self._dataset = args.dataset
+
+        self._dataman = None
 
     def run(self):
 
         result = []
         if self._route_id is None:
 
-            self._route_mgr = DataManager(self._base_path, link_stops=False)
+            self._dataman = DataManager(self._dataset, link_stops=False)
 
-            routes = self._route_mgr.get_routes()
+            routes = self._dataman.get_routes()
             for route in routes:
                 name = route.get_name()
                 number = route.get_number()
@@ -40,8 +40,8 @@ class Runner(object):
                 # print "|| %s || %s || %s || PDF || Map || Notes ||" % (repr(item[0]), item[1], repr(item[2]))
 
         else:
-            self._route_mgr = DataManager(self._base_path)
-            route = self._route_mgr.get_route(self._route_id)
+            self._dataman = DataManager(self._dataset)
+            route = self._dataman.get_route(self._route_id)
             stops = route.get_stops()
 
             print "Stops for Route: %s (%d) %d" % (route.get_name(), route.get_number(), route.get_id())
@@ -57,8 +57,8 @@ class Runner(object):
 if __name__ == "__main__":
 
    parser = argparse.ArgumentParser(description='List routes and stops per route')
-   parser.add_argument("--route_id", help="Route ID", type=int)
-   parser.add_argument("--date", help="june/july/brt", type=str, required=True)
+   parser.add_argument("-r", "--route_id", help="Route ID", type=int)
+   parser.add_argument("-d", "--dataset", help="june/july/brt/brt1", type=str, required=True)
 
    args = parser.parse_args()
 

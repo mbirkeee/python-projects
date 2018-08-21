@@ -7,8 +7,8 @@ from transit_stops import TransitStops
 from stop_times import StopTimes
 from stop_times import SERVICE
 from stop_times import KEY
-from route_id_names import ROUTE_IDS_05_04
-from route_id_names import ROUTE_IDS_06_21
+from dataset import ROUTE_IDS_05_04
+from dataset import ROUTE_IDS_06_21
 
 class Intersect(object):
 

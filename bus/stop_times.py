@@ -1,10 +1,9 @@
-import pyproj
 import simplejson
 import os
 import time
 
 from constants import KEY
-from constants import SERVICE
+from dataset import SERVICE
 
 LATEST_TIME = (24 * 60 * 60) - 1
 

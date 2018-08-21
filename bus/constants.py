@@ -1,18 +1,4 @@
-class BASE(object):
-    JULY = "../data/sts/csv/2018_08_05/"
-    JUNE = "../data/sts/csv/2018_05_04/"
-    BRT  = "../data/shapefiles/brt_lines/brt"
 
-class SERVICE(object):
-    UNKNOWN     = 0
-    MWF         = 1
-    SAT         = 2
-    SUN         = 3
-
-class DATASET(object):
-    JUNE        = 'june'
-    JULY        = 'july'
-    BRT_ORIG    = 'brt'
 
 
 
@@ -39,3 +25,9 @@ class KEY(object):
     SCORE_METHOD        = 'score_method'
     DISTANCE_DECAY      = 'distance_decay'
     STOP_DEMAND         = 'stop_demand'
+
+    STOPS_ADDED         = 'stops_added'
+    STOPS_REMOVED       = 'stops_removed'
+    LAT                 = 'lat'
+    LON                 = 'lng'
+    LNG                 = 'lng'

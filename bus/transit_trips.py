@@ -1,11 +1,10 @@
 import os
 import time
 
-from route_id_names import ROUTE_IDS_05_04
-from route_id_names import ROUTE_IDS_06_21
-from route_id_names import BAD_SHAPES
-
-from constants import SERVICE
+from dataset import ROUTE_IDS_05_04
+from dataset import ROUTE_IDS_06_21
+from dataset import BAD_SHAPES
+from dataset import SERVICE
 
 class TransitTrips(object):
 

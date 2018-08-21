@@ -38,8 +38,8 @@ class Plotter(object):
     # def add_dot(self, point):
     #     self._dot_list.append(point)
 
-    def add_marker(self, point, title, label):
-        self._marker_list.append((point, title, label))
+    def add_marker(self, point, title, hover):
+        self._marker_list.append((point, title, hover))
 
     def add_polyline(self, item):
         if not isinstance(item, Polyline):
@@ -95,7 +95,7 @@ class Plotter(object):
         polypoint.set_attribute(ATTR.STROKE_OPACITY, strokeOpacity)
         for stop in stops:
             polypoint.add_point(stop.get_point())
-        
+
         self.add_polypoint(polypoint)
 
     def plot(self, file_name):
@@ -163,10 +163,10 @@ class Plotter(object):
             for item in self._marker_list:
                 point = item[0]
                 title = item[1]
-                label = item[2]
+                hover = item[2]
                 lat = point.get_lat()
                 lng = point.get_lng()
-                f.write("%d:{center:{lat:%f,lng:%f},title:'%s',label:'%s',},\n" % (i, lat, lng, title, label))
+                f.write("%d:{center:{lat:%f,lng:%f},title:'%s',label:'%s',},\n" % (i, lat, lng, hover, title))
                 i += 1
 
             f.write("};\n")

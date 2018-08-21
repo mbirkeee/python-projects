@@ -3,15 +3,18 @@ import shapefile
 import time
 
 from constants import KEY
-from constants import SERVICE
-
 
 from geometry import Polyline
 from geometry import Point
 
-from route_id_names import ROUTE_IDS_05_04
-from route_id_names import ROUTE_IDS_06_21
-from route_id_names import BAD_STOP_IDS_BRT
+from dataset import SERVICE
+from dataset import ROUTE_IDS_05_04
+from dataset import ROUTE_IDS_06_21
+from dataset import BAD_STOP_IDS_BRT
+from dataset import SUPPORTED_DATASETS
+from dataset import OPEN_DATA_ROUTE_FILTER
+
+from stop_updates import STOP_UPDATES
 
 from transit_trips import TransitTrips
 from transit_shapes import TransitShapes
@@ -25,8 +28,10 @@ class TransitShapefile(object):
     """
     This manager processes the transit data as supplied in shapefiles (e.g., the BRT data)
     """
-    def __init__(self, base_path):
-        self._base_path = base_path
+    def __init__(self, dataset):
+
+        self._base_path = SUPPORTED_DATASETS.get(dataset)
+        print "TransitShapefile: %s" % self._base_path
 
         self._route_dict = {}
         self._stop_dict = {}
@@ -45,6 +50,10 @@ class TransitShapefile(object):
         self.read_stops()
         self.read_direction_stops()
 
+        self._created_stop_id_base = 20000
+
+        self.apply_stop_updates(dataset)
+
         # After dictionaries built, cross-link them
         for route in self._route_dict.itervalues():
             route.set_stop_dict(self._stop_dict)
@@ -52,9 +61,76 @@ class TransitShapefile(object):
         for stop in self._stop_dict.itervalues():
             stop.set_route_dict(self._route_dict)
 
+    def apply_stops_added(self, added_stops, route_id):
+
+        route = self._route_dict.get(route_id)
+
+        for added_stop in added_stops:
+            print "CONSIDER ADDED STOP", added_stop
+            stop_id = added_stop.get(KEY.STOP_ID)
+
+            if stop_id is None:
+                print "THIS MUST BE A LAT/LON stop!!!!"
+                lat = added_stop.get(KEY.LAT)
+                lng = added_stop.get(KEY.LNG)
+                if lat is None or lng is None:
+                    raise ValueError("Bad Stop!")
+
+                stop_id = self._created_stop_id_base
+                self._created_stop_id_base += 1
+
+                name = "Manually Created stop: %s" % repr(stop_id)
+                stop = TransitStop(stop_id, name, Point(lat, lng))
+
+                if self._stop_dict.has_key(stop_id):
+                    raise ValueError("Duplicate stop_id!!!! %s" % repr(stop_id))
+
+                self._stop_dict[stop_id] = stop
+
+            else:
+                print "Want to assign an existing stop to this route"
+                stop = self._stop_dict.get(stop_id)
+
+            # Assign this existing stop to the route
+            stop.manually_add_route(route_id)
+            route.manually_add_stop(stop_id)
+
+            print repr(stop)
+
+    def apply_stops_removed(self, removed_stops, route_id):
+
+        route = self._route_dict.get(route_id)
+
+        for removed_stop in removed_stops:
+            stop_id = removed_stop.get(KEY.STOP_ID)
+
+            stop = self._stop_dict.get(stop_id)
+            if stop is None:
+                raise ValueError("Bad stop!! stop_id: %s" % repr(stop_id))
+
+            stop.manually_remove_route(route_id)
+            route.manually_remove_stop(stop_id)
+
+
+    def apply_stop_updates(self, dataset):
+
+        stop_updates = STOP_UPDATES.get(dataset, [])
+
+        for item in stop_updates:
+            route_id = item.get(KEY.ROUTE_ID)
+            print "Considering route:", route_id
+
+            added_stops = item.get(KEY.STOPS_ADDED)
+            self.apply_stops_added(added_stops, route_id)
+
+            removed_stops = item.get(KEY.STOPS_REMOVED)
+            self.apply_stops_removed(removed_stops, route_id)
+
+
     def get_active_stops(self):
         if not self._active_stops:
             self.get_active_stop_ids()
+
         return self._active_stops
 
     def get_active_stop_ids(self):
@@ -104,7 +180,7 @@ class TransitShapefile(object):
         return result
 
     def get_stops(self):
-        return self.get_active_stops()
+        return [stop for stop in self._stop_dict.itervalues()]
 
     def get_route_ids(self):
         result = [k for k in self._route_dict.iterkeys()]
@@ -358,23 +434,33 @@ class DataManager(object):
     link_stops        : Link stops to routes.  Required for heatmap but not for just
                         plotting the routes.  Speeds things up if skipped (OpenData only)
     """
-    def __init__(self, base_path, link_route_shapes=False, link_stops=True):
+    def __init__(self, dataset, link_route_shapes=False, link_stops=True):
+
+        base_path = SUPPORTED_DATASETS.get(dataset)
+        if base_path is None:
+            raise ValueError("dataset not supported: %s" % repr(dataset))
+
+        stop_updates = STOP_UPDATES.get(dataset)
+        if stop_updates is not None:
+            print "Want to update stops with supplementary info"
+
+        self._include_route_dict = OPEN_DATA_ROUTE_FILTER.get(dataset)
+
+
+        # if base_path.find("2018_05_04") > 0:
+        #     print "this is the JUNE data"
+        #     self._include_route_dict = ROUTE_IDS_05_04
+        #
+        # elif base_path.find('2018_08_05') > 0:
+        #     print "this is the JULY data"
+        #     self._include_route_dict = ROUTE_IDS_06_21
 
         self._shapefile_mode = False
-
-        if base_path.find("2018_05_04") > 0:
-            print "this is the JUNE data"
-            self._include_route_dict = ROUTE_IDS_05_04
-
-        elif base_path.find('2018_08_05') > 0:
-            print "this is the JULY data"
-            self._include_route_dict = ROUTE_IDS_06_21
-
-        else:
+        if self._include_route_dict is None:
             self._shapefile_mode = True
 
         if self._shapefile_mode:
-            self._shapefile = TransitShapefile(base_path)
+            self._shapefile = TransitShapefile(dataset)
         else:
             self._base_path = base_path
             self._route_dict = {}

@@ -7,7 +7,8 @@ import math
 from geometry import Polygon
 from geometry import Point
 
-from constants import BASE
+# from dataset import BASE
+
 PROJ = pyproj.Proj("+init=EPSG:32613")
 
 def is_shapefile(base):
@@ -15,14 +16,14 @@ def is_shapefile(base):
         return True
     return False
 
-def base_path_from_date(date):
-    if date.find('jul') >= 0:
-        base = BASE.JULY
-    elif date.find('jun') >= 0:
-        base = BASE.JUNE
-    else:
-        base = BASE.BRT
-    return base
+# def base_path_from_date(date):
+#     if date.find('jul') >= 0:
+#         base = BASE.JULY
+#     elif date.find('jun') >= 0:
+#         base = BASE.JUNE
+#     else:
+#         base = BASE.BRT
+#     return base
 
 # Should be obsolete, points have distance method
 # def get_point_dist(point1, point2):
