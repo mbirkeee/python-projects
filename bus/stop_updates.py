@@ -98,6 +98,49 @@ STOP_UPDATES = {
                 { KEY.STOP_ID : 3171 },
                 { KEY.STOP_ID : 3285 },
                 { KEY.STOP_ID : 3730 },
+            ]
+        },{
+            KEY.ROUTE_ID : 102281942,
+            KEY.NAME : "BRT Green - Inbound Westbound",
+            KEY.STOPS_ADDED : [
+                { KEY.STOP_ID : 4166 },
+                { KEY.STOP_ID: 3127},
+                { KEY.LAT : 52.140388, KEY.LNG : -106.622940 },
+                { KEY.LAT : 52.146413, KEY.LNG : -106.569351 },
+                { KEY.LAT: 52.146466, KEY.LNG: -106.575509},
+                { KEY.LAT: 52.146440, KEY.LNG: -106.583535},
+                { KEY.LAT: 52.151170, KEY.LNG: -106.593381},
+                { KEY.LAT: 52.151209, KEY.LNG: -106.598166},
+                { KEY.LAT: 52.143008, KEY.LNG: -106.623010},
+                { KEY.LAT: 52.129370, KEY.LNG: -106.685933},
+                { KEY.LAT: 52.129413, KEY.LNG: -106.690362},
+                { KEY.LAT: 52.129401, KEY.LNG: -106.705744},
+            ],
+            KEY.STOPS_REMOVED : [
+                { KEY.STOP_ID : 5427 },
+                {KEY.STOP_ID: 5391},
+                {KEY.STOP_ID: 3171},
+                {KEY.STOP_ID: 5900},
+                {KEY.STOP_ID: 3138},
+                {KEY.STOP_ID: 4362},
+            ]
+        },{
+            KEY.ROUTE_ID : 102281943,
+            KEY.NAME : "BRT Green - Outbound Eastbound",
+            KEY.STOPS_ADDED : [
+                {KEY.STOP_ID: 4362},
+                {KEY.LAT: 52.129212, KEY.LNG: -106.705551},
+                {KEY.LAT: 52.129201, KEY.LNG: -106.684247},
+                {KEY.LAT: 52.128654, KEY.LNG: -106.635092},
+                {KEY.LAT: 52.140186, KEY.LNG: -106.622440},
+                {KEY.LAT: 52.143109, KEY.LNG: -106.622499},
+                {KEY.LAT: 52.150813, KEY.LNG: -106.598201},
+                {KEY.LAT: 52.150890, KEY.LNG: -106.592070},
+                {KEY.LAT: 52.146050, KEY.LNG: -106.582170},
+            ],
+            KEY.STOPS_REMOVED : [
+                {KEY.STOP_ID: 3136},
+                {KEY.STOP_ID: 3280},
 
             ]
         }
