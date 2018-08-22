@@ -43,6 +43,7 @@ class Heatmap(object):
         self._max_score = None
         self._min_score = None
         self._ave_score = None
+        self._route_ids = []
 
         # self._dataset_to_base_map = {
         #     DATASET.JUNE        : BASE.JUNE,
@@ -51,6 +52,12 @@ class Heatmap(object):
         # }
 
         self.validate_mode_dict()
+
+    def add_route_id(self, route_id):
+
+        self._route_ids.append(route_id)
+        self._route_ids = list(set(self._route_ids))
+
 
     def validate_mode_dict(self):
         print "Must validate mode dict"
@@ -154,7 +161,15 @@ class Heatmap(object):
         self._data_man = DataManager(self._dataset)
         self._da_man = DaData()
         das = self._da_man.get_das()
-        stops = self._data_man.get_stops()
+
+        if not self._route_ids:
+            stops = self._data_man.get_active_stops()
+        else:
+            stops = []
+            for route_id in self._route_ids:
+                route = self._data_man.get_route(route_id)
+                route_stops = route.get_stops()
+                stops.extend(route_stops)
 
         buffer_method = self.get_buffer_method()
         if buffer_method is None:
@@ -177,8 +192,13 @@ class Heatmap(object):
 
         except Exception as err:
             print "Intersect().load() Exception: %s" % repr(err)
-            intersect.process(stops, das)
-            intersect.to_shapefile(buffer_method, self._dataset)
+            if not self._route_ids:
+                intersect.process(stops, das)
+                intersect.to_shapefile(buffer_method, self._dataset)
+            else:
+                print "CANNOT compute intersections with subset of stops"
+                print "quitting"
+                return
 
         judge = Score(self._data_man)
 
@@ -189,6 +209,9 @@ class Heatmap(object):
             stop_tuples = intersect.get_intersections(group=2, id=da.get_id())
             print "Got %d stops for da_id: %d" % (len(stop_tuples), da.get_id())
 
+            if self._route_ids:
+                stop_tuples = self.filter_stop_tuples(stop_tuples, stops)
+
             for raster in rasters:
                 if score_method == SCORE_METHOD.STOP_COUNT:
                     score = judge.get_score_stop_count(raster, stop_tuples)
@@ -198,6 +221,16 @@ class Heatmap(object):
                 if score > 0:
                     raster.set_score(score)
                     self.add_raster(raster)
+
+    def filter_stop_tuples(self, stop_tuples, stops):
+        result = []
+        allowable_stop_ids = [stop.get_id() for stop in stops]
+        for stop_tuple in stop_tuples:
+            stop_id = stop_tuple[1]
+            if not stop_id in allowable_stop_ids:
+                continue
+            result.append(stop_tuple)
+        return result
 
     def add_raster(self, raster):
 
@@ -379,34 +412,43 @@ class Heatmap(object):
 
 if __name__ == "__main__":
 
-    h1 = Heatmap()
-    h1.set_mode(1)
-    h1.set_dataset("brt")
-    h1.run()
-
-    h2 = Heatmap()
-    h2.set_mode(1)
-    h2.set_dataset("brt1")
-    h2.run()
+    # h1 = Heatmap()
+    # h1.set_mode(1)
+    # h1.set_dataset("brt")
+    # h1.run()
     #
-    h3 = h2-h1
-    h3.plot("temp/maps/june_brt_mode_1_diff.html")
+    # h2 = Heatmap()
+    # h2.set_mode(1)
+    # h2.set_dataset("brt1")
+    # h2.run()
+    # #
+    # h3 = h2-h1
+    # h3.plot("temp/maps/june_brt_mode_1_diff.html")
+    #
+    # h1.dump_score_csv()
+    # h2.dump_score_csv()
+    # h3.dump_score_csv()
+    #
+    # print "h1 max_score", h1.get_max_score()
+    # print "h1 min_score", h1.get_min_score()
+    # print "h1 ave_score", h1.get_ave_score()
+    #
+    # print "h2 max_score", h2.get_max_score()
+    # print "h2 min_score", h2.get_min_score()
+    # print "h2 ave_score", h2.get_ave_score()
+    #
+    # print "h3 max_score", h3.get_max_score()
+    # print "h3 min_score", h3.get_min_score()
+    # print "h3 ave_score", h3.get_ave_score()
 
-    h1.dump_score_csv()
-    h2.dump_score_csv()
-    h3.dump_score_csv()
-
-    print "h1 max_score", h1.get_max_score()
-    print "h1 min_score", h1.get_min_score()
-    print "h1 ave_score", h1.get_ave_score()
-
-    print "h2 max_score", h2.get_max_score()
-    print "h2 min_score", h2.get_min_score()
-    print "h2 ave_score", h2.get_ave_score()
-
-    print "h3 max_score", h3.get_max_score()
-    print "h3 min_score", h3.get_min_score()
-    print "h3 ave_score", h3.get_ave_score()
-
+    h4 = Heatmap()
+    h4.set_dataset("brt1")
+    h4.add_route_id(102281938)
+    h4.add_route_id(102281939)
+    h4.add_route_id(102281940)
+    h4.add_route_id(102281941)
+    h4.set_mode(1)
+    h4.run()
+    h4.plot("temp/maps/brt_route_heatmap_mode_1.html")
 
     # print "h2 max_score", h2.get_max_score()

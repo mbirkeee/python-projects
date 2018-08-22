@@ -37,8 +37,8 @@ class Score(object):
         raster_point = raster_p.get_centroid()
 
         for item in stop_tuples:
-            stop_id = item[1]
             stop_p = item[0]
+            stop_id = item[1]
             stop = self._dataman.get_stop(stop_id)
 
             if stop_id != stop.get_id():
