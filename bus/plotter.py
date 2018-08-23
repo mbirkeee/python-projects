@@ -1,3 +1,5 @@
+import os
+
 from geometry import Polygon
 from geometry import Polyline
 
@@ -98,11 +100,14 @@ class Plotter(object):
 
         self.add_polypoint(polypoint)
 
-    def plot(self, file_name):
+    def plot(self, file_name, tab_name=None):
         print "plot called", file_name
 
+        if tab_name is None:
+            tab_name = os.path.basename(file_name)
+
         f = open(file_name, "w")
-        f.write(MAP_TOP)
+        f.write(MAP_TOP % tab_name)
 
         if len(self._polygon_list):
             for item in self._polygon_list:

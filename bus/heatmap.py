@@ -412,43 +412,46 @@ class Heatmap(object):
 
 if __name__ == "__main__":
 
-    # h1 = Heatmap()
-    # h1.set_mode(1)
-    # h1.set_dataset("brt")
-    # h1.run()
-    #
-    # h2 = Heatmap()
-    # h2.set_mode(1)
-    # h2.set_dataset("brt1")
-    # h2.run()
-    # #
-    # h3 = h2-h1
-    # h3.plot("temp/maps/june_brt_mode_1_diff.html")
-    #
-    # h1.dump_score_csv()
-    # h2.dump_score_csv()
-    # h3.dump_score_csv()
-    #
-    # print "h1 max_score", h1.get_max_score()
-    # print "h1 min_score", h1.get_min_score()
-    # print "h1 ave_score", h1.get_ave_score()
-    #
-    # print "h2 max_score", h2.get_max_score()
-    # print "h2 min_score", h2.get_min_score()
-    # print "h2 ave_score", h2.get_ave_score()
-    #
-    # print "h3 max_score", h3.get_max_score()
-    # print "h3 min_score", h3.get_min_score()
-    # print "h3 ave_score", h3.get_ave_score()
+    h1 = Heatmap()
+    h1.set_mode(1)
+    h1.set_dataset("brt")
+    h1.run()
+    h1.plot("temp/maps/h1.html")
 
-    h4 = Heatmap()
-    h4.set_dataset("brt1")
-    h4.add_route_id(102281938)
-    h4.add_route_id(102281939)
-    h4.add_route_id(102281940)
-    h4.add_route_id(102281941)
-    h4.set_mode(1)
-    h4.run()
-    h4.plot("temp/maps/brt_route_heatmap_mode_1.html")
+    h2 = Heatmap()
+    h2.set_mode(1)
+    h2.set_dataset("brt1")
+    h2.run()
+    h2.plot("temp/maps/h2.html")
+
+    #
+    h3 = h2-h1
+    h3.plot("temp/maps/brt1_brt_mode_1_diff.html")
+
+    h1.dump_score_csv()
+    h2.dump_score_csv()
+    h3.dump_score_csv()
+    #
+    print "h1 max_score", h1.get_max_score()
+    print "h1 min_score", h1.get_min_score()
+    print "h1 ave_score", h1.get_ave_score()
+
+    print "h2 max_score", h2.get_max_score()
+    print "h2 min_score", h2.get_min_score()
+    print "h2 ave_score", h2.get_ave_score()
+
+    print "h3 max_score", h3.get_max_score()
+    print "h3 min_score", h3.get_min_score()
+    print "h3 ave_score", h3.get_ave_score()
+
+    # h4 = Heatmap()
+    # h4.set_dataset("brt1")
+    # h4.add_route_id(102281938)
+    # h4.add_route_id(102281939)
+    # h4.add_route_id(102281940)
+    # h4.add_route_id(102281941)
+    # h4.set_mode(1)
+    # h4.run()
+    # h4.plot("temp/maps/brt_route_heatmap_mode_1.html")
 
     # print "h2 max_score", h2.get_max_score()

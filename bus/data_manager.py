@@ -111,9 +111,16 @@ class TransitShapefile(object):
             stop.manually_remove_route(route_id)
             route.manually_remove_stop(stop_id)
 
-
     def apply_stop_updates(self, dataset):
 
+        """
+        1                                                 BRT, Red (IB)  102281938
+        1                                                 BRT, Red (OB)  102281939
+        2                                                BRT, Blue (IB)  102281940
+        2                                                BRT, Blue (OB)  102281941
+        3                                               BRT, Green (IB)  102281942
+        3                                               BRT, Green (OB)  102281943
+    """
         stop_updates = STOP_UPDATES.get(dataset, [])
 
         for item in stop_updates:
@@ -125,6 +132,11 @@ class TransitShapefile(object):
 
             removed_stops = item.get(KEY.STOPS_REMOVED)
             self.apply_stops_removed(removed_stops, route_id)
+
+            route_name = item.get(KEY.NAME)
+            if route_name is not None:
+                route = self.get_route(route_id)
+                route.set_name(route_name)
 
 
     def get_active_stops(self):

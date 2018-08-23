@@ -23,6 +23,9 @@ class TransitRoute(object):
         self._segments = []
         self._segment_dict = {}
 
+    def set_name(self, name):
+        self._name = name
+
     def set_stop_dict(self, stop_dict):
         self._stop_dict = stop_dict
 

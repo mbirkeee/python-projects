@@ -6,16 +6,16 @@ TOP = """
   <head>
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
     <meta charset="utf-8">
-    <title>Bus Maps</title>
+    <title>%s</title>
     <style>
       /* Always set the map height explicitly to define the size of the div
        * element that contains the map. */
       #map {
-        height: 100%;
+        height: 100%%;
       }
       /* Optional: Makes the sample page fill the window. */
       html, body {
-        height: 100%;
+        height: 100%%;
         margin: 0;
         padding: 0;
       }
@@ -24,7 +24,6 @@ TOP = """
   <body>
     <div id="map"></div>
     <script>
-
       function initMap() {
         var map = new google.maps.Map(document.getElementById('map'), {
           zoom: 13,
@@ -94,65 +93,7 @@ google.maps.event.addListener(mark, 'mousemove', function (event) {
 google.maps.event.addListener(mark, 'click', function (event) {
     displayCoordinates(event.latLng);
   });
-
 """
-
-# MARKER1 = """
-# for (var point in marker) {
-#   var marker = new google.maps.Marker({
-#     position: new google.maps.LatLng(marker[point].center),
-#     map: map,
-#     title: marker[point].title,
-#     label: marker[point].label,
-#   });
-# }
-# """
-
-
-# CIRCLE_RED_50 = """
-# for (var point in circle) {
-#   var circ = new google.maps.Circle({
-#     strokeColor: '#FF0000',
-#     strokeOpacity: 0.50,
-#     strokeWeight: 1,
-#     fillColor: '#FF0000',
-#     fillOpacity: 0.50,
-#     map: map,
-#     center: circle[point].center,
-#     radius: 50
-#   });
-# }
-# """
-
-# CIRCLE1 = """
-# for (var point in circle1) {
-#   var circle = new google.maps.Circle({
-#     strokeColor: '#FF0000',
-#     strokeOpacity: 0.25,
-#     strokeWeight: 1,
-#     fillColor: '#FF0000',
-#     fillOpacity: 0.25,
-#     map: map,
-#     center: circle1[point].center,
-#     radius: 100
-#   });
-# }
-# """
-#
-# CIRCLE2 = """
-# for (var point in circle2) {
-#   var circle = new google.maps.Circle({
-#     strokeColor: '#0000FF',
-#     strokeOpacity: 0.25,
-#     strokeWeight: 1,
-#     fillColor: '#0000FF',
-#     fillOpacity: 0.25,
-#     map: map,
-#     center: circle2[point].center,
-#     radius: 2
-#   });
-# }
-# """
 
 POLYGON = """
 var my_polygon = new google.maps.Polygon({
@@ -164,7 +105,6 @@ var my_polygon = new google.maps.Polygon({
   fillOpacity: %f
 });
 my_polygon.setMap(map);
-
 """
 
 POLYGON_LATLON = """

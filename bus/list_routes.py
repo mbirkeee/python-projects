@@ -30,11 +30,13 @@ class Runner(object):
                 name = route.get_name()
                 number = route.get_number()
                 route_id = route.get_id()
-                result.append((int(number), name, route_id))
+                stops = route.get_stops()
+                result.append((int(number), name, route_id, len(stops)))
 
             s = sorted(result)
-            for item in s:
-                print "%5s  %60s %10s" % (repr(item[0]), item[1], repr(item[2]))
+            for index, item in enumerate(s):
+                print "%3s: Route: %3s  Name:  %-60s Stops: %4s ID: %10s" % \
+                      (repr(index), repr(item[0]), item[1], repr(item[3]), repr(item[2]))
 
                 # Format for wiki table
                 # print "|| %s || %s || %s || PDF || Map || Notes ||" % (repr(item[0]), item[1], repr(item[2]))
