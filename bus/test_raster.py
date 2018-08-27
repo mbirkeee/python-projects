@@ -69,16 +69,17 @@ polygon1.add_point(Point(lat_start + .000899,     lng_start + .00146))
 polygon1.add_point(Point(lat_start + .000899,     lng_start))
 print "Final", polygon1.get_area()
 
+lng_c2 = .00146049608306
+lat_c2 = .00089893575680
+
 point1 = Point(lat_start, lng_start)
-point2 = Point(lat_start, lng_start + .00146049608303)
+point2 = Point(lat_start, lng_start + lng_c2)
 print "Distance", point1.get_distance(point2)
 
 point1 = Point(lat_start, lng_start)
-point2 = Point(lat_start + .000898935756756, lng_start)
+point2 = Point(lat_start + lat_c2, lng_start)
 print "Distance", point1.get_distance(point2)
 
-lat_c2 = .000898935756758
-lng_c2 = .001460496083037
 
 polygon1 = Polygon()
 polygon1.add_point(Point(lat_start,             lng_start))

@@ -6,6 +6,8 @@ from geometry import Polygon
 
 from shapefile_writer import ShapeFileWriter
 
+RASTER_SHAPEFILE_TEMPLATE = "temp/shapefiles/raster_cache/%s/da_id_%d.shp"
+
 class Raster(object):
 
     def __init__(self, parent_id, my_id, polygon):
@@ -79,34 +81,34 @@ class DA(object):
         return result
 
     def get_rasters(self, size):
-
         if not self._rasters:
 
-            shape_file = "temp/shapefiles/raster_cache/%s/raster_%d.shp" % (size, self.get_id())
+            shape_file = RASTER_SHAPEFILE_TEMPLATE % (size, self.get_id())
 
             if os.path.exists(shape_file):
                 self._rasters = self._rasters_from_shapefile(shape_file)
             else:
-                index = 1000
-                # Use clipped polygon for rasters... should make things a little faster
-                polygon = self.get_clipped_polygon()
-                raster_points = polygon.get_raster_points(size)
-
-
-                for point in raster_points:
-                    p = point.get_square_buffer(size)
-                    intersecting_polygons = p.intersect(polygon)
-                    for clipped in intersecting_polygons:
-                        raster = Raster(self.get_id(), index, clipped)
-                        index += 1
-                        self._rasters.append(raster)
-
-                writer = ShapeFileWriter()
-                for raster in self._rasters:
-                    writer.add_raster(raster)
-
-                writer.write(shape_file)
-        print "DA: %d got %d rasters" % (self.get_id(), len(self._rasters))
+                raise ValueError("must run make_rasters!!!")
+                # index = 1000
+                #
+                # # Use clipped polygon for rasters... should make things a little faster
+                # polygon = self.get_clipped_polygon()
+                # raster_points = polygon.get_raster_points(size)
+                #
+                # for point in raster_points:
+                #     p = point.get_square_buffer(size)
+                #     intersecting_polygons = p.intersect(polygon)
+                #     for clipped in intersecting_polygons:
+                #         raster = Raster(self.get_id(), index, clipped)
+                #         index += 1
+                #         self._rasters.append(raster)
+                #
+                # writer = ShapeFileWriter()
+                # for raster in self._rasters:
+                #     writer.add_raster(raster)
+                #
+                # writer.write(shape_file)
+        print "DA: %d rasters: %d" % (self.get_id(), len(self._rasters))
         return self._rasters
 
     def get_area(self):
@@ -229,6 +231,97 @@ class DaData(object):
         self._clip()
 
         self._use_clipped_area()
+
+        self._lat_saskatoon_min =   52.065626
+        self._lat_saskatoon_max =   52.212493
+        self._lng_saskatoon_min = -106.777544
+        self._lng_saskatoon_max = -106.526575
+
+        # self._lat_saskatoon_min = 52.067740
+        # self._lat_saskatoon_max = 52.206957
+        # self._lng_saskatoon_min = -106.787424
+        # self._lng_saskatoon_max = -106.519849
+
+        self._increments = {
+            100 : {'lat' : .00089893575680, 'lng' :  .00146049608306}
+        }
+
+        self._all_rasters = None
+
+    def get_saskatoon_bounding_box(self):
+
+        bb = Polygon()
+        bb.add_point(Point(self._lat_saskatoon_min, self._lng_saskatoon_min))
+        bb.add_point(Point(self._lat_saskatoon_min, self._lng_saskatoon_max))
+        bb.add_point(Point(self._lat_saskatoon_max, self._lng_saskatoon_max))
+        bb.add_point(Point(self._lat_saskatoon_max, self._lng_saskatoon_min))
+        return bb
+
+    def get_all_rasters(self, stops):
+
+        increments = self._increments.get(100)
+        lat_inc = increments.get('lat')
+        lng_inc = increments.get('lng')
+
+        raster_count = 0
+
+        if self._all_rasters is None:
+            self._all_rasters = []
+
+            for lat_index in xrange(10000):
+                lat = self._lat_saskatoon_min + lat_index * lat_inc
+                if lat > self._lat_saskatoon_max:
+                    break
+
+                for lng_index in xrange(10000):
+                    lng = self._lng_saskatoon_min + lng_index * lng_inc
+                    if lng > self._lng_saskatoon_max:
+                        break
+
+                    print raster_count, "MAKE RASTER FOR", lat, lng
+
+                    p = Polygon()
+                    p.add_point(Point(lat,           lng))
+                    p.add_point(Point(lat,           lng + lng_inc))
+                    p.add_point(Point(lat + lat_inc, lng + lng_inc))
+                    p.add_point(Point(lat + lat_inc, lng))
+
+                    centroid = p.get_centroid()
+                    for stop in stops:
+                        distance_to_stop = centroid.get_distance(stop.get_point())
+                        # print distance_to_stop
+                        if distance_to_stop < 1000:
+                            self._all_rasters.append(Raster(None, None, p))
+                            raster_count += 1
+                            break
+
+        return self._all_rasters
+
+    def make_rasters(self, stops):
+
+        all_rasters = self.get_all_rasters(stops)
+
+        das = self.get_das()
+
+        # This is extremely brute force.  It could probably be sped up
+        # considerably by only generating potential raster boxes within
+        # the bounding box of the DA polygon
+
+        for da_index, da in enumerate(das):
+            print "Processing DA: %s: %d" % (da_index, da.get_id())
+            index = 1000
+            writer = ShapeFileWriter()
+            shapefile_name = RASTER_SHAPEFILE_TEMPLATE % ("100", da.get_id())
+
+            p = da.get_polygon()
+            for raster in all_rasters:
+                intersecting_polygons = p.intersect(raster.get_polygon())
+
+                for clipped in intersecting_polygons:
+                    writer.add_raster(Raster(da.get_id(), index, clipped))
+                    index += 1
+
+            writer.write(shapefile_name)
 
     def _use_clipped_area(self):
         for da_id, p in self._clipped_polygons.iteritems():

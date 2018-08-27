@@ -7,11 +7,9 @@ from constants import KEY
 from geometry import Polyline
 from geometry import Point
 
-from dataset import SERVICE
-from dataset import ROUTE_IDS_05_04
-from dataset import ROUTE_IDS_06_21
+from dataset import SERVICE, SERVICES
 from dataset import BAD_STOP_IDS_BRT
-from dataset import SUPPORTED_DATASETS
+from dataset import DATASETS
 from dataset import OPEN_DATA_ROUTE_FILTER
 
 from stop_updates import STOP_UPDATES
@@ -23,18 +21,224 @@ from transit_objects import TransitStop
 from transit_objects import TransitRoute
 from stop_times import StopTimes
 
+from brt_schedule import BRT_SCHEDULE
 
-class TransitShapefile(object):
+class BrtSchedule(object):
+
+    def __init__(self, get_route_callback):
+
+#        self._dataman = dataman
+        self._data = {}
+        self._get_route_callback = get_route_callback
+
+        for key, value in BRT_SCHEDULE.iteritems():
+            # print key, value
+
+            # Convert the keys from entered to internal
+            data = {
+                SERVICE.MWF : value.get('m'),
+                SERVICE.SAT : value.get('sa'),
+                SERVICE.SUN : value.get('sn'),
+            }
+
+            data = self._init_times(data)
+
+            # Since the entered dict keys specify multiple routes, this makes a copy
+            # for each route
+            key_parts = key.split(",")
+            for part in key_parts:
+                route_number = int(part.strip())
+
+                self._data[route_number] = data
+
+        # for key, value in self._data.iteritems():
+        #     print "KEY", key, "VALUE", repr(value)
+
+    def _convert_times(self, data):
+
+        result = []
+        if data is None:
+            return
+
+        for item in data:
+            # The items are tuples of format (start_time, end_time, minutes_between departures)
+            # All times are even hours that is, ints)
+
+            item_new = (item[0] * 60, (item[1] * 60) - 1, item[2])
+            # print "fix", item, "--->", item_new
+
+            result.append(item_new)
+
+        return result
+
+    def _init_times(self, data):
+        # print "convert times for", repr(data)
+        for service in SERVICES:
+            data[service] = self._convert_times(data.get(service))
+        return data
+
+    def _get_time_minutes(self, time_str):
+
+        parts = time_str.split(":")
+        if len(parts) == 1:
+            # This is just an hour specification
+            result = 60 * int(parts[0])
+        elif len(parts) == 2:
+            result = 60 * int(parts[0]) + int(parts[1])
+        else:
+            raise ValueError("Invalid time string: %s" % repr(time_str))
+
+        # print "time: %s --> %d" % (time_str, result)
+        return result
+
+    def _get_route_number(self, route):
+
+        # Handle passed in routes or route_ids
+        if isinstance(route, int):
+            route = self._dataman.get_route(route)
+        return route.get_number()
+
+    def _find_tuples(self, route_number, service):
+
+        data = self._data.get(route_number)
+        if data is None:
+            raise ValueError("Cant find data for route: %s" % repr(route_number))
+        return data.get(service)
+
+    def _find_tuple(self, route_number, service, minutes):
+
+        data = self._data.get(route_number)
+        if data is None:
+            raise ValueError("Cant find data for route: %s" % repr(route_number))
+        s = data.get(service)
+
+        if not s:
+            return
+
+        for item in s:
+            # print "Consider item", item
+            if minutes >= item[0] and minutes <= item[1]:
+                return item
+
+    def get_departs_per_hour(self, route, service, time_str):
+        t = self._get_time_minutes(time_str)
+        route_number = self._get_route_number(route)
+
+        item = self._find_tuple(route_number, service, t)
+        if item is None:
+            return 0
+
+        # print "Found tuple", item
+        result = 60.0 / float(item[2])
+        return result
+
+    def get_departs_per_day(self, route, service):
+        route_number = self._get_route_number(route)
+        tuples = self._find_tuples(route_number, service)
+        if tuples is None:
+            return 0
+
+        total = 0.0
+        for item in tuples:
+            # print "depart per day process item:", item
+            total += (float(item[1]) - float(item[0])) / float(item[2])
+
+        return total
+
+    def get_departs_per_week(self, route):
+        total = self.get_departs_per_day(route, SERVICE.MWF)
+        total += self.get_departs_per_day(route, SERVICE.SAT)
+        total += self.get_departs_per_day(route, SERVICE.SUN)
+        return total
+
+    def get_depart_wait_minutes(self, route, service, time_str):
+        t = self._get_time_minutes(time_str)
+        route_number = self._get_route_number(route)
+
+        item = self._find_tuple(route_number, service, t)
+        if item is None:
+            return None
+
+        # print "Found tuple", item
+        # Item 2 is the departure frequency in minutes...
+        # so average wait time is frequency/2
+        result = float(item[2])/2.0
+        return result
+
+class DatamanBase(object):
+
+    def __init__(self, dataset):
+
+        self._base_path = DATASETS.get(dataset)
+
+        self._route_dict = {}
+        self._stop_dict = {}
+
+    def get_depart_wait_minutes(self, route, stop_id, service, time_str):
+        raise NotImplementedError
+
+    def get_departs_per_hour(self, route, stop_id, service, time_str):
+        raise NotImplementedError
+
+    def get_departs_per_day(self, route, stop_id, service):
+        raise NotImplementedError
+
+    def get_departs_per_week(self, route, stop_id):
+        raise NotImplementedError
+
+    def get_segments(self, route_id):
+        raise NotImplementedError
+
+    def get_stops(self):
+        raise NotImplementedError
+
+    def get_route_ids(self):
+        raise NotImplementedError
+
+    # def get_stop(self, stop_id):
+    #     raise NotImplementedError
+
+    # def get_route(self, route_id):
+    #     raise NotImplementedError
+
+    # def get_routes(self):
+    #     raise NotImplementedError
+
+    def make_round_buffers(self, radius):
+        stops = self.get_stops()
+        for stop in stops:
+            stop.make_round_buffer(radius)
+
+    def get_route(self, route_id):
+        return self._route_dict.get(route_id)
+
+    def get_stop(self, stop_id):
+        return self._stop_dict.get(stop_id)
+
+    def get_route_ids(self):
+        result = [k for k in self._route_dict.iterkeys()]
+        return result
+
+    def get_routes(self):
+        return [route for route in self._route_dict.itervalues()]
+
+    def get_route_name(self, route_id):
+        route = self.get_route(route_id)
+        return route.get_name()
+
+    def get_route_number(self, route_id):
+        route = self.get_route(route_id)
+        return route.get_number()
+
+class DatamanBrt(DatamanBase):
     """
     This manager processes the transit data as supplied in shapefiles (e.g., the BRT data)
     """
     def __init__(self, dataset):
 
-        self._base_path = SUPPORTED_DATASETS.get(dataset)
-        print "TransitShapefile: %s" % self._base_path
+        super(DatamanBrt, self).__init__(dataset)
 
-        self._route_dict = {}
-        self._stop_dict = {}
+        print "TransitShapefile: %s" % self._base_path
 
         self._dir_dict = {
             "inbound"   : "IB",
@@ -54,12 +258,26 @@ class TransitShapefile(object):
 
         self.apply_stop_updates(dataset)
 
+        self._schedule = BrtSchedule(self.get_route)
+
         # After dictionaries built, cross-link them
         for route in self._route_dict.itervalues():
             route.set_stop_dict(self._stop_dict)
 
         for stop in self._stop_dict.itervalues():
             stop.set_route_dict(self._route_dict)
+
+    def get_depart_wait_minutes(self, route, stop_id, service, time_str):
+        return self._schedule.get_depart_wait_minutes(route, service, time_str)
+
+    def get_departs_per_hour(self, route, stop_id, service, time_str):
+        return self._schedule.get_departs_per_hour(route, service, time_str)
+
+    def get_departs_per_day(self, route, stop_id, service):
+        return self._schedule.get_departs_per_day(route, service)
+
+    def get_departs_per_week(self, route, stop_id):
+        return self._schedule.get_departs_per_week(route)
 
     def apply_stops_added(self, added_stops, route_id):
 
@@ -113,14 +331,6 @@ class TransitShapefile(object):
 
     def apply_stop_updates(self, dataset):
 
-        """
-        1                                                 BRT, Red (IB)  102281938
-        1                                                 BRT, Red (OB)  102281939
-        2                                                BRT, Blue (IB)  102281940
-        2                                                BRT, Blue (OB)  102281941
-        3                                               BRT, Green (IB)  102281942
-        3                                               BRT, Green (OB)  102281943
-    """
         stop_updates = STOP_UPDATES.get(dataset, [])
 
         for item in stop_updates:
@@ -137,7 +347,6 @@ class TransitShapefile(object):
             if route_name is not None:
                 route = self.get_route(route_id)
                 route.set_name(route_name)
-
 
     def get_active_stops(self):
         if not self._active_stops:
@@ -159,31 +368,11 @@ class TransitShapefile(object):
         route = self.get_route(route_id)
         return route.get_segments()
 
-    # def get_polylines(self, route_id):
-    #     """
-    #     Return a list to be compatible with pre-brt data
-    #     """
-    #     p = Polyline()
-    #     data = self._route_dict.get(route_id)
-    #     points = data.get('points')
-    #     for point in points:
-    #         # print point.get_lat_lng()
-    #         p.add_point(point)
-    #
-    #     print "BRT", route_id, p, len(p.get_points())
-    #     return [p]
+#    def get_stop(self, stop_id):
+#        return self._stop_dict.get(stop_id)
 
- #   def get_points(self, route_id):
- #       raise ValueError("fixme!!")
-
-    def get_route(self, route_id):
-        return self._route_dict.get(route_id)
-
-    def get_stop(self, stop_id):
-        return self._stop_dict.get(stop_id)
-
-    def get_routes(self):
-        return [route for route in self._route_dict.itervalues()]
+#    def get_routes(self):
+#        return [route for route in self._route_dict.itervalues()]
 
     def get_route_stops(self, route_id):
         route = self.get_route(route_id)
@@ -191,20 +380,13 @@ class TransitShapefile(object):
         result = [self.get_stop(stop_id) for stop_id in stop_ids]
         return result
 
-    def get_stops(self):
-        return [stop for stop in self._stop_dict.itervalues()]
+#    def get_stops(self):
+#        return [stop for stop in self._stop_dict.itervalues()]
 
-    def get_route_ids(self):
-        result = [k for k in self._route_dict.iterkeys()]
-        return result
+#    def get_route_ids(self):
+#        result = [k for k in self._route_dict.iterkeys()]
+#        return result
 
-    def get_route_name(self, route_id):
-        route = self.get_route(route_id)
-        return route.get_name()
-
-    def get_route_number(self, route_id):
-        route = self.get_route(route_id)
-        return route.get_number()
 
     def read_directions(self):
 
@@ -269,7 +451,10 @@ class TransitShapefile(object):
         line_count = 0
 
         # f = open("%s/test.out" % self._shape_base, 'rb')
-        f = open("%s/direction_stops.dbf" % self._base_path, 'rb')
+        file_name = "%s/direction_stops.dbf" % self._base_path
+        print "Reading file: %s..." % file_name
+
+        f = open(file_name, 'rb')
         for line in f:
             # print line
             line_count += 1
@@ -343,13 +528,14 @@ class TransitShapefile(object):
 
         f.close()
 
-        for stop_id, stop in self._stop_dict.iteritems():
-            print "Stop: %d Routes: %d" % (stop_id, len(stop.get_route_ids()))
+        # for stop_id, stop in self._stop_dict.iteritems():
+        #     print "Stop: %d Routes: %d" % (stop_id, len(stop.get_route_ids()))
 
         for route_id, route in self._route_dict.iteritems():
             print "Route: %d Name: %s Stops: %d" % (route.get_number(), route.get_name(), len(route.get_stop_ids()))
 
-        print "number of routes", len(self._route_dict)
+        print "Total number of routes", len(self._route_dict)
+        print "Done reading %s" % file_name
 
     def read_stops(self):
 
@@ -438,7 +624,21 @@ class TransitShapefile(object):
             result.append(point)
         return result
 
-class DataManager(object):
+def dataman_factory(dataset, link_route_shapes=False, link_stops=True):
+    base_path = DATASETS.get(dataset)
+    if base_path is None:
+        raise ValueError("dataset not supported: %s" % repr(dataset))
+
+    include_data_dict = OPEN_DATA_ROUTE_FILTER.get(dataset)
+
+    if include_data_dict is None:
+        thing = DatamanBrt(dataset)
+    else:
+        thing = DataManagerOpen(dataset, link_route_shapes=link_route_shapes, link_stops=link_stops)
+
+    return thing
+
+class DataManagerOpen(DatamanBase):
     """
     link_route_shapes : Get route shapes for plotting.  Not required for heatmap.
                         Speeds things up a little bit if skipped (OpenData only)
@@ -448,97 +648,217 @@ class DataManager(object):
     """
     def __init__(self, dataset, link_route_shapes=False, link_stops=True):
 
-        base_path = SUPPORTED_DATASETS.get(dataset)
-        if base_path is None:
-            raise ValueError("dataset not supported: %s" % repr(dataset))
-
-        stop_updates = STOP_UPDATES.get(dataset)
-        if stop_updates is not None:
-            print "Want to update stops with supplementary info"
+        super(DataManagerOpen, self).__init__(dataset)
 
         self._include_route_dict = OPEN_DATA_ROUTE_FILTER.get(dataset)
 
+        self._deprecated = {}
+        self.read_file()
 
-        # if base_path.find("2018_05_04") > 0:
-        #     print "this is the JUNE data"
-        #     self._include_route_dict = ROUTE_IDS_05_04
-        #
-        # elif base_path.find('2018_08_05') > 0:
-        #     print "this is the JULY data"
-        #     self._include_route_dict = ROUTE_IDS_06_21
+        self.read_file_stops()
+        self._active_stops = []
 
-        self._shapefile_mode = False
-        if self._include_route_dict is None:
-            self._shapefile_mode = True
+        self._trips = TransitTrips(self._base_path)
 
-        if self._shapefile_mode:
-            self._shapefile = TransitShapefile(dataset)
+        if link_route_shapes:
+            self._shapes = TransitShapes(self._base_path)
+
+            for route in self.get_routes():
+                shape_ids = self._trips.get_shape_ids(route.get_id())
+                for shape_id in shape_ids:
+                    segment = self._shapes.get_polyline(shape_id)
+                    route.add_segment(segment, segment_id=shape_id)
+
+        # Must cross-link routes/stops before calling stop times
+        # After dictionaries built, cross-link them
+        for route in self._route_dict.itervalues():
+            route.set_stop_dict(self._stop_dict)
+
+        for stop in self._stop_dict.itervalues():
+            stop.set_route_dict(self._route_dict)
+
+        if link_stops:
+            # This is SO ugly... must pass in reference to self
+            self._stop_times = StopTimes(self._base_path, self)
+
+    def _sanity_check_departures(self, stop_id, departures):
+        """
+        Look for departures on same route/stop but with different directions
+
+        RESULT: There do not appear to be any cases where there is a departure
+        from a stop on the same route but with a different direction
+        """
+        print "SANITY START"
+        d = {}
+        for depart in departures:
+            # print repr(depart)
+            direction = depart.get(KEY.DIRECTION)
+            route_id = depart.get(KEY.ROUTE_ID)
+            have_direction = d.get(route_id)
+
+            # print "HAVE", repr(have_direction), route_id
+            if have_direction is not None and have_direction != direction:
+                stop = self.get_stop(stop_id)
+                route = self.get_route(route_id)
+                print "WARN_DUPLICATE: %d (%s) %d (%s) " % (stop_id, stop.get_name(), route_id, route.get_name())
+                # raise ValueError("different direction stop_id: %d route_id: %d!!!" % \
+                #                   (stop_id, route_id))
+
+            # print "setting %d to %d" % (route_id, direction)
+            d[route_id] = direction
+
+        print "SANITY DONE"
+
+    def _get_time_minutes(self, time_str):
+
+        parts = time_str.split(":")
+        if len(parts) == 1:
+            # This is just an hour specification
+            result = 60 * int(parts[0])
+        elif len(parts) == 2:
+            result = 60 * int(parts[0]) + int(parts[1])
         else:
-            self._base_path = base_path
-            self._route_dict = {}
-            self._deprecated = {}
-            self.read_file()
+            raise ValueError("Invalid time string: %s" % repr(time_str))
 
-            self._stop_dict = {}
-            self.read_file_stops()
+        # print "time: %s --> %d" % (time_str, result)
+        return result
 
-            self._active_stops = []
+    def _dump_data(self, departures):
+        for depart in departures:
+            print repr(depart)
 
-            self._trips = TransitTrips(base_path)
+        # raise ValueError("ERROR")
 
-            if link_route_shapes:
-                self._shapes = TransitShapes(base_path)
+    def get_departs_per_hour(self, route, stop_id, service, time_str):
 
-                for route in self.get_routes():
-                    shape_ids = self._trips.get_shape_ids(route.get_id())
-                    for shape_id in shape_ids:
-                        segment = self._shapes.get_polyline(shape_id)
-                        route.add_segment(segment, segment_id=shape_id)
+        if isinstance(route, TransitRoute):
+            route_id = route.get_id()
+        else:
+            route_id = route
 
-            # Must cross-link routes/stops before calling stop times
-            # After dictionaries built, cross-link them
-            for route in self._route_dict.itervalues():
-                route.set_stop_dict(self._stop_dict)
+        # Get target depart time
+        target_sec = 60.0 * self._get_time_minutes(time_str)
 
-            for stop in self._stop_dict.itervalues():
-                stop.set_route_dict(self._route_dict)
+        # Get all departures from this stop (they are sorted)
+        departures = self._stop_times.get_stop_departures(stop_id, service)
 
-            if link_stops:
-                # This is SO ugly... must pass in reference to self
-                self._stop_times = StopTimes(base_path, self)
-                # self._trip_dict = {}
-                # self._route_id_to_shape_id = {}
-                # self.read_file_trips()
+        self._sanity_check_departures(stop_id, departures)
 
-    def get_stops(self):
-        if self._shapefile_mode:
-            return self._shapefile.get_stops()
-        return [stop for stop in self._stop_dict.itervalues()]
+        # Discard departures not on target route
+        consider = []
+        for depart in departures:
+            depart_route_id = depart.get(KEY.ROUTE_ID)
+            if depart_route_id != route_id:
+                # print "Skip this route"
+                continue
+            consider.append(depart)
 
-    def make_round_buffers(self, radius):
-        stops = self.get_stops()
-        for stop in stops:
-            stop.make_round_buffer(radius)
+        # Make a list with depart time as forst item in tuple
+        d = []
+        for depart in consider:
+            depart_sec = depart.get(KEY.DEPART_TIME)
+            d.append((depart_sec, depart))
+
+        first_after = None
+        second_after = None
+        first_before = None
+        second_before = None
+        seconds = None
+
+        # Look for first occurance of time that is greater depart time while
+        # keeping track of departures before and after
+        for i, item in enumerate(d):
+
+            second_before = first_before
+            first_before = seconds
+
+            seconds = item[0]
+
+            if seconds < target_sec:
+                try:
+                    x = d[i+1]
+                    first_after = x[0]
+                except:
+                    first_after = None
+
+                try:
+                    x = d[i+2]
+                    second_after = x[0]
+                except:
+                    second_after = None
+            else:
+                break
+
+
+        print "BEFORE: %s %s TIME: %s AFTER: %s %s" % \
+              (repr(second_before), repr(first_before), repr(target_sec), repr(first_after), repr(second_after))
+
+        interval = None
+
+        if first_after is not None and first_before is not None:
+            interval = first_after - first_before
+
+            if first_after <= target_sec:
+                self._dump_data(consider)
+
+            if interval <= 0:
+                self._dump_data(consider)
+
+        elif first_before is not None:
+            # Target time must be after last departure
+            pass # No hourly departures for this scenarion.... its too late in the day
+            # if second_before is not None:
+            #     interval = first_before - second_before
+            #     interval2 = target_sec - first_before
+            #     if interval2 > interval:
+            #         interval = None
+
+        elif first_after is not None:
+            # There are some departures after the target time (e.g, first thing in morning
+            if second_after is not None:
+                interval = second_after - first_after
+                interval2 = first_after - target_sec
+                # Only return hourly departures if the first departure is not too far away
+                if interval2 > interval:
+                    interval = None
+
+            # depart_hour = depart_min / 60
+            # leftover_min = depart_min - depart_hour * 60
+            # print "depart time %d:%02d" % (depart_hour, leftover_min)
+        departs_per_hour = 0
+
+        if interval is not None:
+            minutes = interval / 60
+
+            if minutes == 0:
+                for depart in consider:
+                    print repr(depart)
+
+            departs_per_hour = 60 / minutes
+
+        # Sanity tests
+        if departs_per_hour > 10:
+            print "GOT %d departures:" % departs_per_hour
+            self._dump_data(consider)
+
+
+        return departs_per_hour
 
     def get_active_stops(self):
-        if self._shapefile_mode:
-            return self._shapefile.get_active_stops()
 
-        else:
-            if not self._active_stops:
-                stops = self.get_stops()
-                for stop in stops:
-                    routes_ids = stop.get_route_ids()
-                    # print stop.get_name(), routes_ids
-                    if len(routes_ids) > 0:
-                        self._active_stops.append(stop)
+        if not self._active_stops:
+            stops = self.get_stops()
+            for stop in stops:
+                routes_ids = stop.get_route_ids()
+                # print stop.get_name(), routes_ids
+                if len(routes_ids) > 0:
+                    self._active_stops.append(stop)
 
         print "Total stops:", len(self._stop_dict)
         print "Active stops:", len(self._active_stops)
         return self._active_stops
 
     def get_route_from_trip_id(self, trip_id):
-
         route_id = self._trips.get_route_id(trip_id)
         return self.get_route(route_id)
 
@@ -698,8 +1018,6 @@ class DataManager(object):
         :param route_id:
         :return:
         """
-        if self._shapefile_mode:
-            return self._shapefile.get_segments(route_id)
 
         # Allocate on demand
         if self._transit_trips is None:
@@ -718,24 +1036,8 @@ class DataManager(object):
         return result
 
     def get_route_ids(self):
-        if self._shapefile_mode:
-            return self._shapefile.get_route_ids()
-
         result = [k for k in self._route_dict.iterkeys()]
         return result
 
-    def get_stop(self, stop_id):
-        if self._shapefile_mode:
-            return self._shapefile.get_stop(stop_id)
-        return self._stop_dict.get(stop_id)
-
-    def get_route(self, route_id):
-        if self._shapefile_mode:
-            return self._shapefile.get_route(route_id)
-        return self._route_dict.get(route_id)
-
     def get_routes(self):
-        if self._shapefile_mode:
-            return self._shapefile.get_routes()
-
         return [route for route in self._route_dict.itervalues()]

@@ -73,12 +73,10 @@ class Runner(object):
                     stop = self._dataman.get_stop(stop_id)
                     plotter.add_marker(stop.get_point(), title, title)
 
-                    if self._buffer_method == BUFFER_METHOD.CIRCLE_400:
-                        stop.make_round_buffer(400)
-                        stop_p = stop.get_buffer()
-                        stop_p.set_attribute(ATTR.FILL_OPACITY, 0)
-                        plotter.add_polygon(stop_p)
-
+                    stop.make_buffer(BUFFER_METHOD.CIRCLE_400)
+                    stop_p = stop.get_buffer()
+                    stop_p.set_attribute(ATTR.FILL_OPACITY, 0)
+                    plotter.add_polygon(stop_p)
 
         for da in das:
             p = da.get_polygon()
@@ -102,52 +100,7 @@ class Runner(object):
                     p.set_attribute(ATTR.FILL_OPACITY, 0)
                     plotter.add_polygon(p)
 
-
-
         plotter.plot(file_name)
-
-
-            # test_dict = {}
-            # if isinstance(segments, list):
-            #     for i, segment in enumerate(segments):
-            #         test_dict[i] = segment
-            #     segments = test_dict
-            #
-            # # Plot the stops for this route
-            # stops = route.get_stops()
-            # plotter.add_stops(stops, fillOpacity=0.2)
-            # plotter.add_stops(stops, radius=650.0/2.0, fillOpacity=0.1)
-            #
-            # added_stops = route.get_stops_added()
-            # plotter.add_stops(added_stops, radius=30, fillColor="#0000ff", fillOpacity=0.3)
-            #
-            # removed_stops = route.get_stops_removed()
-            # plotter.add_stops(removed_stops, radius=25, fillColor="#808080", fillOpacity=0.4)
-            #
-            # if self._all_markers:
-            #     self._markers = True
-            #     stops = self.all_stops_close(self._dataman.get_stops(), stops)
-            #
-            # if self._markers:
-            #
-            #     for stop in stops:
-            #         msg = "LAT: %f LNG: %f" % (stop.get_lat(), stop.get_lng())
-            #         plotter.add_marker(stop.get_point(), stop.get_id(), msg)
-            #
-            # plotter.add_route(route)
-            #
-            # plotter.plot("temp/maps/dataset_%s_route_%d.html" % (self._dataset, int(self._route_id)))
-            #
-            # print "Route: %d (%d - %s) has %d stops" % \
-            #       (route.get_id(), route.get_number(), route.get_name(), len(route.get_stops()))
-            #
-            # # for segment_id, segment in segments.iteritems():
-            # #     plotter = Plotter()
-            # #     color = "#0000ff"
-            # #     segment.set_attribute(ATTR.STROKE_COLOR, color)
-            # #     segment.set_attribute(ATTR.STROKE_WEIGHT, 2)
-            # #     plotter.add_polyline(segment)
-            # #     plotter.plot("temp/maps/segment_%d.html" % segment_id)
 
 if __name__ == "__main__":
 

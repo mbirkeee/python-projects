@@ -6,9 +6,15 @@ class MODE(object):
     THREE       = 3
 
 class BUFFER_METHOD(object):
-    CIRCLE_400 = "circle_400"
-    SQUARE_709 = "square_709"
-    DIAMOND_500 = "diamond_500"
+    CIRCLE_400   = "circle_400"
+    SQUARE_709   = "square_709"
+    DIAMOND_500  = "diamond_500"
+
+BUFFER_LIST = [
+    BUFFER_METHOD.CIRCLE_400,
+    BUFFER_METHOD.SQUARE_709,
+    BUFFER_METHOD.DIAMOND_500
+]
 
 class SCORE_METHOD(object):
     STOP_COUNT = "simple_stop_count"
@@ -33,5 +39,5 @@ MODE_DICT = {
         KEY.DISTANCE_DECAY  : False,
         KEY.STOP_DEMAND     : None
     }
-
 }
+

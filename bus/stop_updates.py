@@ -177,8 +177,43 @@ STOP_UPDATES = {
                 { KEY.LAT : 52.129406, KEY.LNG : -106.703979 },
             ],
             KEY.STOPS_REMOVED : [
+            ],
+        },{
+            KEY.ROUTE_ID : 102281949,
+            KEY.NAME : "Mainline, Confederation - Centre Mall - Eastbound (IB)",
+            KEY.STOPS_ADDED : [
+                { KEY.LAT : 52.131480, KEY.LNG : -106.728432 },
+                { KEY.LAT : 52.129182, KEY.LNG : -106.703337 },
+                { KEY.LAT : 52.129155, KEY.LNG : -106.697222 },
+                { KEY.LAT : 52.129097, KEY.LNG : -106.690546 },
+                { KEY.LAT : 52.129110, KEY.LNG : -106.684216 },
+                { KEY.LAT : 52.114680, KEY.LNG : -106.643597 },
+                { KEY.LAT : 52.114653, KEY.LNG : -106.619511 },
+                { KEY.LAT : 52.118672, KEY.LNG : -106.656944 },
+            ],
+            KEY.STOPS_REMOVED : [
 
-            ]
+            ],
+        },{
+            KEY.ROUTE_ID : 102281952,
+            KEY.NAME : "Mainline, Airport - Stonebridge - Southbound (IB)",
+            KEY.STOPS_ADDED : [
+                { KEY.STOP_ID : 5407 },
+                { KEY.LAT : 52.158719, KEY.LNG : -106.685931 },
+                { KEY.LAT : 52.146870, KEY.LNG : -106.670374 },
+                { KEY.LAT : 52.141800, KEY.LNG : -106.670310 },
+                { KEY.LAT : 52.132567, KEY.LNG : -106.670417 },
+                { KEY.LAT : 52.118663, KEY.LNG : -106.662360 },
+                { KEY.LAT : 52.116858, KEY.LNG : -106.662338 },
+                { KEY.LAT : 52.100141, KEY.LNG : -106.657263 },
+                { KEY.LAT : 52.150796, KEY.LNG : -106.673261 },
+                { KEY.LAT : 52.130456, KEY.LNG : -106.670402 },
+                { KEY.LAT : 52.123440, KEY.LNG : -106.664310 },
+            ],
+            KEY.STOPS_REMOVED : [
+                { KEY.STOP_ID : 5676 },
+                { KEY.STOP_ID : 3508 },
+            ],
         }
     ]
 }

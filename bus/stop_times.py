@@ -159,11 +159,12 @@ class StopTimes(object):
         5 shape_dist_traveled
         """
 
-        print "StopTimes: Mapping stops to routes..."
-
         file_name = os.path.join(self._base_path, "my-TransitStopTimes.csv")
         line_count = 0
         f = None
+
+        print "StopTimes: Mapping stops to routes..."
+        print "StopTimes: Reading file %s..." % file_name
 
         try:
             start_time = time.time()

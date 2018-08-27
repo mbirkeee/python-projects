@@ -18,12 +18,14 @@ class Intersect(object):
         self._temp_count = 0
 
         self._file_name = None
+
         self._shapefile_name_template = \
-            "temp/shapefiles/intersect_cache/stop_da_buffer_%s_dataset_%s.shp"
+            "temp/shapefiles/intersect_cache/stop_buffer_%s_count_%d_dataset_%s.shp"
 
-    def load(self, buffer_type, dataset):
+    def load(self, buffer_type, dataset, stops):
 
-        file_name = self._shapefile_name_template % (buffer_type, dataset)
+        stop_count = len(stops)
+        file_name = self._shapefile_name_template % (buffer_type, stop_count, dataset)
         self.from_shapefile(file_name)
 
     def from_shapefile(self, file_name):
@@ -69,14 +71,14 @@ class Intersect(object):
 
         print "Read %d intersections from %s" % (len(records), file_name)
 
-    def to_shapefile(self, buffer_type, dataset):
+    def to_shapefile(self, buffer_type, dataset, stops):
 
-        file_name = self._shapefile_name_template % (buffer_type, dataset)
+        file_name = self._shapefile_name_template % (buffer_type, len(stops), dataset)
 
         writer = ShapeFileWriter()
 
         intersection_list = []
-        print "Want to save intersection to file: %s" % file_name
+        print "Save intersections to file: %s" % file_name
         for group1_id, data in self.group1_data.iteritems():
             for group2_id, intersecting_polygons in data.iteritems():
                 for p in intersecting_polygons:
@@ -100,11 +102,17 @@ class Intersect(object):
         if not isinstance(group2, list):
             group2 = [group2]
 
+        print "Computing intersections:"
+        print "group1 items: %d" % len(group1)
+        print "group2 items: %d" % len(group2)
+
         temp_count = 0
         for item1 in group1:
             group1_id = item1.get_id()
             polygon_1 = item1.get_polygon()
 
+            if polygon_1 is None:
+                raise ValueError("No polygon for item1: %s" % type(item1))
             # self._group1_id_map[group1_id] = item1
 
             # print "finding intersections for group1 id:", group1_id
@@ -113,6 +121,8 @@ class Intersect(object):
                 group2_id = item2.get_id()
                 polygon_2 = item2.get_polygon()
 
+                if polygon_2 is None:
+                    raise ValueError("No polygon for item2: %s" % type(item2))
                 # self._group2_id_map[group2_id] = item2
 
 

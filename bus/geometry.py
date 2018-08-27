@@ -317,6 +317,27 @@ class Polygon(object):
         # print "intersection.GetGeometryCount()", intersection.GetGeometryCount()
         # print "intersection.GetGeometryName()", intersection.GetGeometryName()
 
+    def get_bounding_box(self):
+
+        ogr_poly = self.get_ogr_poly()
+        envelope = ogr_poly.GetEnvelope()
+
+        start_x = envelope[0]
+        start_y = envelope[2]
+
+        end_x = envelope[1]
+        end_y = envelope[3]
+
+        print start_x, start_y, end_x, end_y
+
+        bb = Polygon()
+        bb.add_point(Point(start_x, start_y))
+        bb.add_point(Point(start_x,   end_y))
+        bb.add_point(Point(end_x,     end_y))
+        bb.add_point(Point(end_x,   start_y))
+
+        return bb
+
     def get_raster_points(self, size):
 
         if self._raster_points is None:

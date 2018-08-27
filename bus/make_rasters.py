@@ -35,10 +35,6 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Make Dissemination Areas Rasters')
     # parser.add_argument("-d", "--dataset", help="Dataset", type=str, required=True)
-    # parser.add_argument("-a", "--da_id", help="DA ID", type=int)
-    # parser.add_argument("-m", "--markers", help="Include stop markers (slow and messy)", required=False, action='store_true')
-    # parser.add_argument("-r", "--rasters", help="Include rasters", required=False, action='store_true')
-    # # parser.add_argument("-a", "--all_markers", help="Include ALL stop markers", required=False, action='store_true')
 
     args = parser.parse_args()
 

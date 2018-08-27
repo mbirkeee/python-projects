@@ -1,6 +1,6 @@
 import argparse
 
-from data_manager import DataManager
+from data_manager import dataman_factory
 
 class Runner(object):
     """
@@ -23,7 +23,7 @@ class Runner(object):
         result = []
         if self._route_id is None:
 
-            self._dataman = DataManager(self._dataset, link_stops=False)
+            self._dataman = dataman_factory(self._dataset, link_stops=True)
 
             routes = self._dataman.get_routes()
             for route in routes:
@@ -42,7 +42,7 @@ class Runner(object):
                 # print "|| %s || %s || %s || PDF || Map || Notes ||" % (repr(item[0]), item[1], repr(item[2]))
 
         else:
-            self._dataman = DataManager(self._dataset)
+            self._dataman = dataman_factory(self._dataset)
             route = self._dataman.get_route(self._route_id)
             stops = route.get_stops()
 

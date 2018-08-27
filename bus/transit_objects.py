@@ -1,9 +1,5 @@
-import math
-
-from geometry import Polygon
-from geometry import Point
-
-from intersect import Intersect
+from modes import BUFFER_METHOD
+from modes import BUFFER_LIST
 
 class TransitRoute(object):
     """
@@ -130,6 +126,21 @@ class TransitStop(object):
             self._manually_added_to_routes.remove(route_id)
         except:
             pass
+
+    def make_buffer(self, buffer_method):
+
+        if buffer_method == BUFFER_METHOD.CIRCLE_400:
+            self.make_round_buffer(400)
+        elif buffer_method == BUFFER_METHOD.SQUARE_709:
+            self.make_square_buffer(709)
+        elif buffer_method == BUFFER_METHOD.DIAMOND_500:
+            self.make_diamond_buffer(500)
+        else:
+
+            for method in BUFFER_LIST:
+                print "Supported buffer method:", method
+            raise ValueError("mode %d buffer %s not supported" % (self._mode, buffer_method))
+
 
     def make_round_buffer(self, size):
         point = self.get_point()

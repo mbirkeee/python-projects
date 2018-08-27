@@ -1,7 +1,4 @@
 
-
-
-
 class KEY(object):
     SERVICE_TYPE        = 'serv_type'
     DEPART_TIME         = 'depart_time'

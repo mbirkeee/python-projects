@@ -9,24 +9,25 @@ class SERVICE(object):
     SAT         = 2
     SUN         = 3
 
+SERVICES = [
+    SERVICE.MWF,
+    SERVICE.SAT,
+    SERVICE.SUN,
+]
+
 class DATASET(object):
     JUNE        = 'june'
     JULY        = 'july'
     BRT         = 'brt'
     BRT_1       = 'brt1'
 
-SUPPORTED_DATASETS = {
+DATASETS = {
     DATASET.JUNE    : DATASET_PATH.JUNE,
     DATASET.JULY    : DATASET_PATH.JULY,
     DATASET.BRT     : DATASET_PATH.BRT,
     DATASET.BRT_1   : DATASET_PATH.BRT
 }
 
-class SERVICE(object):
-    UNKNOWN     = 0
-    MWF         = 1
-    SAT         = 2
-    SUN         = 3
 
 """
 These dicts were obtained from the downloaded TransitRoute files, and include

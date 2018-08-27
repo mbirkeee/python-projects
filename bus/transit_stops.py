@@ -6,7 +6,7 @@ from my_utils import is_shapefile
 from geometry import Point
 from geometry import Polygon
 
-from data_manager import TransitShapefile
+from data_manager import DatamanBrt
 from transit_objects import TransitStop
 
 from constants import KEY
@@ -21,7 +21,7 @@ class TransitStopsObsolete(object):
 
         if is_shapefile(self._base_path):
             self._shapefile_mode = True
-            self._shapefile = TransitShapefile(base_path)
+            self._shapefile = DatamanBrt(base_path)
         else:
             self._stop_dict = {}
             self.read_file_stops()

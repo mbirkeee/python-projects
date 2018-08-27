@@ -1,7 +1,6 @@
 import argparse
 
-# from constants import BASE
-from data_manager import DataManager
+from data_manager import dataman_factory
 
 from plotter import Plotter
 from plotter import ATTR
@@ -112,7 +111,7 @@ class Runner(object):
 
         result = []
         if self._route_id is None:
-            self._dataman = DataManager(self._dataset, link_route_shapes=True, link_stops=False)
+            self._dataman = dataman_factory(self._dataset, link_route_shapes=True, link_stops=False)
 
             raise ValueError("plot all routes!!!")
 
@@ -131,7 +130,7 @@ class Runner(object):
             #     # print "|| %s || %s || %s || PDF || Map || Notes ||" % (repr(item[0]), item[1], repr(item[2]))
 
         else:
-            self._dataman = DataManager(self._dataset, link_route_shapes=True, link_stops=True)
+            self._dataman = dataman_factory(self._dataset, link_route_shapes=True, link_stops=True)
 
             # Plot this route and it's s
 

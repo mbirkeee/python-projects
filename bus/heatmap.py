@@ -45,12 +45,6 @@ class Heatmap(object):
         self._ave_score = None
         self._route_ids = []
 
-        # self._dataset_to_base_map = {
-        #     DATASET.JUNE        : BASE.JUNE,
-        #     DATASET.JULY        : BASE.JULY,
-        #     DATASET.BRT_ORIG    : BASE.BRT
-        # }
-
         self.validate_mode_dict()
 
     def add_route_id(self, route_id):
@@ -151,6 +145,14 @@ class Heatmap(object):
         mode_data = self._mode_dict.get(self._mode)
         return mode_data.get(KEY.SCORE_METHOD)
 
+    def make_buffers(self, stops, buffer_method):
+
+        print "Making stop buffers for %d stops..." % len(stops)
+        for stop in stops:
+            stop.make_buffer(buffer_method)
+
+        print "Stop buffers complete"
+
     def run(self):
 
         if self._run_flag:
@@ -162,7 +164,11 @@ class Heatmap(object):
         self._da_man = DaData()
         das = self._da_man.get_das()
 
+        # Use all stops to check if intersections should be updated
+        all_stops = self._data_man.get_stops()
+
         if not self._route_ids:
+            # Only include active stops
             stops = self._data_man.get_active_stops()
         else:
             stops = []
@@ -175,26 +181,18 @@ class Heatmap(object):
         if buffer_method is None:
             raise ValueError("Cannot determine buffer method for mode: %d" % self._mode)
 
-        for stop in stops:
-            if buffer_method == BUFFER_METHOD.CIRCLE_400:
-                stop.make_round_buffer(400)
-            elif buffer_method == BUFFER_METHOD.SQUARE_709:
-                stop.make_square_buffer(709)
-            elif buffer_method == BUFFER_METHOD.DIAMOND_500:
-                stop.make_diamond_buffer(500)
-            else:
-                raise ValueError("mode %d buffer %s not supported" % (self._mode, buffer_method))
-
+        self.make_buffers(stops, buffer_method)
         intersect = Intersect()
 
         try:
-            intersect.load(buffer_method, self._dataset)
+            intersect.load(buffer_method, self._dataset, all_stops)
 
         except Exception as err:
             print "Intersect().load() Exception: %s" % repr(err)
             if not self._route_ids:
-                intersect.process(stops, das)
-                intersect.to_shapefile(buffer_method, self._dataset)
+                self.make_buffers(all_stops, buffer_method)
+                intersect.process(all_stops, das)
+                intersect.to_shapefile(buffer_method, self._dataset, all_stops)
             else:
                 print "CANNOT compute intersections with subset of stops"
                 print "quitting"
@@ -207,7 +205,7 @@ class Heatmap(object):
         for da in das:
             rasters = da.get_rasters(100)
             stop_tuples = intersect.get_intersections(group=2, id=da.get_id())
-            print "Got %d stops for da_id: %d" % (len(stop_tuples), da.get_id())
+            print "DA: %d stops: %d" % (da.get_id(), len(stop_tuples))
 
             if self._route_ids:
                 stop_tuples = self.filter_stop_tuples(stop_tuples, stops)
@@ -411,6 +409,13 @@ class Heatmap(object):
         return result
 
 if __name__ == "__main__":
+
+    h = Heatmap()
+    h.set_mode(1)
+    h.set_dataset('june')
+    h.run()
+
+    raise ValueError('temp stop')
 
     h1 = Heatmap()
     h1.set_mode(1)
