@@ -1,0 +1,6 @@
+Aug. 26
+-------
+Looking at July route 10236 stop 3458.  What does it have departures in both directions?
+
+I was planning to modify plot_stops.py to show associated departures (for june/july data anyways)
+
