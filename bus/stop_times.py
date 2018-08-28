@@ -26,9 +26,9 @@ def int_to_timestr(input):
 
 class StopTimes(object):
 
-    def __init__(self, base_path, route_mgr):
+    def __init__(self, base_path, dataman):
 
-        self.route_mgr = route_mgr
+        self._dataman = dataman
         self._departure_dict = {}
 
         self._base_path = base_path
@@ -113,7 +113,7 @@ class StopTimes(object):
 
         return wait_sec
 
-    def get_stop_departures(self, stop_id, service_type, start_time=0, stop_time=LATEST_TIME):
+    def get_stop_departures(self, stop_id, service_type, start_time=0, stop_time=LATEST_TIME, direction=None, route_id=None):
 
         stops = self._departure_dict.get(stop_id)
         if stops is None:
@@ -123,10 +123,20 @@ class StopTimes(object):
         result = []
 
         for key, value in stops.iteritems():
-            if value.get(KEY.SERVICE_TYPE) == service_type:
-                depart_time = value.get(KEY.DEPART_TIME)
-                if depart_time >= start_time and depart_time <= stop_time:
-                    result.append((depart_time, value))
+            if value.get(KEY.SERVICE_TYPE) != service_type:
+                continue
+
+            if direction is not None:
+                if value.get(KEY.DIRECTION) != direction:
+                    continue
+
+            if route_id is not None:
+                if value.get(KEY.ROUTE_ID) != route_id:
+                    continue
+
+            depart_time = value.get(KEY.DEPART_TIME)
+            if depart_time >= start_time and depart_time <= stop_time:
+                result.append((depart_time, value))
 
         result = sorted(result)
         result = [item[1] for item in result]
@@ -195,7 +205,7 @@ class StopTimes(object):
 
                 trip_id = int(parts[1].strip())
 
-                route = self.route_mgr.get_route_from_trip_id(trip_id)
+                route = self._dataman.get_route_from_trip_id(trip_id)
 
                 if route is None:
                     # I think its perfectly valid to fail to get a route ID when there are
@@ -210,7 +220,7 @@ class StopTimes(object):
                 # print stop_id, trip_id, depart_time
                 # print "LINE", line, trip_id, stop_id
 
-                stop = self.route_mgr.get_stop(stop_id)
+                stop = self._dataman.get_stop(stop_id)
 
                 if stop is None:
                     raise ValueError("Failed to find stop for stop_id: %d" % stop_id)
@@ -221,25 +231,29 @@ class StopTimes(object):
 
                 departure_data = self._departure_dict.get(stop_id, {})
 
-                service_type = self.route_mgr.get_trip_service_type(trip_id)
-                headsign = self.route_mgr.get_trip_headsign(trip_id)
-                direction = self.route_mgr.get_trip_direction(trip_id)
+                service_type = self._dataman.get_trip_service_type(trip_id)
+                headsign = self._dataman.get_trip_headsign(trip_id)
+                direction = self._dataman.get_trip_direction(trip_id)
 
-                key = "%d-%d-%d-%d" % (depart_time, service_type, route.get_id(), direction)
+                # Old key... not quite correct.  Must consider stop_id BUT NOT direction
+                # key = "%d-%d-%d-%d" % (depart_time, service_type, route.get_id(), direction)
 
-                # print "WANT TO CHECK KEY", key
+                # Trying to get rid of duplicate departures
+                key = "%d-%d-%d-%d" % (stop_id, depart_time, service_type, route.get_id())
 
                 if departure_data.has_key(key):
-                    self._count_duplicate_keys_total += 1
-                    continue
 
-                    # print "Already have departure key", key, depart_time_str, stop_id
+                    # This is happening when only the direction differs. And this is happening
+                    # for example at July Stop 3458 route 10236, which is the end of the line.
+                    # Departures before this stop have direction 0, whereas departures after this
+                    # stop have direction 1.  But this stop has direction 0 AND 1
 
-                    # raise ValueError("duplicate key")
-                    x = self._key_counts.get(key, 0)
-                    x += 1
-                    self._key_counts[key] = x
-                    continue
+                    # Sooo, let direction 0 override direction 1.  This means we should overwrite
+                    # existing data if direction is 0, or punt if direction is 1
+
+                    if direction == 1:
+                        self._count_duplicate_keys_total += 1
+                        continue
 
                 if service_type is None:
                     print "failed to get service_id for trip_id", trip_id
@@ -257,6 +271,8 @@ class StopTimes(object):
             read_time = time.time() - start_time
             print "file: %s departures: %d read time: %.2f sec" % (file_name, line_count - 1, read_time)
             print "StopTimes: duplicate departure key count", self._count_duplicate_keys_total
+
+            # raise ValueError("temp stop")
 
         finally:
             if f:

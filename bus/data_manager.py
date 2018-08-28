@@ -222,6 +222,9 @@ class DatamanBase(object):
     def get_routes(self):
         return [route for route in self._route_dict.itervalues()]
 
+    def get_stops(self):
+        return [stop for stop in self._stop_dict.itervalues()]
+
     def get_route_name(self, route_id):
         route = self.get_route(route_id)
         return route.get_name()
@@ -694,7 +697,12 @@ class DataManagerOpen(DatamanBase):
             # print repr(depart)
             direction = depart.get(KEY.DIRECTION)
             route_id = depart.get(KEY.ROUTE_ID)
-            have_direction = d.get(route_id)
+            depart_time = depart.get(KEY.DEPART_TIME)
+
+            key = "%d-%d" % (route_id, depart_time)
+            # key = route_id
+
+            have_direction = d.get(key)
 
             # print "HAVE", repr(have_direction), route_id
             if have_direction is not None and have_direction != direction:
@@ -705,7 +713,7 @@ class DataManagerOpen(DatamanBase):
                 #                   (stop_id, route_id))
 
             # print "setting %d to %d" % (route_id, direction)
-            d[route_id] = direction
+            d[key] = direction
 
         print "SANITY DONE"
 
@@ -727,9 +735,18 @@ class DataManagerOpen(DatamanBase):
         for depart in departures:
             print repr(depart)
 
-        # raise ValueError("ERROR")
+        raise ValueError("ERROR")
+
+    def get_departures(self, stop_id, service):
+        return self._stop_times.get_stop_departures(stop_id, service)
 
     def get_departs_per_hour(self, route, stop_id, service, time_str):
+        departs_0 = self._get_departs_per_hour_internal(route, stop_id, service, time_str, 0)
+        departs_1 = self._get_departs_per_hour_internal(route, stop_id, service, time_str, 1)
+
+        return departs_0 + departs_1
+
+    def _get_departs_per_hour_internal(self, route, stop_id, service, time_str, direction):
 
         if isinstance(route, TransitRoute):
             route_id = route.get_id()
@@ -740,22 +757,46 @@ class DataManagerOpen(DatamanBase):
         target_sec = 60.0 * self._get_time_minutes(time_str)
 
         # Get all departures from this stop (they are sorted)
-        departures = self._stop_times.get_stop_departures(stop_id, service)
+        departures = self._stop_times.get_stop_departures(stop_id, service, direction=direction, route_id=route_id)
 
-        self._sanity_check_departures(stop_id, departures)
+        #self._sanity_check_departures(stop_id, departures)
 
-        # Discard departures not on target route
-        consider = []
+        start_sec = target_sec - 30 * 60
+        end_sec = target_sec + 30 * 60
+
+        depart_count = 0
         for depart in departures:
-            depart_route_id = depart.get(KEY.ROUTE_ID)
-            if depart_route_id != route_id:
-                # print "Skip this route"
-                continue
-            consider.append(depart)
+            depart_sec = depart.get(KEY.DEPART_TIME)
+            if depart_sec >= start_sec and depart_sec < end_sec:
+                depart_count += 1
+        return depart_count
 
-        # Make a list with depart time as forst item in tuple
+
+    def _get_departs_per_hour_internal_OLD(self, route, stop_id, service, time_str, direction):
+        """
+        Attempting to get departures per hour based on interval between two departures
+        is not working well. There are just too many screwey scenarios.  For example there
+        are stops with departures on the same route/direction that leave a minute apart
+        and then fork to different destination.  It might be simpler to just cound departures
+        over a one hour interval
+        """
+
+        if isinstance(route, TransitRoute):
+            route_id = route.get_id()
+        else:
+            route_id = route
+
+        # Get target depart time
+        target_sec = 60.0 * self._get_time_minutes(time_str)
+
+        # Get all departures from this stop (they are sorted)
+        departures = self._stop_times.get_stop_departures(stop_id, service, direction=direction, route_id=route_id)
+
+        #self._sanity_check_departures(stop_id, departures)
+
+        # Make a list with depart time as first item in tuple
         d = []
-        for depart in consider:
+        for depart in departures:
             depart_sec = depart.get(KEY.DEPART_TIME)
             d.append((depart_sec, depart))
 
@@ -799,10 +840,10 @@ class DataManagerOpen(DatamanBase):
             interval = first_after - first_before
 
             if first_after <= target_sec:
-                self._dump_data(consider)
+                self._dump_data(departures)
 
             if interval <= 0:
-                self._dump_data(consider)
+                self._dump_data(departures)
 
         elif first_before is not None:
             # Target time must be after last departure
@@ -831,16 +872,15 @@ class DataManagerOpen(DatamanBase):
             minutes = interval / 60
 
             if minutes == 0:
-                for depart in consider:
+                for depart in departures:
                     print repr(depart)
 
             departs_per_hour = 60 / minutes
 
         # Sanity tests
         if departs_per_hour > 10:
-            print "GOT %d departures:" % departs_per_hour
-            self._dump_data(consider)
-
+            print "GOT %d departures (stop ID): %s" % (departs_per_hour, stop_id)
+            self._dump_data(departures)
 
         return departs_per_hour
 

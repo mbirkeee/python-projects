@@ -53,6 +53,13 @@ def get_dist(point1, point2):
 
     return math.sqrt(math.pow((x1 - x2), 2) + math.pow((y1 - y2),2))
 
+
+def seconds_to_depart_time(seconds):
+    minutes = seconds / 60
+    hours = int(minutes / 60)
+    remain = minutes - (60 * hours)
+    return "%d:%02d" % (hours, remain)
+
 def seconds_to_string(seconds):
     t = datetime.datetime.fromtimestamp(seconds)
     tt = t.strftime("%Y-%m-%d:%H:%M:%S")

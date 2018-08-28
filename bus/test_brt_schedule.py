@@ -34,12 +34,12 @@ class Runner(object):
 
             print route.get_id(), route.get_number(), route.get_name()
             for service in SERVICES:
-                # for t in ["5", "8:30", "15", "19:45"]:
-                for t in ["8:30"]:
+                for t in ["5", "8:30", "15", "19:45"]:
+                # for t in ["8:30"]:
                     for stop in stops:
                         stop_id = stop.get_id()
                         result = self._dataman.get_departs_per_hour(route, stop_id, service, t)
-                        print "HOUR: route: %d service: %d time: %s departs: %f" % (route.get_id(), service, t, result)
+                        print "HOUR: stop_id: %d route: %d service: %d time: %s departs: %f" % (stop_id, route.get_id(), service, t, result)
                         total_count += 1
 
             #    result = self._dataman.get_departs_per_day(route, stop_id, service)

@@ -1,7 +1,7 @@
 import argparse
 
 from da_manager import DaData
-from data_manager import DataManager
+from data_manager import dataman_factory
 from intersect import Intersect
 
 class Runner(object):
@@ -12,13 +12,13 @@ class Runner(object):
         self._dataset = args.dataset
 
         self._daman = DaData()
-        self._datamam = DataManager(self._dataset, link_route_shapes=False, link_stops=False)
+        self._dataman = dataman_factory(self._dataset, link_route_shapes=False, link_stops=False)
 
     def run(self):
 
         # To speed things up, make a list of all stops and throw away any raster
         # points that are farther than 1 km from the nearest stop.
-        all_stops = self._datamam.get_stops()
+        all_stops = self._dataman.get_stops()
         das = self._daman.get_das()
 
         intersect = Intersect()
