@@ -22,6 +22,7 @@ class KEY(object):
     SCORE_METHOD        = 'score_method'
     DISTANCE_DECAY      = 'distance_decay'
     STOP_DEMAND         = 'stop_demand'
+    SCORE_NEAREST_ONLY  = 'score_nearest_only'
 
     STOPS_ADDED         = 'stops_added'
     STOPS_REMOVED       = 'stops_removed'

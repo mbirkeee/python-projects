@@ -95,7 +95,7 @@ class BrtSchedule(object):
 
         # Handle passed in routes or route_ids
         if isinstance(route, int):
-            route = self._dataman.get_route(route)
+            route = self._get_route_callback(route)
         return route.get_number()
 
     def _find_tuples(self, route_number, service):
@@ -174,16 +174,16 @@ class DatamanBase(object):
         self._route_dict = {}
         self._stop_dict = {}
 
-    def get_depart_wait_minutes(self, route, stop_id, service, time_str):
+    def get_depart_wait_minutes(self, route, direction, stop_id, service, time_str):
         raise NotImplementedError
 
-    def get_departs_per_hour(self, route, stop_id, service, time_str):
+    def get_departs_per_hour(self, route, direction, stop_id, service, time_str):
         raise NotImplementedError
 
-    def get_departs_per_day(self, route, stop_id, service):
+    def get_departs_per_day(self, route, direction, stop_id, service):
         raise NotImplementedError
 
-    def get_departs_per_week(self, route, stop_id):
+    def get_departs_per_week(self, route, direction, stop_id):
         raise NotImplementedError
 
     def get_segments(self, route_id):
@@ -270,16 +270,20 @@ class DatamanBrt(DatamanBase):
         for stop in self._stop_dict.itervalues():
             stop.set_route_dict(self._route_dict)
 
-    def get_depart_wait_minutes(self, route, stop_id, service, time_str):
+    def get_depart_wait_minutes(self, route, direction, stop_id, service, time_str):
+        if direction != 0: return None
         return self._schedule.get_depart_wait_minutes(route, service, time_str)
 
-    def get_departs_per_hour(self, route, stop_id, service, time_str):
+    def get_departs_per_hour(self, route, direction, stop_id, service, time_str):
+        if direction != 0: return None
         return self._schedule.get_departs_per_hour(route, service, time_str)
 
-    def get_departs_per_day(self, route, stop_id, service):
+    def get_departs_per_day(self, route, direction, stop_id, service):
+        if direction != 0: return None
         return self._schedule.get_departs_per_day(route, service)
 
-    def get_departs_per_week(self, route, stop_id):
+    def get_departs_per_week(self, route, direction, stop_id):
+        if direction != 0: return None
         return self._schedule.get_departs_per_week(route)
 
     def apply_stops_added(self, added_stops, route_id):
@@ -740,14 +744,16 @@ class DataManagerOpen(DatamanBase):
     def get_departures(self, stop_id, service):
         return self._stop_times.get_stop_departures(stop_id, service)
 
-    def get_departs_per_hour(self, route, stop_id, service, time_str):
-        departs_0 = self._get_departs_per_hour_internal(route, stop_id, service, time_str, 0)
-        departs_1 = self._get_departs_per_hour_internal(route, stop_id, service, time_str, 1)
+    # def get_departs_per_hour(self, route, direction, stop_id, service, time_str):
+    #     departs_0 = self._get_departs_per_hour_internal(route, stop_id, service, time_str, 0)
+    #     departs_1 = self._get_departs_per_hour_internal(route, stop_id, service, time_str, 1)
+    #
+    #     return departs_0 + departs_1
 
-        return departs_0 + departs_1
-
-    def _get_departs_per_hour_internal(self, route, stop_id, service, time_str, direction):
-
+    def get_departs_per_hour(self, route, direction, stop_id, service, time_str, ):
+        """
+        We must consider each diretion seperately
+        """
         if isinstance(route, TransitRoute):
             route_id = route.get_id()
         else:

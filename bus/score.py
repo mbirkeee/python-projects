@@ -30,6 +30,43 @@ class Score(object):
     def __init__(self, dataman):
         self._dataman = dataman
 
+    def get_score_departures_per_hour(self, raster, stop_tuples, service, time_str):
+
+        print "RASTER--------", raster.get_id()
+        total_departs = 0
+
+        raster_p = raster.get_polygon()
+        raster_point = raster_p.get_centroid()
+
+        for item in stop_tuples:
+            stop_p = item[0]
+            stop_id = item[1]
+            stop = self._dataman.get_stop(stop_id)
+
+            if stop_id != stop.get_id():
+                raise ValueError("fixme")
+
+            if not raster_p.intersects(stop_p):
+                continue
+
+            route_ids = stop.get_route_ids()
+            for route_id in route_ids:
+                print "Stop serves route: %d" % route_id
+
+                departs_per_hour_0 = self._dataman.get_departs_per_hour(route_id, 0, stop_id, service, time_str)
+                departs_per_hour_1 = self._dataman.get_departs_per_hour(route_id, 1, stop_id, service, time_str)
+
+                if departs_per_hour_0 is not None:
+                    print "departures 0", departs_per_hour_0
+                    total_departs += departs_per_hour_0
+
+                if departs_per_hour_1 is not None:
+                    print "departures 1", departs_per_hour_1
+                    total_departs += departs_per_hour_1
+
+        print "total departures", total_departs
+        return total_departs
+
     def get_score_stop_count_with_decay(self, raster, stop_tuples):
 
         score = 0

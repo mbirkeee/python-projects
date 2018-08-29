@@ -4,6 +4,7 @@ class MODE(object):
     ONE         = 1
     TWO         = 2
     THREE       = 3
+    FOUR        = 4
 
 class BUFFER_METHOD(object):
     CIRCLE_400   = "circle_400"
@@ -17,27 +18,35 @@ BUFFER_LIST = [
 ]
 
 class SCORE_METHOD(object):
-    STOP_COUNT = "simple_stop_count"
+    STOP_COUNT              = "simple_stop_count"
+    DEPARTURES_PER_HOUR     = "departures_per_hour"
 
 
 MODE_DICT = {
     MODE.ONE : {
-        KEY.BUFFER_METHOD   : BUFFER_METHOD.CIRCLE_400,
-        KEY.SCORE_METHOD    : SCORE_METHOD.STOP_COUNT,
-        KEY.DISTANCE_DECAY  : False,
-        KEY.STOP_DEMAND     : None
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.CIRCLE_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.STOP_COUNT,
+        KEY.DISTANCE_DECAY      : False,
+        KEY.STOP_DEMAND         : None
     },
     MODE.TWO : {
-        KEY.BUFFER_METHOD   : BUFFER_METHOD.SQUARE_709,
-        KEY.SCORE_METHOD    : SCORE_METHOD.STOP_COUNT,
-        KEY.DISTANCE_DECAY  : False,
-        KEY.STOP_DEMAND     : None
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.SQUARE_709,
+        KEY.SCORE_METHOD        : SCORE_METHOD.STOP_COUNT,
+        KEY.DISTANCE_DECAY      : False,
+        KEY.STOP_DEMAND         : None
     },
     MODE.THREE : {
-        KEY.BUFFER_METHOD   : BUFFER_METHOD.DIAMOND_500,
-        KEY.SCORE_METHOD    : SCORE_METHOD.STOP_COUNT,
-        KEY.DISTANCE_DECAY  : False,
-        KEY.STOP_DEMAND     : None
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.DIAMOND_500,
+        KEY.SCORE_METHOD        : SCORE_METHOD.STOP_COUNT,
+        KEY.DISTANCE_DECAY      : False,
+        KEY.STOP_DEMAND         : None
+    },
+    MODE.FOUR : {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.CIRCLE_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_HOUR,
+        KEY.SCORE_NEAREST_ONLY  : False,
+        KEY.DISTANCE_DECAY      : False,
+        KEY.STOP_DEMAND         : None
     }
 }
 

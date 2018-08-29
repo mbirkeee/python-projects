@@ -5,8 +5,10 @@ from shapefile_writer import ShapeFileWriter
 from da_manager import Raster
 from da_manager import DaData
 
-from data_manager import DataManager
+from data_manager import dataman_factory
 from intersect import Intersect
+
+from dataset import SERVICE
 
 from plotter import Plotter
 from plotter import ATTR
@@ -34,9 +36,12 @@ class Heatmap(object):
         self._raster_dict = {}
 
         self._mode = None
+        self._service = None
+        self._time_str = None
+
         self._dataset = None
         self._base_path = None
-        self._data_man = None
+        self._dataman = None
         self._da_man = None
         self._run_flag = False
         self._mode_dict = MODE_DICT
@@ -121,6 +126,12 @@ class Heatmap(object):
         print "Wrote %d scores to: %s" % (len(x), file_name)
 
 
+    def set_service(self, service):
+        self._service = service
+
+    def set_time_str(self, time_str):
+        self._time_str = time_str
+
     def set_mode(self, mode):
         if self._mode is not None:
             print "Mode %d cannot be changed" % self._mode
@@ -160,20 +171,20 @@ class Heatmap(object):
             return
 
         self._run_flag = True
-        self._data_man = DataManager(self._dataset)
+        self._dataman = dataman_factory(self._dataset)
         self._da_man = DaData()
         das = self._da_man.get_das()
 
         # Use all stops to check if intersections should be updated
-        all_stops = self._data_man.get_stops()
+        all_stops = self._dataman.get_stops()
 
         if not self._route_ids:
             # Only include active stops
-            stops = self._data_man.get_active_stops()
+            stops = self._dataman.get_active_stops()
         else:
             stops = []
             for route_id in self._route_ids:
-                route = self._data_man.get_route(route_id)
+                route = self._dataman.get_route(route_id)
                 route_stops = route.get_stops()
                 stops.extend(route_stops)
 
@@ -198,7 +209,7 @@ class Heatmap(object):
                 print "quitting"
                 return
 
-        judge = Score(self._data_man)
+        judge = Score(self._dataman)
 
         score_method = self.get_score_method()
 
@@ -213,8 +224,10 @@ class Heatmap(object):
             for raster in rasters:
                 if score_method == SCORE_METHOD.STOP_COUNT:
                     score = judge.get_score_stop_count(raster, stop_tuples)
+                elif score_method == SCORE_METHOD.DEPARTURES_PER_HOUR:
+                    score = judge.get_score_departures_per_hour(raster, stop_tuples, self._service, self._time_str)
                 else:
-                    raise ValueError("Score method not supported")
+                    raise ValueError("Score method not supported: %s" % score_method)
 
                 if score > 0:
                     raster.set_score(score)
@@ -410,36 +423,37 @@ class Heatmap(object):
 
 if __name__ == "__main__":
 
-    h = Heatmap()
-    h.set_mode(1)
-    h.set_dataset('june')
-    h.run()
-
-    raise ValueError('temp stop')
-
     h1 = Heatmap()
-    h1.set_mode(1)
-    h1.set_dataset("brt")
+    h1.set_mode(4)
+    # h1.set_mode(1)
+    h1.set_service(SERVICE.MWF)
+    h1.set_time_str("8:14")
+    h1.set_dataset("july")
     h1.run()
-    h1.plot("temp/maps/h1.html")
+    h1.plot()
 
-    h2 = Heatmap()
-    h2.set_mode(1)
-    h2.set_dataset("brt1")
-    h2.run()
-    h2.plot("temp/maps/h2.html")
-
-    #
-    h3 = h2-h1
-    h3.plot("temp/maps/brt1_brt_mode_1_diff.html")
-
-    h1.dump_score_csv()
-    h2.dump_score_csv()
-    h3.dump_score_csv()
-    #
     print "h1 max_score", h1.get_max_score()
     print "h1 min_score", h1.get_min_score()
     print "h1 ave_score", h1.get_ave_score()
+    h1.dump_score_csv()
+
+    raise ValueError("temp stop")
+
+    # h2 = Heatmap()
+    # h2.set_mode(1)
+    # h2.set_dataset("brt1")
+    # h2.run()
+    # h2.plot("temp/maps/h2.html")
+    #
+    # #
+    # h3 = h2-h1
+    # h3.plot("temp/maps/brt1_brt_mode_1_diff.html")
+    #
+    # h1.dump_score_csv()
+    # h2.dump_score_csv()
+    # h3.dump_score_csv()
+    # #
+
 
     print "h2 max_score", h2.get_max_score()
     print "h2 min_score", h2.get_min_score()
