@@ -214,6 +214,61 @@ STOP_UPDATES = {
                 { KEY.STOP_ID : 5676 },
                 { KEY.STOP_ID : 3508 },
             ],
+        },{
+            KEY.ROUTE_ID : 102281953,
+            KEY.NAME : "Mainline, Airport - Stonebridge - Northbound (IB)",
+            KEY.STOPS_ADDED : [
+                { KEY.STOP_ID : 5818 },
+                { KEY.STOP_ID : 5814 },
+                { KEY.STOP_ID : 5560 },
+                { KEY.LAT : 52.159137, KEY.LNG : -106.679467 },
+                { KEY.LAT : 52.150365, KEY.LNG : -106.673029 },
+                { KEY.LAT : 52.132587, KEY.LNG : -106.669940 },
+                { KEY.LAT : 52.123465, KEY.LNG : -106.664039 },
+                { KEY.LAT : 52.118600, KEY.LNG : -106.662054 },
+                { KEY.LAT : 52.116861, KEY.LNG : -106.662032 },
+            ],
+            KEY.STOPS_REMOVED : [
+                { KEY.STOP_ID : 3138 },
+                { KEY.STOP_ID : 4064 },
+                { KEY.STOP_ID : 3506 },
+                { KEY.STOP_ID : 5726 },
+                { KEY.STOP_ID : 3892 },
+            ],
+        },{
+            KEY.ROUTE_ID : 102281944,
+            KEY.NAME : "Mainline, 33rd St - Taylor - Eastbound (IB)",
+            KEY.STOPS_ADDED : [
+                { KEY.LAT : 52.143738, KEY.LNG : -106.741328 },
+                { KEY.LAT : 52.133602, KEY.LNG : -106.663011 },
+            ],
+            KEY.STOPS_REMOVED : [
+                { KEY.STOP_ID : 10018 },
+            ],
+        },{
+            KEY.ROUTE_ID : 102281945,
+            KEY.NAME : "Mainline, 33rd St - Taylor - Westbound (IB)",
+            KEY.STOPS_ADDED : [
+                { KEY.STOP_ID : 3807 },
+                { KEY.STOP_ID : 10018 },
+                { KEY.LAT : 52.100253, KEY.LNG : -106.551466 },
+                { KEY.LAT : 52.101940, KEY.LNG : -106.558204 },
+                { KEY.LAT : 52.103021, KEY.LNG : -106.571765 },
+                { KEY.LAT : 52.103085, KEY.LNG : -106.566789 },
+                { KEY.LAT : 52.102125, KEY.LNG : -106.575156 },
+                { KEY.LAT : 52.100484, KEY.LNG : -106.581749 },
+                { KEY.LAT : 52.103693, KEY.LNG : -106.594854 },
+                { KEY.LAT : 52.133335, KEY.LNG : -106.660015 },
+                { KEY.LAT : 52.133946, KEY.LNG : -106.663444 },
+                { KEY.LAT : 52.144052, KEY.LNG : -106.733326 },
+                { KEY.LAT : 52.143999, KEY.LNG : -106.737789 },
+                { KEY.LAT : 52.144025, KEY.LNG : -106.741372 },
+            ],
+            KEY.STOPS_REMOVED : [
+                { KEY.STOP_ID : 3285 },
+                { KEY.STOP_ID : 3171 },
+
+            ],
         }
     ]
 }

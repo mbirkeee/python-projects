@@ -1,5 +1,6 @@
 import copy
 import shapefile
+import math
 
 from shapefile_writer import ShapeFileWriter
 from da_manager import Raster
@@ -294,7 +295,7 @@ class Heatmap(object):
 
             self._raster_list.append(raster)
 
-    def plot(self, file_name=None, plotter=None, include_das=True, max_score=None, min_score=None):
+    def plot(self, file_name=None, plotter=None, include_das=True, max_score=None, min_score=None, log=False):
 
         if file_name is None:
             file_name = "temp/maps/heatmap_mode_%s_%s.html" % (self._mode, self._dataset)
@@ -320,6 +321,7 @@ class Heatmap(object):
                     min_score = score
 
         max_score_abs = max(abs(min_score), abs(max_score))
+        max_score_log = math.log10(max_score_abs)
 
         for raster in self._raster_list:
 
@@ -332,9 +334,23 @@ class Heatmap(object):
             if score == 0:
                 continue
 
+
+            if score > max_score:
+                score = max_score
+
+            if score < min_score:
+                score = min_score
+
             if score > 0:
-                opacity = score / max_score_abs
-                color = "#ff0000"
+                if log:
+                    opacity = math.log10(score) / max_score_log
+                else:
+                    opacity = score / max_score_abs
+
+                if score >= max_score:
+                    color = "#fff240"
+                else:
+                    color = "#ff0000"
             else:
                 opacity = -1.0 * score / max_score_abs
                 color = "#0000ff"
@@ -354,10 +370,14 @@ class Heatmap(object):
         if write_file:
             plotter.plot(file_name)
 
-    def to_shapefile(self, file_name):
+    def to_shapefile(self, file_name=None):
         """
         Dump this heatmap to a shapefile
         """
+
+        if file_name is None:
+            file_name = "temp/shapefiles/heatmaps/heatmap_mode_%s_%s.shp" % (self._mode, self._dataset)
+
         writer = ShapeFileWriter()
         for raster in self._raster_list:
             writer.add_raster(raster)
@@ -436,6 +456,7 @@ if __name__ == "__main__":
     print "h1 min_score", h1.get_min_score()
     print "h1 ave_score", h1.get_ave_score()
     h1.dump_score_csv()
+    h1.to_shapefile()
 
     raise ValueError("temp stop")
 
