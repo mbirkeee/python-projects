@@ -777,6 +777,16 @@ class DataManagerOpen(DatamanBase):
                 depart_count += 1
         return depart_count
 
+    def get_departs_per_day(self, route, direction, stop_id, service):
+        if isinstance(route, TransitRoute):
+            route_id = route.get_id()
+        else:
+            route_id = route
+
+        # Get all departures from this stop (they are sorted)
+        departures = self._stop_times.get_stop_departures(stop_id, service, direction=direction, route_id=route_id)
+        return len(departures)
+
 
     def _get_departs_per_hour_internal_OLD(self, route, stop_id, service, time_str, direction):
         """

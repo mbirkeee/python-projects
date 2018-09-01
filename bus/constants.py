@@ -12,6 +12,7 @@ class KEY(object):
     POPULATION          = 'pop'
     WEIGHT              = 'weight'
     DAILY_DEPARTURES    = 'daily_departures'
+    DEPARTURES          = 'departures'
 
     BAD_ID              = 'bad_id'
     POINT               = 'point'
@@ -20,9 +21,10 @@ class KEY(object):
     STOP_SET            = 'stop_set'
     BUFFER_METHOD       = 'buffer_method'
     SCORE_METHOD        = 'score_method'
-    DISTANCE_DECAY      = 'distance_decay'
     STOP_DEMAND         = 'stop_demand'
     SCORE_NEAREST_ONLY  = 'score_nearest_only'
+    DECAY_METHOD        = 'decay_method'
+    DECAY_FACTOR        = 'decay_factor'
 
     STOPS_ADDED         = 'stops_added'
     STOPS_REMOVED       = 'stops_removed'

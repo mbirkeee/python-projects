@@ -243,6 +243,9 @@ class Filter(object):
         self._e = e
         self._n = n
 
+    def set_dpass(self, dpass):
+        self._dpass = dpass
+
     def butterworth(self, distance):
 
         r = float(distance)/float(self._dpass)

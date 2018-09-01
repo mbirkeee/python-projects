@@ -3,17 +3,6 @@ class DATASET_PATH(object):
     JUNE = "../data/sts/csv/2018_05_04/"
     BRT  = "../data/shapefiles/brt_lines/brt"
 
-class SERVICE(object):
-    UNKNOWN     = 0
-    MWF         = 1
-    SAT         = 2
-    SUN         = 3
-
-SERVICES = [
-    SERVICE.MWF,
-    SERVICE.SAT,
-    SERVICE.SUN,
-]
 
 class DATASET(object):
     JUNE        = 'june'
@@ -28,6 +17,17 @@ DATASETS = {
     DATASET.BRT_1   : DATASET_PATH.BRT
 }
 
+class SERVICE(object):
+    UNKNOWN     = 0
+    MWF         = 1
+    SAT         = 2
+    SUN         = 3
+
+SERVICES = [
+    SERVICE.MWF,
+    SERVICE.SAT,
+    SERVICE.SUN,
+]
 
 """
 These dicts were obtained from the downloaded TransitRoute files, and include

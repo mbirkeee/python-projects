@@ -5,35 +5,40 @@ from stop_times import StopTimes
 from stop_times import SERVICE
 from stop_times import KEY
 
-DECAY = Filter()
+from modes import DECAY_METHOD
+
+# DECAY = Filter()
 
 class Score(object):
 
-    # def __init__(self, base_path, stops=None):
-    #
-    #     self._base_path = base_path
-    #     self._stops = stops
-    #     self._brt_mode = False
-    #
-    #     if base_path.find("2018_05_04") > 0:
-    #         print "this is the JUNE data"
-    #
-    #     elif base_path.find('2018_08_05') > 0:
-    #         print "this is the JULY data"
-    #
-    #     else:
-    #         self._brt_mode = True
-    #
-    #     if not self._brt_mode:
-    #         self._stop_times = StopTimes(self._base_path, stops=stops)
-
     def __init__(self, dataman):
         self._dataman = dataman
+        self._filter = Filter(dpass=250)
 
-    def get_score_departures_per_hour(self, raster, stop_tuples, service, time_str):
+    def get_decay_factor(self, point1, point2, decay_method):
+
+        distance = point1.get_distance(point2, method="crow")
+
+        if decay_method == None:
+            decay = 1.0
+
+        elif decay_method == DECAY_METHOD.CROW_250:
+            self._filter.set_dpass(250)
+            decay = self._filter.butterworth(distance)
+
+        elif decay_method == DECAY_METHOD.CROW_100:
+            self._filter.set_dpass(100)
+            decay = self._filter.butterworth(distance)
+
+        else:
+            raise ValueError("decay method not supported")
+
+        return distance, decay
+
+    def get_score_departures_per_hour(self, raster, stop_tuples, service, time_str, decay_method, nearest_only):
 
         print "RASTER--------", raster.get_id()
-        total_departs = 0
+        total_departs = 0.0
 
         raster_p = raster.get_polygon()
         raster_point = raster_p.get_centroid()
@@ -49,6 +54,8 @@ class Score(object):
             if not raster_p.intersects(stop_p):
                 continue
 
+            decay_factor = self.get_decay_factor(stop.get_point(), raster_point, decay_method)
+
             route_ids = stop.get_route_ids()
             for route_id in route_ids:
                 print "Stop serves route: %d" % route_id
@@ -57,15 +64,89 @@ class Score(object):
                 departs_per_hour_1 = self._dataman.get_departs_per_hour(route_id, 1, stop_id, service, time_str)
 
                 if departs_per_hour_0 is not None:
-                    print "departures 0", departs_per_hour_0
-                    total_departs += departs_per_hour_0
+                    print "departures 0", departs_per_hour_0, decay_factor
+                    total_departs += decay_factor * departs_per_hour_0
 
                 if departs_per_hour_1 is not None:
-                    print "departures 1", departs_per_hour_1
-                    total_departs += departs_per_hour_1
+                    print "departures 1", departs_per_hour_1, decay_factor
+                    total_departs += decay_factor * departs_per_hour_1
 
         print "total departures", total_departs
         return total_departs
+
+    def get_closest(self, items):
+
+        result = None
+        closest = None
+
+        for item in items:
+            distance = item.get(KEY.DISTANCE)
+            if closest is None or distance < closest:
+                closest = distance
+                result = item
+
+        return result
+
+
+    def get_score_departures_per_day(self, raster, stop_tuples, service, decay_method, nearest_only):
+
+        print "RASTER--------", raster.get_id()
+        total_score = 0.0
+
+        route_dict = {}
+
+        raster_p = raster.get_polygon()
+        raster_point = raster_p.get_centroid()
+
+        for item in stop_tuples:
+            stop_p = item[0]
+            stop_id = item[1]
+            stop = self._dataman.get_stop(stop_id)
+
+            if stop_id != stop.get_id():
+                raise ValueError("fixme")
+
+            # Does the raster polygon intersect the stop polygon?
+            # TODO: isn't this a given base on the passed in intersecting polygons?
+            if not raster_p.intersects(stop_p):
+                continue
+
+            distance, decay_factor = self.get_decay_factor(stop.get_point(), raster_point, decay_method)
+
+            route_ids = stop.get_route_ids()
+            for route_id in route_ids:
+                print "Stop %d serves route: %d" % (stop_id, route_id)
+
+                for direction in [0, 1]:
+                    departs = self._dataman.get_departs_per_day(route_id, direction, stop_id, service)
+
+                    if departs is None or departs == 0:
+                        continue
+
+                    # Make a list of unique departures so that closest stop can be determined
+                    key = "%d-%d" % (route_id, direction)
+                    stop_list = route_dict.get(key, [])
+                    stop_list.append({
+                        KEY.STOP_ID         : stop_id,
+                        KEY.DEPARTURES      : departs,
+                        KEY.DISTANCE        : distance,
+                        KEY.DECAY_FACTOR    : decay_factor
+                    })
+                    route_dict[key] = stop_list
+
+            for key, items in route_dict.iteritems():
+                if nearest_only:
+                    items = [self.get_closest(items)]
+
+                for item in items:
+                    departs = item.get(KEY.DEPARTURES)
+                    decay_factor = item.get(KEY.DECAY_FACTOR)
+
+                    total_score += departs * decay_factor
+
+        print "total departures", total_score
+        return total_score
+
 
     def get_score_stop_count_with_decay(self, raster, stop_tuples):
 
@@ -92,7 +173,10 @@ class Score(object):
 
         return score
 
-    def get_score_stop_count(self, raster, stop_tuples):
+    def get_score_stop_count(self, raster, stop_tuples, decay_method):
+
+        if decay_method is not None:
+            raise ValueError("decay method not supported")
 
         score = 0
         raster_p = raster.get_polygon()

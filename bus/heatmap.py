@@ -9,7 +9,8 @@ from da_manager import DaData
 from data_manager import dataman_factory
 from intersect import Intersect
 
-from dataset import SERVICE
+from dataset import DATASET
+from modes import SERVICE
 
 from plotter import Plotter
 from plotter import ATTR
@@ -24,6 +25,8 @@ from constants import KEY
 from modes import MODE_DICT
 from modes import BUFFER_METHOD
 from modes import SCORE_METHOD
+from modes import DECAY_METHOD
+from modes import DECAY_LIST
 
 class Heatmap(object):
 
@@ -37,7 +40,6 @@ class Heatmap(object):
         self._raster_dict = {}
 
         self._mode = None
-        self._service = None
         self._time_str = None
 
         self._dataset = None
@@ -126,10 +128,6 @@ class Heatmap(object):
 
         print "Wrote %d scores to: %s" % (len(x), file_name)
 
-
-    def set_service(self, service):
-        self._service = service
-
     def set_time_str(self, time_str):
         self._time_str = time_str
 
@@ -149,6 +147,14 @@ class Heatmap(object):
     def set_dataset(self, dataset):
         self._dataset = dataset
 
+    def get_decay_method(self):
+        mode_data = self._mode_dict.get(self._mode)
+        decay_method = mode_data.get(KEY.DECAY_METHOD)
+        if not decay_method in DECAY_LIST:
+            raise ValueError("Decay mode not supported")
+
+        return decay_method
+
     def get_buffer_method(self):
         mode_data = self._mode_dict.get(self._mode)
         return mode_data.get(KEY.BUFFER_METHOD)
@@ -156,6 +162,17 @@ class Heatmap(object):
     def get_score_method(self):
         mode_data = self._mode_dict.get(self._mode)
         return mode_data.get(KEY.SCORE_METHOD)
+
+    def get_service_type(self):
+        mode_data = self._mode_dict.get(self._mode)
+        return mode_data.get(KEY.SERVICE_TYPE, SERVICE.MWF)
+
+    def get_nearest_only(self):
+        """
+        REturn nearest only flag. Default to False if not specified
+        """
+        mode_data = self._mode_dict.get(self._mode)
+        return mode_data.get(KEY.SCORE_NEAREST_ONLY, False)
 
     def make_buffers(self, stops, buffer_method):
 
@@ -213,6 +230,9 @@ class Heatmap(object):
         judge = Score(self._dataman)
 
         score_method = self.get_score_method()
+        decay_method = self.get_decay_method()
+        nearest_only = self.get_nearest_only()
+        service = self.get_service_type()
 
         for da in das:
             rasters = da.get_rasters(100)
@@ -224,9 +244,14 @@ class Heatmap(object):
 
             for raster in rasters:
                 if score_method == SCORE_METHOD.STOP_COUNT:
-                    score = judge.get_score_stop_count(raster, stop_tuples)
+                    score = judge.get_score_stop_count(raster, stop_tuples, decay_method)
                 elif score_method == SCORE_METHOD.DEPARTURES_PER_HOUR:
-                    score = judge.get_score_departures_per_hour(raster, stop_tuples, self._service, self._time_str)
+                    score = judge.get_score_departures_per_hour( \
+                        raster, stop_tuples, service, self._time_str, decay_method, nearest_only)
+                elif score_method == SCORE_METHOD.DEPARTURES_PER_DAY:
+                    score = judge.get_score_departures_per_day( \
+                        raster, stop_tuples, service, decay_method, nearest_only)
+
                 else:
                     raise ValueError("Score method not supported: %s" % score_method)
 
@@ -295,7 +320,7 @@ class Heatmap(object):
 
             self._raster_list.append(raster)
 
-    def plot(self, file_name=None, plotter=None, include_das=True, max_score=None, min_score=None, log=False):
+    def plot(self, file_name=None, plotter=None, include_das=True, max_score=None, min_score=None, log=False, sqrt=False):
 
         if file_name is None:
             file_name = "temp/maps/heatmap_mode_%s_%s.html" % (self._mode, self._dataset)
@@ -322,6 +347,7 @@ class Heatmap(object):
 
         max_score_abs = max(abs(min_score), abs(max_score))
         max_score_log = math.log10(max_score_abs)
+        max_score_sqrt = math.sqrt(max_score_abs)
 
         for raster in self._raster_list:
 
@@ -334,7 +360,6 @@ class Heatmap(object):
             if score == 0:
                 continue
 
-
             if score > max_score:
                 score = max_score
 
@@ -344,6 +369,8 @@ class Heatmap(object):
             if score > 0:
                 if log:
                     opacity = math.log10(score) / max_score_log
+                elif sqrt:
+                    opacity = math.sqrt(score) / max_score_sqrt
                 else:
                     opacity = score / max_score_abs
 
@@ -369,6 +396,11 @@ class Heatmap(object):
 
         if write_file:
             plotter.plot(file_name)
+
+        print "max_score", max_score_abs
+        print "max_score_log", max_score_log
+        print "max_score_sqrt", max_score_sqrt
+
 
     def to_shapefile(self, file_name=None):
         """
@@ -441,34 +473,125 @@ class Heatmap(object):
 
         return result
 
+def test2():
+
+
+
+
+# x = np.linspace(0, 10, 500)
+# dashes = [10, 5, 100, 5]  # 10 points on, 5 off, 100 on, 5 off
+#
+# fig, ax = plt.subplots()
+# line1, = ax.plot(x, np.sin(x), '--', linewidth=2,
+#                  label='Dashes set retroactively')
+# line1.set_dashes(dashes)
+#
+# line2, = ax.plot(x, -1 * np.sin(x), dashes=[30, 5, 10, 5],
+#                  label='Dashes set proactively')
+#
+# ax.legend(loc='lower right')
+# plt.show()
+
+    import matplotlib.pyplot as plt
+    h = Heatmap()
+    h.from_shapefile("temp/shapefiles/heatmaps/heatmap_mode_7_july.shp")
+
+    raster_dict = h.get_raster_dict()
+    score_list = []
+    for key, r in raster_dict.iteritems():
+        print "%d: %f" % (r.get_id(), r.get_score())
+        score_list.append(r.get_score())
+
+    y = sorted(score_list)
+    y.reverse()
+
+    x = range(len(y))
+
+    h2 = Heatmap()
+    h2.from_shapefile("temp/shapefiles/heatmaps/heatmap_mode_7_brt1.shp")
+
+    raster_dict = h2.get_raster_dict()
+    score_list = []
+    for key, r in raster_dict.iteritems():
+        print "%d: %f" % (r.get_id(), r.get_score())
+        score_list.append(r.get_score())
+
+    y2 = sorted(score_list)
+    y2.reverse()
+
+    x2 = range(len(y2))
+
+
+    fig, ax = plt.subplots()
+    # line1, = ax.loglog(x, y, label="July")
+    # line2, = ax.loglog(x2, y2, label="BRT 1")
+
+    line1, = ax.semilogy(x, y, label="July")
+    line2, = ax.semilogy(x2, y2, label="BRT 1")
+
+    ax.legend(loc='lower left')
+    plt.title("Score vs # of Grid Cells")
+    plt.ylabel("Accessibility Score")
+    plt.xlabel("Number of 100m X 100m grid Cells")
+    plt.show()
+
+def test1():
+
+    july_250 = Heatmap()
+    july_250.from_shapefile("temp/shapefiles/heatmaps/heatmap_mode_7_july.shp")
+
+    brt_250 = Heatmap()
+    brt_250.from_shapefile("temp/shapefiles/heatmaps/heatmap_mode_7_brt1.shp")
+
+    july_100 = Heatmap()
+    july_100.from_shapefile("temp/shapefiles/heatmaps/heatmap_mode_8_july.shp")
+
+    brt_100 = Heatmap()
+    brt_100.from_shapefile("temp/shapefiles/heatmaps/heatmap_mode_8_brt1.shp")
+
+    diff_250 = brt_250 - july_250
+    diff_100 = brt_100 - july_100
+
+    diff_100_250 = diff_100 - diff_250
+    diff_100_250.plot("temp/maps/100_200.html")
+
 if __name__ == "__main__":
 
+
+    test2()
+    raise ValueError("Done")
+
+    mode = 8
+    d1 = DATASET.JULY
+    d2 = DATASET.BRT_1
+
     h1 = Heatmap()
-    h1.set_mode(4)
-    # h1.set_mode(1)
-    h1.set_service(SERVICE.MWF)
+    h1.set_mode(mode)
     h1.set_time_str("8:14")
-    h1.set_dataset("july")
+    h1.set_dataset(d1)
     h1.run()
     h1.plot()
 
     print "h1 max_score", h1.get_max_score()
     print "h1 min_score", h1.get_min_score()
     print "h1 ave_score", h1.get_ave_score()
+
     h1.dump_score_csv()
     h1.to_shapefile()
+    h1.plot()
 
-    raise ValueError("temp stop")
+    # raise ValueError("temp stop")
 
-    # h2 = Heatmap()
-    # h2.set_mode(1)
-    # h2.set_dataset("brt1")
-    # h2.run()
-    # h2.plot("temp/maps/h2.html")
-    #
-    # #
-    # h3 = h2-h1
-    # h3.plot("temp/maps/brt1_brt_mode_1_diff.html")
+    h2 = Heatmap()
+    h2.set_mode(mode)
+    h2.set_dataset(d2)
+    h2.set_time_str("8:14")
+    h2.run()
+    h2.to_shapefile()
+    h2.plot()
+
+    h3 = h2 - h1
+    h3.plot("temp/maps/diff_%s_%s_mode_%d.html" %(d2, d1, mode))
     #
     # h1.dump_score_csv()
     # h2.dump_score_csv()

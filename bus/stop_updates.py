@@ -269,8 +269,104 @@ STOP_UPDATES = {
                 { KEY.STOP_ID : 3171 },
 
             ],
+        },{
+            KEY.ROUTE_ID : 102281950,
+            KEY.NAME : "Mainline, Downtown - SaskTel Centre - Southbound (IB)",
+            KEY.STOPS_ADDED : [
+                { KEY.STOP_ID : 3978 },
+                { KEY.STOP_ID : 3437 },
+                { KEY.LAT : 52.189848, KEY.LNG : -106.679886 },
+                { KEY.LAT : 52.194408, KEY.LNG : -106.666415 },
+                { KEY.LAT : 52.160736, KEY.LNG : -106.665085 },
+            ],
+            KEY.STOPS_REMOVED : [
+
+            ],
+        },{
+            KEY.ROUTE_ID : 102281951,
+            KEY.NAME : "Mainline, Downtown - SaskTel Centre - Northbound (IB)",
+            KEY.STOPS_ADDED : [
+                { KEY.STOP_ID : 3073 },
+                { KEY.LAT : 52.161111, KEY.LNG : -106.664447 },
+                { KEY.LAT : 52.164218, KEY.LNG : -106.664404 },
+                { KEY.LAT : 52.166113, KEY.LNG : -106.664447 },
+                { KEY.LAT : 52.168219, KEY.LNG : -106.664404 },
+                { KEY.LAT : 52.176378, KEY.LNG : -106.656722 },
+                { KEY.LAT : 52.170400, KEY.LNG : -106.663604 },
+                { KEY.LAT : 52.173387, KEY.LNG : -106.657049 },
+                { KEY.LAT : 52.180361, KEY.LNG : -106.657274 },
+                { KEY.LAT : 52.184019, KEY.LNG : -106.657339 },
+                { KEY.LAT : 52.187211, KEY.LNG : -106.657555 },
+                { KEY.LAT : 52.192394, KEY.LNG : -106.660248 },
+            ],
+            KEY.STOPS_REMOVED : [
+
+            ],
+        },{
+            KEY.ROUTE_ID : 102281936,
+            KEY.NAME : "Crosstown, St Paul's - Westbound (IB) ",
+            KEY.STOPS_ADDED : [
+                { KEY.LAT : 52.134439, KEY.LNG : -106.729415 },
+                { KEY.LAT : 52.135927, KEY.LNG : -106.731045 },
+                { KEY.LAT : 52.131162, KEY.LNG : -106.759171 },
+                { KEY.LAT : 52.137024, KEY.LNG : -106.736405 },
+                { KEY.LAT : 52.137085, KEY.LNG : -106.742429 },
+                { KEY.LAT : 52.137079, KEY.LNG : -106.748941 },
+                { KEY.LAT : 52.137026, KEY.LNG : -106.753801 },
+                { KEY.LAT : 52.136868, KEY.LNG : -106.760132 },
+                { KEY.LAT : 52.134063, KEY.LNG : -106.759297 },
+                { KEY.LAT : 52.128125, KEY.LNG : -106.759120 },
+                { KEY.LAT : 52.137106, KEY.LNG : -106.744946 },
+                { KEY.LAT : 52.137061, KEY.LNG : -106.756806 },
+            ],
+            KEY.STOPS_REMOVED : [
+                { KEY.STOP_ID : 10000 },
+
+            ],
+        },{
+            KEY.ROUTE_ID : 102281937,
+            KEY.NAME : "Crosstown, St Paul's - Eastbound (IB) ",
+            KEY.STOPS_ADDED : [
+                { KEY.LAT : 52.135307, KEY.LNG : -106.759040 },
+            ],
+            KEY.STOPS_REMOVED : [
+                { KEY.STOP_ID : 3285 },
+            ],
+        },{
+            KEY.ROUTE_ID : 102281954,
+            KEY.NAME : "Crosstown, Lawson - Stonebridge - Southbound (IB)",
+            KEY.STOPS_ADDED : [
+                { KEY.STOP_ID : 3734 },
+                { KEY.STOP_ID : 10028 },
+                { KEY.STOP_ID : 5676 },
+                { KEY.LAT : 52.168018, KEY.LNG : -106.621526 },
+                { KEY.LAT : 52.147693, KEY.LNG : -106.622773 },
+                { KEY.LAT : 52.132086, KEY.LNG : -106.639693 },
+                { KEY.LAT : 52.128123, KEY.LNG : -106.646584 },
+                { KEY.LAT : 52.084360, KEY.LNG : -106.635165 },
+                { KEY.LAT : 52.086258, KEY.LNG : -106.633652 },
+                { KEY.LAT : 52.086219, KEY.LNG : -106.629124 },
+                { KEY.LAT : 52.086298, KEY.LNG : -106.625423 },
+                { KEY.LAT : 52.097189, KEY.LNG : -106.646610 },
+                { KEY.LAT : 52.083858, KEY.LNG : -106.641854 },
+            ],
+            KEY.STOPS_REMOVED : [
+            ],
+        },{
+            KEY.ROUTE_ID : 102281955,
+            KEY.NAME : "Crosstown, Lawson - Stonebridge - Northbound (IB)",
+            KEY.STOPS_ADDED : [
+                { KEY.LAT : 52.168338, KEY.LNG : -106.622581 },
+                { KEY.LAT : 52.184094, KEY.LNG : -106.629774 },
+                { KEY.LAT : 52.176025, KEY.LNG : -106.616089 },
+                { KEY.LAT : 52.173607, KEY.LNG : -106.614598 },
+                { KEY.LAT : 52.171357, KEY.LNG : -106.614126 },
+                { KEY.LAT : 52.170330, KEY.LNG : -106.617843 },
+                { KEY.LAT : 52.173377, KEY.LNG : -106.629066 },
+                { KEY.LAT : 52.170973, KEY.LNG : -106.623891 },
+            ],
+            KEY.STOPS_REMOVED : [
+            ],
         }
     ]
 }
-
-
