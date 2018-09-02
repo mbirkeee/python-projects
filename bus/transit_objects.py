@@ -121,6 +121,10 @@ class TransitStop(object):
         self._manually_added_to_routes = list(set(self._manually_added_to_routes))
 
     def manually_remove_route(self, route_id):
+        if not route_id in self._serves_route_ids:
+            raise ValueError("manually_remove_route: stop %d does not serve route %d" % \
+                (self.get_id(), route_id))
+
         self._serves_route_ids.remove(route_id)
         try:
             self._manually_added_to_routes.remove(route_id)

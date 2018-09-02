@@ -295,7 +295,7 @@ class DatamanBrt(DatamanBase):
             stop_id = added_stop.get(KEY.STOP_ID)
 
             if stop_id is None:
-                print "THIS MUST BE A LAT/LON stop!!!!"
+                print "THIS MUST BE A LAT/LON stop"
                 lat = added_stop.get(KEY.LAT)
                 lng = added_stop.get(KEY.LNG)
                 if lat is None or lng is None:
@@ -308,12 +308,12 @@ class DatamanBrt(DatamanBase):
                 stop = TransitStop(stop_id, name, Point(lat, lng))
 
                 if self._stop_dict.has_key(stop_id):
-                    raise ValueError("Duplicate stop_id!!!! %s" % repr(stop_id))
+                    raise ValueError("Duplicate stop_id: %s" % repr(stop_id))
 
                 self._stop_dict[stop_id] = stop
 
             else:
-                print "Want to assign an existing stop to this route"
+                print "Assign existing stop %d to route %d" % (stop_id, route_id)
                 stop = self._stop_dict.get(stop_id)
 
             # Assign this existing stop to the route
