@@ -223,6 +223,17 @@ class TransitStop(object):
         self._serves_route_ids.append(route_id)
         self._serves_route_ids = list(set(self._serves_route_ids))
 
+    def serves_route(self, route):
+        if isinstance(route, TransitRoute):
+            route_id = route.get_id()
+        else:
+            route_id = route
+
+        if route_id in self._serves_route_ids:
+            return True
+
+        return False
+
     def get_route_ids(self):
         return self._serves_route_ids
 

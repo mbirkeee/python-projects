@@ -103,7 +103,12 @@ class Point(object):
         x2 = point.get_x()
         y2 = point.get_y()
 
-        return math.sqrt(math.pow((x1 - x2), 2) + math.pow((y1 - y2), 2))
+        if method == 'crow':
+            return math.sqrt(math.pow((x1 - x2), 2) + math.pow((y1 - y2), 2))
+        elif method == 'grid':
+            return abs(x1 - x2) + abs(y1 - y2)
+        else:
+            raise ValueError("distanve method not supported: %s" % repr(method))
 
 
 class Polyline(object):

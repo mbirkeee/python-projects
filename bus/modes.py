@@ -10,6 +10,7 @@ class MODE(object):
     SIX         = 6
     SEVEN       = 7
     EIGHT       = 8
+    NINE        = 9
 
 class BUFFER_METHOD(object):
     CIRCLE_400   = "circle_400"
@@ -27,15 +28,16 @@ class DECAY_METHOD(object):
     NONE        = None
     CROW_250    = "crow_250"    # Euclidian distance, butterworth dpass = 250
     CROW_100    = "crow_100"    # Euclidian distance, butterworth dpass = 100
+    GRID_250    = "grid_250"    #
 
 # List of supported decay methods
+# TODO is this really needed?
 DECAY_LIST = [
     DECAY_METHOD.NONE,
     DECAY_METHOD.CROW_250,
     DECAY_METHOD.CROW_100,
+    DECAY_METHOD.GRID_250,
 ]
-
-
 
 class SCORE_METHOD(object):
     STOP_COUNT              = "simple_stop_count"
@@ -93,6 +95,13 @@ MODE_DICT = {
         KEY.DECAY_METHOD        : DECAY_METHOD.CROW_100,
         KEY.STOP_DEMAND         : None,
         KEY.SERVICE_TYPE        : SERVICE.MWF
+    },
+    MODE.NINE : {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.CIRCLE_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_DAY,
+        KEY.SCORE_NEAREST_ONLY  : True,
+        KEY.DECAY_METHOD        : DECAY_METHOD.GRID_250,
+        KEY.STOP_DEMAND         : None,
+        KEY.SERVICE_TYPE        : SERVICE.MWF
     }
 }
-

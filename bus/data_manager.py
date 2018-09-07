@@ -12,7 +12,7 @@ from dataset import BAD_STOP_IDS_BRT
 from dataset import DATASETS
 from dataset import OPEN_DATA_ROUTE_FILTER
 
-from stop_updates import STOP_UPDATES
+from stop_updates import STOP_UPDATES, NEW_STOPS
 
 from transit_trips import TransitTrips
 from transit_shapes import TransitShapes
@@ -213,7 +213,10 @@ class DatamanBase(object):
         return self._route_dict.get(route_id)
 
     def get_stop(self, stop_id):
-        return self._stop_dict.get(stop_id)
+        stop = self._stop_dict.get(stop_id)
+        if stop is None:
+            raise ValueError("Can't find stop id: %d" % stop_id)
+        return stop
 
     def get_route_ids(self):
         result = [k for k in self._route_dict.iterkeys()]
@@ -259,6 +262,7 @@ class DatamanBrt(DatamanBase):
 
         self._created_stop_id_base = 20000
 
+        self.add_new_stops(dataset)
         self.apply_stop_updates(dataset)
 
         self._schedule = BrtSchedule(self.get_route)
@@ -314,11 +318,16 @@ class DatamanBrt(DatamanBase):
 
             else:
                 print "Assign existing stop %d to route %d" % (stop_id, route_id)
-                stop = self._stop_dict.get(stop_id)
+                stop = self.get_stop(stop_id)
 
             # Assign this existing stop to the route
-            stop.manually_add_route(route_id)
-            route.manually_add_stop(stop_id)
+            if stop.serves_route(route):
+                # It would be OK to "re-add" existing stop but this exception
+                # just helps to keep things clean
+                raise ValueError("Stop %d already serves route %d" % (stop_id, route_id))
+            else:
+                stop.manually_add_route(route_id)
+                route.manually_add_stop(stop_id)
 
             print repr(stop)
 
@@ -354,6 +363,19 @@ class DatamanBrt(DatamanBase):
             if route_name is not None:
                 route = self.get_route(route_id)
                 route.set_name(route_name)
+
+    def add_new_stops(self, dataset):
+        new_stops = NEW_STOPS.get(dataset, {})
+        for stop_id, location in new_stops.iteritems():
+            print "Add stop: %d %s" % (stop_id, location)
+            lat = location.get(KEY.LAT)
+            lng = location.get(KEY.LNG)
+            if lat is None or lng is None:
+                raise ValueError("Bad Stop!")
+
+            name = "Manually Created stop: %s" % repr(stop_id)
+            stop = TransitStop(stop_id, name, Point(lat, lng))
+            self._stop_dict[stop_id] = stop
 
     def get_active_stops(self):
         if not self._active_stops:

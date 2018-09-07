@@ -17,6 +17,7 @@ class KEY(object):
     BAD_ID              = 'bad_id'
     POINT               = 'point'
     NAME                = 'name'
+    NOTES               = 'notes'
 
     STOP_SET            = 'stop_set'
     BUFFER_METHOD       = 'buffer_method'

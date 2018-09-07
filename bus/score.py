@@ -17,12 +17,17 @@ class Score(object):
 
     def get_decay_factor(self, point1, point2, decay_method):
 
-        distance = point1.get_distance(point2, method="crow")
+        if decay_method in [None, DECAY_METHOD.CROW_100, DECAY_METHOD.CROW_250]:
+            distance = point1.get_distance(point2, method="crow")
+        elif decay_method in [DECAY_METHOD.GRID_250]:
+            distance = point1.get_distance(point2, method="grid")
+        else:
+            raise ValueError("decay method not supported: %s" % repr(decay_method))
 
         if decay_method == None:
             decay = 1.0
 
-        elif decay_method == DECAY_METHOD.CROW_250:
+        elif decay_method in [DECAY_METHOD.CROW_250, DECAY_METHOD.GRID_250]:
             self._filter.set_dpass(250)
             decay = self._filter.butterworth(distance)
 
@@ -31,7 +36,7 @@ class Score(object):
             decay = self._filter.butterworth(distance)
 
         else:
-            raise ValueError("decay method not supported")
+            raise ValueError("decay method not supported: %s" % repr(decay_method))
 
         return distance, decay
 

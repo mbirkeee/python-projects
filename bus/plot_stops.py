@@ -80,12 +80,12 @@ class Runner(object):
                     p = item[0]
                     plotter.add_polygon(p)
 
-                plotter.plot("temp/maps/stop_%d_buffer_%s_%s" % (stop.get_id(), self._buffer, self._dataset))
+                plotter.plot("temp/maps/stop_%d_buffer_%s_%s.html" % (stop.get_id(), self._buffer, self._dataset))
             else:
                 point = Polypoint()
                 point.add_point(stop.get_point())
                 plotter.add_polypoint(point)
-                plotter.plot("temp/maps/stop_%d_%s" % (stop.get_id(), self._buffer, self._dataset))
+                plotter.plot("temp/maps/stop_%d_%s.html" % (stop.get_id(), self._dataset))
 
             if self._dataset in [DATASET.JULY, DATASET.JUNE]:
                 departures = self._dataman.get_departures(stop.get_id(), SERVICE.MWF)
@@ -99,6 +99,12 @@ class Runner(object):
 
                     print "%6s Direction: %s Route: %d   %s" % \
                           (depart_str, direction, route_id, sign)
+            else:
+                print "Stop serves routes:"
+                print "------------------"
+                routes = stop.get_routes()
+                for route in routes:
+                    print "%3d %d   %s" % (route.get_number(), route.get_id(), route.get_name())
 
 
 if __name__ == "__main__":

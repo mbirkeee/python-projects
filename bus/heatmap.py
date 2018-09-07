@@ -494,7 +494,7 @@ def test2():
 
     import matplotlib.pyplot as plt
     h = Heatmap()
-    h.from_shapefile("temp/shapefiles/heatmaps/heatmap_mode_7_july.shp")
+    h.from_shapefile("temp/shapefiles/heatmaps/heatmap_mode_9_brt1.shp")
 
     raster_dict = h.get_raster_dict()
     score_list = []
@@ -526,8 +526,8 @@ def test2():
     # line1, = ax.loglog(x, y, label="July")
     # line2, = ax.loglog(x2, y2, label="BRT 1")
 
-    line1, = ax.semilogy(x, y, label="July")
-    line2, = ax.semilogy(x2, y2, label="BRT 1")
+    line1, = ax.semilogy(x, y, label="BRT dpass = 250; Grid")
+    line2, = ax.semilogy(x2, y2, label="BRT dpass = 250; Euclidian")
 
     ax.legend(loc='lower left')
     plt.title("Score vs # of Grid Cells")
@@ -555,13 +555,25 @@ def test1():
     diff_100_250 = diff_100 - diff_250
     diff_100_250.plot("temp/maps/100_200.html")
 
+def test3():
+
+    brt_250_crow = Heatmap()
+    brt_250_crow.from_shapefile("temp/shapefiles/heatmaps/heatmap_mode_7_brt1.shp")
+
+    brt_250_grid = Heatmap()
+    brt_250_grid.from_shapefile("temp/shapefiles/heatmaps/heatmap_mode_9_brt1.shp")
+
+    diff = brt_250_crow - brt_250_grid
+    diff.plot("temp/maps/brt_250_grid_crow.html", max_score=5000, sqrt=True)
+
+
 if __name__ == "__main__":
 
 
-    test2()
+    test3()
     raise ValueError("Done")
 
-    mode = 8
+    mode = 9
     d1 = DATASET.JULY
     d2 = DATASET.BRT_1
 
