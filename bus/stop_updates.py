@@ -101,7 +101,6 @@ ADDED_STOPS = {
     30132 : { KEY.LAT : 52.103021, KEY.LNG : -106.571765 },
     30133 : { KEY.LAT : 52.103085, KEY.LNG : -106.566789 },
     30134 : { KEY.LAT : 52.102125, KEY.LNG : -106.575156 },
-    30135 : { KEY.LAT : 52.100484, KEY.LNG : -106.581749 },
     30136 : { KEY.LAT : 52.103694, KEY.LNG : -106.595328 },
     30139 : { KEY.LAT : 52.144052, KEY.LNG : -106.733326 },
     30140 : { KEY.LAT : 52.143999, KEY.LNG : -106.737789 },
@@ -226,6 +225,65 @@ ADDED_STOPS = {
     30295 : { KEY.LAT : 52.167497, KEY.LNG : -106.565689 },
     30296 : { KEY.LAT : 52.170774, KEY.LNG : -106.570246 },
 
+    30301 : { KEY.LAT : 52.109883, KEY.LNG : -106.575199 },
+    30302 : { KEY.LAT : 52.103616, KEY.LNG : -106.581453 },
+    30303 : { KEY.LAT : 52.100626, KEY.LNG : -106.582027 },
+    30304 : { KEY.LAT : 52.097741, KEY.LNG : -106.584559 },
+    30305 : { KEY.LAT : 52.096135, KEY.LNG : -106.585989 },
+    30306 : { KEY.LAT : 52.096135, KEY.LNG : -106.585989 },
+    30307 : { KEY.LAT : 52.100161, KEY.LNG : -106.598767 },
+    30308 : { KEY.LAT : 52.097302, KEY.LNG : -106.598802 },
+    30309 : { KEY.LAT : 52.093143, KEY.LNG : -106.597096 },
+    30310 : { KEY.LAT : 52.117941, KEY.LNG : -106.587189 },
+    30311 : { KEY.LAT : 52.103329, KEY.LNG : -106.596027 },
+    30312 : { KEY.LAT : 52.094988, KEY.LNG : -106.598752 },
+    30313 : { KEY.LAT : 52.094080, KEY.LNG : -106.586256 },
+    30314 : { KEY.LAT : 52.093110, KEY.LNG : -106.591860 },
+
+    30320 : { KEY.LAT : 52.115128, KEY.LNG : -106.575199 },
+    30321 : { KEY.LAT : 52.110862, KEY.LNG : -106.563617 },
+    30322 : { KEY.LAT : 52.110853, KEY.LNG : -106.560146 },
+    30323 : { KEY.LAT : 52.108495, KEY.LNG : -106.558183 },
+    30324 : { KEY.LAT : 52.107130, KEY.LNG : -106.560103 },
+    30325 : { KEY.LAT : 52.105802, KEY.LNG : -106.563391 },
+    30326 : { KEY.LAT : 52.092855, KEY.LNG : -106.559491 },
+    30327 : { KEY.LAT : 52.101028, KEY.LNG : -106.571486 },
+    30329 : { KEY.LAT : 52.100573, KEY.LNG : -106.582279 },
+    30330 : { KEY.LAT : 52.120863, KEY.LNG : -106.575177 },
+
+    30340 : { KEY.LAT : 52.152516, KEY.LNG : -106.697741 },
+    30341 : { KEY.LAT : 52.154600, KEY.LNG : -106.713881 },
+    30342 : { KEY.LAT : 52.151366, KEY.LNG : -106.717942 },
+    30343 : { KEY.LAT : 52.143518, KEY.LNG : -106.714356 },
+    30344 : { KEY.LAT : 52.136972, KEY.LNG : -106.721008 },
+    30346 : { KEY.LAT : 52.120558, KEY.LNG : -106.741371 },
+
+    30350 : { KEY.LAT : 52.122424, KEY.LNG : -106.724361 },
+    30351 : { KEY.LAT : 52.142115, KEY.LNG : -106.725865 },
+    30352 : { KEY.LAT : 52.143439, KEY.LNG : -106.725693 },
+    30353 : { KEY.LAT : 52.150761, KEY.LNG : -106.718111 },
+    30354 : { KEY.LAT : 52.152041, KEY.LNG : -106.717703 },
+    30355 : { KEY.LAT : 52.153257, KEY.LNG : -106.720602 },
+    30356 : { KEY.LAT : 52.154732, KEY.LNG : -106.721761 },
+    30357 : { KEY.LAT : 52.146182, KEY.LNG : -106.730055 },
+    30358 : { KEY.LAT : 52.137534, KEY.LNG : -106.726404 },
+    30359 : { KEY.LAT : 52.127114, KEY.LNG : -106.728424 },
+    30360 : { KEY.LAT : 52.124617, KEY.LNG : -106.722389 },
+    30361 : { KEY.LAT : 52.119616, KEY.LNG : -106.725340 },
+
+    30370 : { KEY.LAT : 52.172547, KEY.LNG : -106.632565 },
+    30371 : { KEY.LAT : 52.192213, KEY.LNG : -106.646392 },
+    30372 : { KEY.LAT : 52.197958, KEY.LNG : -106.646409 },
+    30373 : { KEY.LAT : 52.200037, KEY.LNG : -106.646398 },
+    30374 : { KEY.LAT : 52.187883, KEY.LNG : -106.646638 },
+    30375 : { KEY.LAT : 52.184057, KEY.LNG : -106.646568 },
+    30376 : { KEY.LAT : 52.180382, KEY.LNG : -106.646529 },
+    30377 : { KEY.LAT : 52.177872, KEY.LNG : -106.646556 },
+    30378 : { KEY.LAT : 52.174146, KEY.LNG : -106.646556 },
+
+    30380 : { KEY.LAT : 52.144876, KEY.LNG : -106.748935 },
+    30382 : { KEY.LAT : 52.139568, KEY.LNG : -106.749355 },
+    30383 : { KEY.LAT : 52.142398, KEY.LNG : -106.749355 },
 }
 
 NEW_STOPS = {
@@ -236,6 +294,176 @@ NEW_STOPS = {
 STOP_UPDATES = {
     DATASET.BRT_1 : [
         {
+            KEY.ROUTE_ID : 102281935,
+            KEY.NAME : "Suburban Connector, 33rd St - Confed - Eastbound (IB)",
+            KEY.STOPS_ADDED : [
+                { KEY.STOP_ID : 4362 },
+                { KEY.STOP_ID : 10018 },
+                { KEY.STOP_ID : 30180 },
+                { KEY.STOP_ID : 30181 },
+                { KEY.STOP_ID : 30183 },
+                { KEY.STOP_ID : 30184 },
+                { KEY.STOP_ID : 30190 },
+                { KEY.STOP_ID : 30185 },
+                { KEY.STOP_ID : 30382 },
+                { KEY.STOP_ID : 30383 },
+            ],
+            KEY.STOPS_REMOVED : [
+                { KEY.STOP_ID : 10012 },
+            ],
+        },{
+            KEY.ROUTE_ID : 102281934,
+            KEY.NAME : "Suburban Connector, 33rd St - Confed - Eastbound (IB)",
+            KEY.STOPS_ADDED : [
+                { KEY.STOP_ID : 10012 },
+                { KEY.STOP_ID : 30380 },
+            ],
+            KEY.STOPS_REMOVED : [
+                { KEY.STOP_ID : 4362 },
+
+            ],
+        },{
+            KEY.ROUTE_ID : 102281968,
+            KEY.NAME : "Suburban Connector, North Industrial - Lawson (IB)",
+            KEY.NOTES : "This route goes out/in on Millar Ave. It really should be seperate " + \
+                        "Outbound and Inbound routes.  As it is, it woon't 'count' quite as much",
+            KEY.STOPS_ADDED : [
+                { KEY.STOP_ID : 5592 },
+                { KEY.STOP_ID : 4089 },
+
+                { KEY.STOP_ID : 30038 },
+                { KEY.STOP_ID : 30370 },
+                { KEY.STOP_ID : 30371 },
+                { KEY.STOP_ID : 30372 },
+                { KEY.STOP_ID : 30373 },
+                { KEY.STOP_ID : 30374 },
+                { KEY.STOP_ID : 30375 },
+                { KEY.STOP_ID : 30376 },
+                { KEY.STOP_ID : 30377 },
+                { KEY.STOP_ID : 30378 },
+
+            ],
+            KEY.STOPS_REMOVED : [
+
+            ],
+        },{
+            KEY.ROUTE_ID : 102281964,
+            KEY.NAME : "Suburban Connector, Confederation B (IB)",
+            KEY.NOTES : "This route shows a stop point far away from the end point. " + \
+                        "We must assume that it actuall runs back to the start point.",
+            KEY.STOPS_ADDED : [
+                { KEY.STOP_ID : 4072 },
+                { KEY.STOP_ID : 4202 },
+                { KEY.STOP_ID : 3908 },
+                { KEY.STOP_ID : 4074 },
+                { KEY.STOP_ID : 4365 },
+                { KEY.STOP_ID : 3756 },
+                { KEY.STOP_ID : 5370 },
+                { KEY.STOP_ID : 5449 },
+                { KEY.STOP_ID : 4069 },
+                { KEY.STOP_ID : 3119 },
+
+
+                { KEY.STOP_ID : 30350 },
+                { KEY.STOP_ID : 30351 },
+                { KEY.STOP_ID : 30352 },
+                { KEY.STOP_ID : 30353 },
+                { KEY.STOP_ID : 30354 },
+                { KEY.STOP_ID : 30355 },
+                { KEY.STOP_ID : 30356 },
+                { KEY.STOP_ID : 30357 },
+                { KEY.STOP_ID : 30358 },
+                { KEY.STOP_ID : 30080 },
+                { KEY.STOP_ID : 30359 },
+                { KEY.STOP_ID : 30360 },
+                { KEY.STOP_ID : 30361 },
+
+            ],
+            KEY.STOPS_REMOVED : [
+                { KEY.STOP_ID : 3762 },
+                { KEY.STOP_ID : 5567 },
+
+            ],
+        },{
+            KEY.ROUTE_ID : 102281966,
+            KEY.NAME : "Suburban Connector, Confederation A (IB)",
+            KEY.NOTES : "This route is a loop but has long sections that run along the same road.  This means that " + \
+                        "there are actually 'two' directions' in some spots that will not be counted as such in the " +\
+                        "filtered scoring",
+            KEY.STOPS_ADDED : [
+                { KEY.STOP_ID : 30340 },
+                { KEY.STOP_ID : 30341 },
+                { KEY.STOP_ID : 30342 },
+                { KEY.STOP_ID : 30343 },
+                { KEY.STOP_ID : 30344 },
+                { KEY.STOP_ID : 30080 },
+                { KEY.STOP_ID : 30346 },
+
+            ],
+            KEY.STOPS_REMOVED : [
+                { KEY.STOP_ID : 3262 },
+            ],
+        },{
+            KEY.ROUTE_ID : 102281962,
+            KEY.NAME : "Suburban Connector, 8th St Belt B (CW)",
+            KEY.STOPS_ADDED : [
+                { KEY.STOP_ID : 3824 },
+
+                { KEY.STOP_ID : 30320 },
+                { KEY.STOP_ID : 30321 },
+                { KEY.STOP_ID : 30322 },
+                { KEY.STOP_ID : 30323 },
+                { KEY.STOP_ID : 30324 },
+                { KEY.STOP_ID : 30325 },
+                { KEY.STOP_ID : 30326 },
+                { KEY.STOP_ID : 30327 },
+                { KEY.STOP_ID : 30134 },
+                { KEY.STOP_ID : 30329 },
+                { KEY.STOP_ID : 30330 },
+            ],
+            KEY.STOPS_REMOVED : [
+                { KEY.STOP_ID : 5619 },
+                { KEY.STOP_ID : 5618 },
+                { KEY.STOP_ID : 5617 },
+                { KEY.STOP_ID : 5616 },
+                { KEY.STOP_ID : 3817 },
+                { KEY.STOP_ID : 3819 }
+            ],
+        },{
+            KEY.ROUTE_ID : 102281961,
+            KEY.NAME : "Suburban Connector, 8th St Belt A (CW)",
+            KEY.STOPS_ADDED : [
+                { KEY.STOP_ID : 3284 },
+                { KEY.STOP_ID : 5909 },
+
+                { KEY.STOP_ID : 30301 },
+                { KEY.STOP_ID : 30302 },
+                { KEY.STOP_ID : 30303 },
+                { KEY.STOP_ID : 30304 },
+                { KEY.STOP_ID : 30305 },
+                { KEY.STOP_ID : 30306 },
+                { KEY.STOP_ID : 30307 },
+                { KEY.STOP_ID : 30308 },
+                { KEY.STOP_ID : 30309 },
+                { KEY.STOP_ID : 30310 },
+                { KEY.STOP_ID : 30311 },
+                { KEY.STOP_ID : 30312 },
+                { KEY.STOP_ID : 30313 },
+                { KEY.STOP_ID : 30314 },
+
+            ],
+            KEY.STOPS_REMOVED : [
+                { KEY.STOP_ID : 10024 },
+                { KEY.STOP_ID : 4225 },
+                { KEY.STOP_ID : 3936 },
+                { KEY.STOP_ID : 3939 },
+                { KEY.STOP_ID : 3938 },
+                { KEY.STOP_ID : 3934 },
+                { KEY.STOP_ID : 5387 },
+                { KEY.STOP_ID : 4198 },
+                { KEY.STOP_ID : 3366 },
+            ],
+        },{
             KEY.ROUTE_ID : 102281959 ,
             KEY.NAME : "Suburban Connector, U of S - Univ. Heights - Westbound (IB)",
             KEY.STOPS_ADDED : [
@@ -511,7 +739,7 @@ STOP_UPDATES = {
                 { KEY.STOP_ID : 30132 },
                 { KEY.STOP_ID : 30133 },
                 { KEY.STOP_ID : 30134 },
-                { KEY.STOP_ID : 30135 },
+                { KEY.STOP_ID : 30329 },
                 { KEY.STOP_ID : 30136 },
                 { KEY.STOP_ID : 30035 },
                 { KEY.STOP_ID : 30042 },
@@ -840,90 +1068,6 @@ STOP_UPDATES = {
                 { KEY.STOP_ID : 3892 },
                 { KEY.STOP_ID : 3357 },
             ],
-        },{
-            KEY.ROUTE_ID : 102281961,
-            KEY.NAME : "Suburban Connector, 8th St Belt A (CW)",
-            KEY.STOPS_ADDED : [
-                { KEY.STOP_ID : 3284 },
-                { KEY.STOP_ID : 5909 },
-                { KEY.LAT : 52.109883, KEY.LNG : -106.575199 },
-                { KEY.LAT : 52.103616, KEY.LNG : -106.581453 },
-                { KEY.LAT : 52.100626, KEY.LNG : -106.582027 },
-                { KEY.LAT : 52.097741, KEY.LNG : -106.584559 },
-                { KEY.LAT : 52.096135, KEY.LNG : -106.585989 },
-                { KEY.LAT : 52.096135, KEY.LNG : -106.585989 },
-                { KEY.LAT : 52.100161, KEY.LNG : -106.598767 },
-                { KEY.LAT : 52.097302, KEY.LNG : -106.598802 },
-                { KEY.LAT : 52.093143, KEY.LNG : -106.597096 },
-                { KEY.LAT : 52.117941, KEY.LNG : -106.587189 },
-                { KEY.LAT : 52.103329, KEY.LNG : -106.596027 },
-                { KEY.LAT : 52.094988, KEY.LNG : -106.598752 },
-                { KEY.LAT : 52.094080, KEY.LNG : -106.586256 },
-                { KEY.LAT : 52.093110, KEY.LNG : -106.591860 },
-
-            ],
-            KEY.STOPS_REMOVED : [
-                { KEY.STOP_ID : 10024 },
-                { KEY.STOP_ID : 4225 },
-                { KEY.STOP_ID : 3936 },
-                { KEY.STOP_ID : 3939 },
-                { KEY.STOP_ID : 3938 },
-                { KEY.STOP_ID : 3934 },
-                { KEY.STOP_ID : 5387 },
-                { KEY.STOP_ID : 4198 },
-                { KEY.STOP_ID : 3366 },
-            ],
-        },{
-            KEY.ROUTE_ID : 102281962,
-            KEY.NAME : "Suburban Connector, 8th St Belt B (CW)",
-            KEY.STOPS_ADDED : [
-                { KEY.STOP_ID : 3824 },
-                { KEY.LAT : 52.115128, KEY.LNG : -106.575199 },
-                { KEY.LAT : 52.110862, KEY.LNG : -106.563617 },
-                { KEY.LAT : 52.110853, KEY.LNG : -106.560146 },
-                { KEY.LAT : 52.108495, KEY.LNG : -106.558183 },
-                { KEY.LAT : 52.107130, KEY.LNG : -106.560103 },
-                { KEY.LAT : 52.105802, KEY.LNG : -106.563391 },
-                { KEY.LAT : 52.092855, KEY.LNG : -106.559491 },
-                { KEY.LAT : 52.101028, KEY.LNG : -106.571486 },
-                { KEY.LAT : 52.102062, KEY.LNG : -106.575231 },
-                { KEY.LAT : 52.100573, KEY.LNG : -106.582279 },
-            ],
-            KEY.STOPS_REMOVED : [
-                { KEY.STOP_ID : 5619 },
-                { KEY.STOP_ID : 5618 },
-                { KEY.STOP_ID : 5617 },
-                { KEY.STOP_ID : 5616 },
-                { KEY.STOP_ID : 3817 },
-                { KEY.STOP_ID : 3819 }
-            ],
-        },{
-            KEY.ROUTE_ID : 102281966,
-            KEY.NAME : "Suburban Connector, Confederation A (IB)",
-            KEY.NOTES : "This route is a loop but has long sections that run along the same road.  This means that " + \
-                        "there are actually 'two' directions' in some spots that will not be counted as such in the " +\
-                        "filtered scoring",
-            KEY.STOPS_ADDED : [
-                { KEY.LAT : 52.152516, KEY.LNG : -106.697741 },
-                { KEY.LAT : 52.154600, KEY.LNG : -106.713881 },
-                { KEY.LAT : 52.151366, KEY.LNG : -106.717942 },
-                { KEY.LAT : 52.143518, KEY.LNG : -106.714356 },
-                { KEY.LAT : 52.136972, KEY.LNG : -106.721008 },
-                { KEY.LAT : 52.131894, KEY.LNG : -106.728400 },
-                { KEY.LAT : 52.120558, KEY.LNG : -106.741371 },
-            ],
-            KEY.STOPS_REMOVED : [
-                { KEY.STOP_ID : 3262 }
-            ],
-        },{
-            KEY.ROUTE_ID : 102281964,
-            KEY.NAME : "Suburban Connector, Confederation B (IB)",
-            KEY.STOPS_ADDED : [
-
-            ],
-            KEY.STOPS_REMOVED : [
-
-            ],
-        }
+        },
     ]
 }
