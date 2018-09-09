@@ -90,6 +90,9 @@ class TransitRoute(object):
         self._stop_ids.append(stop_id)
         self._stop_ids = list(set(self._stop_ids))
 
+    def __repr__(self):
+         return "%3d: %s (%d)" % (self._route_number, self._name, self._route_id)
+
 class TransitStop(object):
     """
     A Single transit stop

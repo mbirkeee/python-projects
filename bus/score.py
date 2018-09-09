@@ -92,6 +92,11 @@ class Score(object):
 
         return result
 
+    def get_score_closest_stop(self, raster, distance_method):
+
+        active_stops = self._dataman.get_active_stops()
+        min_dist, min_stop = raster.get_closest_stop(active_stops, method=distance_method)
+        return min_dist
 
     def get_score_departures_per_day(self, raster, stop_tuples, service, decay_method, nearest_only):
 

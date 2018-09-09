@@ -63,7 +63,7 @@ ROUTE_IDS_06_21 = {
 #    10102 : "City Centre / Centre Mall",
     10177 : "City Centre / Centre Mall",            # Route 19
 #    10098 : "City Centre / Civic Op Centre",
-    10173 : "City Centre / Civic Op Centre",        # Route 15
+#    10173 : "City Centre / Civic Op Centre",        # Route 15
 #    10146 : "City Centre / Confederation",
 #    10082 : "City Centre / Exhibition",
     10157 : "City Centre / Exhibition",             # Route 1
@@ -162,7 +162,7 @@ ROUTE_IDS_05_04 = {
 #    10027 : "City Centre / Centre Mall",
     10102 : "City Centre / Centre Mall",
 #    10023 : "City Centre / Civic Op Centre",
-    10098 : "City Centre / Civic Op Centre",
+#    10098 : "City Centre / Civic Op Centre",
 #    10071 : "City Centre / Confederation",
     10146 : "City Centre / Confederation",
 #    10007 : "City Centre / Exhibition",

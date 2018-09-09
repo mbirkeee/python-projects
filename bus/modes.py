@@ -11,14 +11,18 @@ class MODE(object):
     SEVEN       = 7
     EIGHT       = 8
     NINE        = 9
+    TEN         = 10
+    ELEVEN      = 11
 
 class BUFFER_METHOD(object):
+    NONE         = "none"
     CIRCLE_400   = "circle_400"
     SQUARE_709   = "square_709"
     DIAMOND_500  = "diamond_500"
 
 # List of supported buffer methods
 BUFFER_LIST = [
+    BUFFER_METHOD.NONE,
     BUFFER_METHOD.CIRCLE_400,
     BUFFER_METHOD.SQUARE_709,
     BUFFER_METHOD.DIAMOND_500
@@ -43,6 +47,7 @@ class SCORE_METHOD(object):
     STOP_COUNT              = "simple_stop_count"
     DEPARTURES_PER_HOUR     = "departures_per_hour"
     DEPARTURES_PER_DAY      = "departures_per_day"
+    DIST_TO_CLOSEST_STOP    = "dist_to_closest_stop"
 
 #-----------------------------------------------------------------------
 MODE_DICT = {
@@ -103,5 +108,15 @@ MODE_DICT = {
         KEY.DECAY_METHOD        : DECAY_METHOD.GRID_250,
         KEY.STOP_DEMAND         : None,
         KEY.SERVICE_TYPE        : SERVICE.MWF
+    },
+    MODE.TEN : {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.NONE,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DIST_TO_CLOSEST_STOP,
+        KEY.DISTANCE_METHOD     : 'grid',
+    },
+    MODE.ELEVEN : {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.NONE,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DIST_TO_CLOSEST_STOP,
+        KEY.DISTANCE_METHOD     : 'crow',
     }
 }

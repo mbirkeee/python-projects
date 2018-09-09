@@ -16,6 +16,7 @@ class Raster(object):
         self._parent_id = parent_id
         self._polygon = polygon
         self._score = 0
+        self._centroid = None
 
     def set_score(self, score):
         self._score = score
@@ -31,6 +32,27 @@ class Raster(object):
 
     def get_polygon(self):
         return self._polygon
+
+    def get_centroid(self):
+        if self._centroid is None:
+            self._centroid = self._polygon.get_centroid()
+        return self._centroid
+
+    def get_closest_stop(self, stops, method='crow'):
+
+        min_dist = None
+        min_stop = None
+
+        centroid = self.get_centroid()
+
+        for stop in stops:
+            distance = centroid.get_distance(stop.get_point(), method=method)
+
+            if min_dist is None or distance < min_dist:
+                min_dist = distance
+                min_stop = stop
+
+        return min_dist, min_stop
 
 
 class DA(object):

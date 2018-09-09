@@ -26,6 +26,7 @@ class KEY(object):
     SCORE_NEAREST_ONLY  = 'score_nearest_only'
     DECAY_METHOD        = 'decay_method'
     DECAY_FACTOR        = 'decay_factor'
+    DISTANCE_METHOD     = 'distance_method'
 
     STOPS_ADDED         = 'stops_added'
     STOPS_REMOVED       = 'stops_removed'

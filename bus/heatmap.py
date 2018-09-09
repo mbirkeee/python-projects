@@ -163,18 +163,26 @@ class Heatmap(object):
         mode_data = self._mode_dict.get(self._mode)
         return mode_data.get(KEY.SCORE_METHOD)
 
+    def get_distance_method(self):
+        mode_data = self._mode_dict.get(self._mode)
+        return mode_data.get(KEY.DISTANCE_METHOD)
+
     def get_service_type(self):
         mode_data = self._mode_dict.get(self._mode)
         return mode_data.get(KEY.SERVICE_TYPE, SERVICE.MWF)
 
     def get_nearest_only(self):
         """
-        REturn nearest only flag. Default to False if not specified
+        Return nearest only flag. Default to False if not specified
         """
         mode_data = self._mode_dict.get(self._mode)
         return mode_data.get(KEY.SCORE_NEAREST_ONLY, False)
 
     def make_buffers(self, stops, buffer_method):
+
+        if buffer_method == BUFFER_METHOD.NONE:
+            print "No buffers required"
+            return
 
         print "Making stop buffers for %d stops..." % len(stops)
         for stop in stops:
@@ -229,6 +237,7 @@ class Heatmap(object):
 
         judge = Score(self._dataman)
 
+        dist_method = self.get_distance_method()
         score_method = self.get_score_method()
         decay_method = self.get_decay_method()
         nearest_only = self.get_nearest_only()
@@ -246,11 +255,13 @@ class Heatmap(object):
                 if score_method == SCORE_METHOD.STOP_COUNT:
                     score = judge.get_score_stop_count(raster, stop_tuples, decay_method)
                 elif score_method == SCORE_METHOD.DEPARTURES_PER_HOUR:
-                    score = judge.get_score_departures_per_hour( \
+                    score = judge.get_score_departures_per_hour(
                         raster, stop_tuples, service, self._time_str, decay_method, nearest_only)
                 elif score_method == SCORE_METHOD.DEPARTURES_PER_DAY:
-                    score = judge.get_score_departures_per_day( \
+                    score = judge.get_score_departures_per_day(
                         raster, stop_tuples, service, decay_method, nearest_only)
+                elif score_method == SCORE_METHOD.DIST_TO_CLOSEST_STOP:
+                    score = judge.get_score_closest_stop(raster, dist_method)
 
                 else:
                     raise ValueError("Score method not supported: %s" % score_method)
@@ -566,12 +577,52 @@ def test3():
     diff = brt_250_crow - brt_250_grid
     diff.plot("temp/maps/brt_250_grid_crow.html", max_score=5000, sqrt=True)
 
+def test4():
+    """
+    closets stop heatmap
+    """
+    h = Heatmap()
+    h.set_mode(11)
+    h.set_dataset(DATASET.JUNE)
+    h.run()
+    h.to_shapefile()
+
+    h1 = Heatmap()
+    h1.set_mode(11)
+    h1.set_dataset(DATASET.JULY)
+    h1.run()
+    h1.to_shapefile()
+
+    h2 = Heatmap()
+    h2.set_mode(11)
+    h2.set_dataset(DATASET.BRT_1)
+    h2.run()
+    h2.to_shapefile()
+
+    # h.plot()
+
+def test5():
+
+    maps = [
+        "temp/shapefiles/heatmaps/heatmap_mode_10_june.shp",
+        "temp/shapefiles/heatmaps/heatmap_mode_10_july.shp",
+        "temp/shapefiles/heatmaps/heatmap_mode_10_brt1.shp",
+        "temp/shapefiles/heatmaps/heatmap_mode_11_june.shp",
+        "temp/shapefiles/heatmaps/heatmap_mode_11_july.shp",
+        "temp/shapefiles/heatmaps/heatmap_mode_11_brt1.shp",
+    ]
+
+    for m in maps:
+        h = Heatmap()
+        h.from_shapefile(m)
+        ave = h.get_ave_score()
+        print m, ave
+
 
 if __name__ == "__main__":
 
-
-    test3()
-    raise ValueError("Done")
+    # test5()
+    # raise ValueError("Done")
 
     mode = 9
     d1 = DATASET.JULY

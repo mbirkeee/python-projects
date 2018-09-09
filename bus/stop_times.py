@@ -113,7 +113,19 @@ class StopTimes(object):
 
         return wait_sec
 
-    def get_stop_departures(self, stop_id, service_type, start_time=0, stop_time=LATEST_TIME, direction=None, route_id=None):
+    def get_stop_departures(self, stop, service_type, start_time=0, stop_time=LATEST_TIME, direction=None, route=None):
+
+        if isinstance(stop, int):
+            stop_id = stop
+        else:
+            stop_id = stop.get_id()
+
+        if route is None:
+            route_id = None
+        elif isinstance(route, int):
+            route_id = route
+        else:
+            route_id = route.get_id()
 
         stops = self._departure_dict.get(stop_id)
         if stops is None:

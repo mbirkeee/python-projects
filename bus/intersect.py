@@ -3,6 +3,7 @@ import shapefile
 from shapefile_writer import ShapeFileWriter
 from geometry import Polygon
 from geometry import Point
+from modes import BUFFER_METHOD
 
 class Intersect(object):
 
@@ -23,6 +24,10 @@ class Intersect(object):
             "temp/shapefiles/intersect_cache/stop_buffer_%s_count_%d_dataset_%s.shp"
 
     def load(self, buffer_type, dataset, stops):
+
+        if buffer_type == BUFFER_METHOD.NONE:
+            print "Intersect.load(): skipping intersection calculation"
+            return
 
         stop_count = len(stops)
         file_name = self._shapefile_name_template % (buffer_type, stop_count, dataset)
