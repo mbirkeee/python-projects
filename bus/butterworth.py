@@ -48,7 +48,7 @@ def get_factor(busses_per_hour, dpass):
     average =  total/float(runs)
     return average
 
-def norm(data):
+def normalize(data):
 
     d = np.array(data)
     m_val = np.max(d)
@@ -101,22 +101,62 @@ def comp(per_hour, dpass):
 
     return result
 
-if __name__ == "__main__":
+def plot_butterworth_wait():
 
-    # comp(30, 15)
-    # raise ValueError("done")
+    wait_time = np.array(range(0, 600), dtype=np.float)
+    wait_time /= 10.0
 
-    # decay = get_factor(2, 15)
-    # print decay
-    # raise ValueError("Done")
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    filter = Filter()
+
+    mb = [1, 2, 5, 10, 15, 20, 30, 45, 60]
+
+    for m in mb:
+        result = []
+        filter.set_dpass(m)
+
+        for t in wait_time:
+            decay = filter.butterworth(t)
+            result.append(decay)
+
+        line2, = ax.plot(wait_time, result, label="mb: %d mins" % m)
+
+    ax.legend(loc='upper right')
+    plt.title("Decay vs. Wait Time (minutes)")
+    plt.ylabel("Decay Value")
+    plt.xlabel("Wait Time (minutes)")
+    plt.subplots_adjust(left=0.1, right=.9, top=0.9, bottom=0.1)
+    plt.show()
+
+
+def plot_butterworth(dpass):
+
+    d = np.array(range(0, 500), dtype=np.float)
+    filter = Filter(dpass=dpass)
+
+    result = []
+    for dist in d:
+        decay = filter.butterworth(dist)
+        result.append(decay)
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    line2, = ax.plot(d, result, label="dpass = 250 meters")
+
+    ax.legend(loc='lower left')
+    plt.title("Decay vs. Distance with Butterworth Filter")
+    plt.ylabel("Decay Value")
+    plt.xlabel("Distance (meters)")
+    plt.show()
+
+def plot_wait(norm=False):
 
     per_hour = np.array(range(1, 6000), dtype=np.float)
     per_hour = per_hour / 1000.0
 
-    fig, ax = plt.subplots()
-    line2, = ax.plot(per_hour, norm(per_hour), label="Departures / Hour")
+    fig, ax = plt.subplots(figsize=(10, 6))
 
-    for dpass in [3, 5, 8, 10, 15, 20, 45, 60]:
+    for dpass in [1, 2, 5, 10, 15, 20, 30, 45, 60]:
         decay_list = []
         for f in per_hour:
 
@@ -124,16 +164,45 @@ if __name__ == "__main__":
             decay = comp(f, dpass)
             # print f, decay
             decay_list.append(decay)
-            label  = "Wait Time: %d min" % dpass
 
-        line1, = ax.plot(per_hour, norm(decay_list), label=label)
+        label  = "m_b: %d (min)" % dpass
 
-    ax.legend(loc='lower right')
-    plt.title("Service vs. Willing Wait Time (Butterworth)")
-    plt.ylabel("Service")
+        if norm:
+            line1, = ax.plot(per_hour, normalize(decay_list), label=label)
+        else:
+            line1, = ax.plot(per_hour, decay_list, label=label)
+        # line1, = ax.plot(mi, decay_list, label=label)
+
+    if norm:
+        line2, = ax.plot(per_hour, normalize(per_hour), label="Departures / Hour")
+
+    if norm:
+        ax.legend(loc='lower right')
+        plt.title("Normalized Service vs. Departures per Hour")
+        plt.ylabel("Normalized Service")
+    else:
+        ax.legend(loc='upper left')
+        plt.title("Service vs. Departures per Hour")
+        plt.ylabel("Service")
+
     plt.xlabel("Departures / Hour")
 
+    plt.subplots_adjust(left=0.1, right=.9, top=0.9, bottom=0.1)
+
     plt.show()
+
+if __name__ == "__main__":
+
+    plot_wait(norm=True)
+
+    # plot_butterworth_wait()
+    # comp(30, 15)
+    # raise ValueError("done")
+
+    # decay = get_factor(2, 15)
+    # print decay
+    # raise ValueError("Done")
+
 
 
 
