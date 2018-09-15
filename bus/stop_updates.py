@@ -23,6 +23,7 @@ ADDED_STOPS = {
     30017 : { KEY.LAT : 52.129376, KEY.LNG : -106.685448 },
     30018 : { KEY.LAT : 52.129456, KEY.LNG : -106.697419 },
 
+    30023 : { KEY.LAT : 52.102729, KEY.LNG : -106.571447 },
     30024 : { KEY.LAT : 52.114877, KEY.LNG : -106.619897 },
     30026 : { KEY.LAT : 52.110497, KEY.LNG : -106.622994 },
     30027 : { KEY.LAT : 52.102840, KEY.LNG : -106.622994 },
@@ -47,7 +48,7 @@ ADDED_STOPS = {
     30051 : { KEY.LAT : 52.146409, KEY.LNG : -106.570875 },
     30052 : { KEY.LAT : 52.146466, KEY.LNG : -106.575509 },
     30053 : { KEY.LAT : 52.146440, KEY.LNG : -106.583535 },
-    30054 : { KEY.LAT : 52.151170, KEY.LNG : -106.593381 },
+#    30054 : { KEY.LAT : 52.151170, KEY.LNG : -106.593381 },
     30055 : { KEY.LAT : 52.149555, KEY.LNG : -106.566007 },
     30056 : { KEY.LAT : 52.143008, KEY.LNG : -106.623010 },
     30057 : { KEY.LAT : 52.128968, KEY.LNG : -106.638176 },
@@ -58,7 +59,7 @@ ADDED_STOPS = {
     30062 : { KEY.LAT : 52.129201, KEY.LNG : -106.684247 },
     30064 : { KEY.LAT : 52.140186, KEY.LNG : -106.622440 },
     30065 : { KEY.LAT : 52.143109, KEY.LNG : -106.622499 },
-    30066 : { KEY.LAT : 52.150813, KEY.LNG : -106.598201 },
+#    30066 : { KEY.LAT : 52.150813, KEY.LNG : -106.598201 },
     30067 : { KEY.LAT : 52.150890, KEY.LNG : -106.592070 },
     30068 : { KEY.LAT : 52.146050, KEY.LNG : -106.582170 },
 
@@ -112,6 +113,7 @@ ADDED_STOPS = {
     30153 : { KEY.LAT : 52.172768, KEY.LNG : -106.660606 },
     30154 : { KEY.LAT : 52.145780, KEY.LNG : -106.663465 },
 
+    30159 : { KEY.LAT : 52.158291, KEY.LNG : -106.664741 },
     30160 : { KEY.LAT : 52.161111, KEY.LNG : -106.664447 },
     30161 : { KEY.LAT : 52.164218, KEY.LNG : -106.664404 },
     30162 : { KEY.LAT : 52.166113, KEY.LNG : -106.664447 },
@@ -230,7 +232,6 @@ ADDED_STOPS = {
     30303 : { KEY.LAT : 52.100626, KEY.LNG : -106.582027 },
     30304 : { KEY.LAT : 52.097741, KEY.LNG : -106.584559 },
     30305 : { KEY.LAT : 52.096135, KEY.LNG : -106.585989 },
-    30306 : { KEY.LAT : 52.096135, KEY.LNG : -106.585989 },
     30307 : { KEY.LAT : 52.100161, KEY.LNG : -106.598767 },
     30308 : { KEY.LAT : 52.097302, KEY.LNG : -106.598802 },
     30309 : { KEY.LAT : 52.093143, KEY.LNG : -106.597096 },
@@ -293,6 +294,11 @@ ADDED_STOPS = {
 
     30405 : { KEY.LAT : 52.129999, KEY.LNG : -106.728052 }, # 22 & Deifenbaker Westbound
     30406 : { KEY.LAT : 52.146556, KEY.LNG : -106.574930 }, # Attridge & Lowe Northbound
+
+    30500 : { KEY.LAT : 52.138248, KEY.LNG : -106.563858 },
+    30501 : { KEY.LAT : 52.098863, KEY.LNG : -106.646419 },
+    30502 : { KEY.LAT : 52.170641, KEY.LNG : -106.566638 },
+    30503 : { KEY.LAT : 52.165361, KEY.LNG : -106.567239 },
 }
 
 NEW_STOPS = {
@@ -379,11 +385,11 @@ STOP_UPDATES = {
                 { KEY.STOP_ID : 3329 },
                 { KEY.STOP_ID : 3327 },
                 { KEY.STOP_ID : 3352 },
+                { KEY.STOP_ID : 3807 },
 
                 { KEY.STOP_ID : 30032 },
                 { KEY.STOP_ID : 30037 },
                 { KEY.STOP_ID : 30038 },
-                { KEY.STOP_ID : 30042 },
                 { KEY.STOP_ID : 30404 },
             ],
             KEY.STOPS_REMOVED : [
@@ -651,14 +657,13 @@ STOP_UPDATES = {
             KEY.NAME : "Suburban Connector, 8th St Belt A (CW)",
             KEY.STOPS_ADDED : [
                 { KEY.STOP_ID : 3284 },
-                { KEY.STOP_ID : 5909 },
 
+                { KEY.STOP_ID : 10030 },
                 { KEY.STOP_ID : 30301 },
                 { KEY.STOP_ID : 30302 },
                 { KEY.STOP_ID : 30303 },
                 { KEY.STOP_ID : 30304 },
                 { KEY.STOP_ID : 30305 },
-                { KEY.STOP_ID : 30306 },
                 { KEY.STOP_ID : 30307 },
                 { KEY.STOP_ID : 30308 },
                 { KEY.STOP_ID : 30309 },
@@ -691,7 +696,7 @@ STOP_UPDATES = {
                 { KEY.STOP_ID : 30292 },
                 { KEY.STOP_ID : 30293 },
                 { KEY.STOP_ID : 30294 },
-                { KEY.STOP_ID : 30054 },
+#                { KEY.STOP_ID : 30054 },
                 { KEY.STOP_ID : 30295 },
                 { KEY.STOP_ID : 30296 },
 
@@ -716,8 +721,11 @@ STOP_UPDATES = {
                 { KEY.STOP_ID : 30285 },
                 { KEY.STOP_ID : 30055 },
                 { KEY.STOP_ID : 30051 },
-                { KEY.STOP_ID : 30066 },
                 { KEY.STOP_ID : 30058 },
+                { KEY.STOP_ID : 30502 },
+                { KEY.STOP_ID : 30503 },
+
+
             ],
             KEY.STOPS_REMOVED : [
                 { KEY.STOP_ID : 5526 },
@@ -813,6 +821,7 @@ STOP_UPDATES = {
                 { KEY.STOP_ID : 30232 },
                 { KEY.STOP_ID : 30235 },
                 { KEY.STOP_ID : 30202 },
+                { KEY.STOP_ID : 30500 },
 
             ],
             KEY.STOPS_REMOVED : [
@@ -835,8 +844,7 @@ STOP_UPDATES = {
             KEY.ROUTE_ID : 102281955,
             KEY.NAME : "Crosstown, Lawson - Stonebridge - Northbound (IB)",
             KEY.STOPS_ADDED : [
-                { KEY.STOP_ID : 30059 },
-
+          #      { KEY.STOP_ID : 30059 },
                 { KEY.STOP_ID : 30210 },
                 { KEY.STOP_ID : 30211 },
                 { KEY.STOP_ID : 30212 },
@@ -845,6 +853,7 @@ STOP_UPDATES = {
                 { KEY.STOP_ID : 30215 },
                 { KEY.STOP_ID : 30216 },
                 { KEY.STOP_ID : 30217 },
+                { KEY.STOP_ID : 30501 },
             ],
             KEY.STOPS_REMOVED : [
                 { KEY.STOP_ID : 3730 },
@@ -869,7 +878,7 @@ STOP_UPDATES = {
                 { KEY.STOP_ID : 30207 },
                 { KEY.STOP_ID : 30208 },
                 { KEY.STOP_ID : 30209 },
-                { KEY.STOP_ID : 30057 },
+   #             { KEY.STOP_ID : 30057 },
             ],
             KEY.STOPS_REMOVED : [
             ],
@@ -910,6 +919,7 @@ STOP_UPDATES = {
             KEY.STOPS_ADDED : [
                 { KEY.STOP_ID : 3073 },
 
+                { KEY.STOP_ID : 30159 },
                 { KEY.STOP_ID : 30160 },
                 { KEY.STOP_ID : 30161 },
                 { KEY.STOP_ID : 30162 },
@@ -980,6 +990,7 @@ STOP_UPDATES = {
 
                 { KEY.STOP_ID : 3280 },
 
+                { KEY.STOP_ID : 30023 },
                 { KEY.STOP_ID : 30092 },
                 { KEY.STOP_ID : 30028 },
                 { KEY.STOP_ID : 30029 },
@@ -998,7 +1009,8 @@ STOP_UPDATES = {
             KEY.ROUTE_ID : 102281948,
             KEY.NAME : "Mainline, Confederation - Centre Mall - Westbound (IB)",
             KEY.STOPS_ADDED : [
-                {KEY.STOP_ID: 5909},        # This is center mall terminal
+                {KEY.STOP_ID: 10030},        # This is center mall terminal
+
                 {KEY.STOP_ID: 4172},
                 {KEY.STOP_ID: 3335},
                 {KEY.STOP_ID: 3342},
@@ -1106,175 +1118,3 @@ STOP_UPDATES = {
     ]
 }
 
-OLD_UPDATES = [
-    {
-        KEY.ROUTE_ID : 102281938,
-        KEY.NAME : "BRT Red - Eastbound (IB)",
-        KEY.STOPS_ADDED : [
-            { KEY.STOP_ID : 10000 },
-
-            { KEY.STOP_ID : 3132 },
-            { KEY.STOP_ID : 3136 },
-            { KEY.STOP_ID : 3968 },
-            { KEY.STOP_ID : 5836 },
-
-            { KEY.STOP_ID : 3175 },
-            { KEY.STOP_ID : 3170 },
-            { KEY.STOP_ID : 3172 },
-            { KEY.STOP_ID : 3173 },
-            { KEY.STOP_ID : 3078 },
-            { KEY.STOP_ID : 3281 },
-            { KEY.STOP_ID : 3351 },
-            { KEY.STOP_ID : 3334 },
-
-            { KEY.STOP_ID : 30061 },
-            { KEY.STOP_ID : 30062 },
-
-            { KEY.STOP_ID : 30000 },
-            { KEY.STOP_ID : 30001 },
-            { KEY.STOP_ID : 30004 },
-            { KEY.STOP_ID : 30005 },
-            { KEY.STOP_ID : 30006 },
-            { KEY.STOP_ID : 30007 },
-            { KEY.STOP_ID : 30008 },
-            { KEY.STOP_ID : 30081 },
-            { KEY.STOP_ID : 30083 },
-            { KEY.STOP_ID : 30059 },
-
-        ],
-        KEY.STOPS_REMOVED : [
-            { KEY.STOP_ID : 10027 },
-            { KEY.STOP_ID : 10019 },
-            { KEY.STOP_ID : 3280 },
-            { KEY.STOP_ID : 3285 },
-        ],
-    },{
-            KEY.ROUTE_ID : 102281939,
-            KEY.NAME : "BRT Red - Westbound (OB)",
-            KEY.STOPS_ADDED : [
-                { KEY.STOP_ID : 4387 },
-                { KEY.STOP_ID : 3353 },
-                { KEY.STOP_ID : 3017 },
-                { KEY.STOP_ID : 3135 },
-
-
-                { KEY.STOP_ID : 10000 },
-                { KEY.STOP_ID : 10019 },
-
-                { KEY.STOP_ID : 30009 },
-                { KEY.STOP_ID : 30010 },
-                { KEY.STOP_ID : 30011 },
-
-                { KEY.STOP_ID : 30013 },
-                { KEY.STOP_ID : 30014 },
-                { KEY.STOP_ID : 30015 },
-                { KEY.STOP_ID : 30016 },
-                { KEY.STOP_ID : 30017 },
-                { KEY.STOP_ID : 30018 },
-                { KEY.STOP_ID : 30024 },
-                { KEY.STOP_ID : 30076 },
-            ],
-            KEY.STOPS_REMOVED : [
-                { KEY.STOP_ID : 10026 },
-                { KEY.STOP_ID : 5625 },
-                { KEY.STOP_ID : 5664 },
-                { KEY.STOP_ID : 5900 },
-                { KEY.STOP_ID : 3171 },
-                { KEY.STOP_ID : 3076 },
-            ]
-        },{
-            KEY.ROUTE_ID : 102281941,
-            KEY.NAME : "BRT Blue - Northbound (OB)",
-            KEY.STOPS_ADDED : [
-                { KEY.STOP_ID : 2 },
-                { KEY.STOP_ID : 3719 },
-                { KEY.STOP_ID : 3329 },
-                { KEY.STOP_ID : 3327 },
-                { KEY.STOP_ID : 5738 },
-                { KEY.STOP_ID : 3340 },
-                { KEY.STOP_ID : 3331 },
-                { KEY.STOP_ID : 3337 },
-                { KEY.STOP_ID : 3342 },
-                { KEY.STOP_ID : 3350 },
-                { KEY.STOP_ID : 3352 },
-                { KEY.STOP_ID : 3355 },
-                { KEY.STOP_ID : 3360 },
-                { KEY.STOP_ID : 4052 },
-                { KEY.STOP_ID : 3807 },
-                { KEY.STOP_ID : 4423 },
-                { KEY.STOP_ID : 3734 },
-
-                { KEY.STOP_ID : 30031 },
-                { KEY.STOP_ID : 30032 },
-                { KEY.STOP_ID : 30033 },
-                { KEY.STOP_ID : 30034 },
-                { KEY.STOP_ID : 30035 },
-                { KEY.STOP_ID : 30036 },
-                { KEY.STOP_ID : 30037 },
-                { KEY.STOP_ID : 30038 },
-                { KEY.STOP_ID : 30072 },
-                { KEY.STOP_ID : 30041 },
-                { KEY.STOP_ID : 30042 },
-                { KEY.STOP_ID : 30043 },
-            ],
-            KEY.STOPS_REMOVED : [
-                { KEY.STOP_ID : 3171 },
-                { KEY.STOP_ID : 3285 },
-                { KEY.STOP_ID : 3730 },
-            ]
-        },{
-            KEY.ROUTE_ID : 102281942,
-            KEY.NAME : "BRT Green - Westbound (IB)",
-            KEY.STOPS_ADDED : [
-                {KEY.STOP_ID: 4166 },
-                {KEY.STOP_ID: 3127 },
-                {KEY.STOP_ID: 3017 },
-
-                {KEY.STOP_ID: 3135 },
-
-                {KEY.STOP_ID: 30016 },
-                {KEY.STOP_ID: 30017 },
-                {KEY.STOP_ID: 30018 },
-                {KEY.STOP_ID: 30050 },
-                {KEY.STOP_ID: 30051 },
-                {KEY.STOP_ID: 30052 },
-                {KEY.STOP_ID: 30053 },
-                {KEY.STOP_ID: 30054 },
-                {KEY.STOP_ID: 30056 },
-                {KEY.STOP_ID: 30055 },
-                {KEY.STOP_ID: 30057 },
-                {KEY.STOP_ID: 30058 },
-                {KEY.STOP_ID: 30076 },
-
-            ],
-            KEY.STOPS_REMOVED : [
-                {KEY.STOP_ID: 5427},
-                {KEY.STOP_ID: 5391},
-                {KEY.STOP_ID: 3171},
-                {KEY.STOP_ID: 5900},
-                {KEY.STOP_ID: 4362},
-                {KEY.STOP_ID: 3076},
-            ]
-        },{
-            KEY.ROUTE_ID : 102281943,
-            KEY.NAME : "BRT Green - Eastbound (OB)",
-            KEY.STOPS_ADDED : [
-                {KEY.STOP_ID: 4362},
-
-                {KEY.STOP_ID: 30059},
-                {KEY.STOP_ID: 30061},
-                {KEY.STOP_ID: 30062},
-                {KEY.STOP_ID: 30004},
-                {KEY.STOP_ID: 30064},
-                {KEY.STOP_ID: 30065},
-                {KEY.STOP_ID: 30066},
-                {KEY.STOP_ID: 30067},
-                {KEY.STOP_ID: 30068},
-                {KEY.STOP_ID: 30081},
-                {KEY.STOP_ID: 30083},
-            ],
-            KEY.STOPS_REMOVED : [
-                {KEY.STOP_ID: 3280},
-            ]
-        },
-]

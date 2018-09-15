@@ -42,7 +42,7 @@ class Score(object):
 
     def get_score_departures_per_hour(self, raster, stop_tuples, service, time_str, decay_method, nearest_only):
 
-        print "RASTER--------", raster.get_id()
+        print "RASTER %d -------- Nearest Only %s " % (raster.get_id(), repr(nearest_only))
         total_departs = 0.0
 
         raster_p = raster.get_polygon()
@@ -60,6 +60,7 @@ class Score(object):
                 continue
 
             decay_factor = self.get_decay_factor(stop.get_point(), raster_point, decay_method)
+            print "The distance decay factor is: %f" % decay_factor
 
             route_ids = stop.get_route_ids()
             for route_id in route_ids:
@@ -97,6 +98,9 @@ class Score(object):
         active_stops = self._dataman.get_active_stops()
         min_dist, min_stop = raster.get_closest_stop(active_stops, method=distance_method)
         return min_dist
+
+    def get_score_departures_new(self, raster, stop_tuples, depart_method, service=None, time_str=None,
+                                decay_method=None, nearest_only=True):
 
     def get_score_departures_per_day(self, raster, stop_tuples, service, decay_method, nearest_only):
 

@@ -944,8 +944,8 @@ class DataManagerOpen(DatamanBase):
                 if len(routes_ids) > 0:
                     self._active_stops.append(stop)
 
-        print "Total stops:", len(self._stop_dict)
-        print "Active stops:", len(self._active_stops)
+        # print "Total stops:", len(self._stop_dict)
+        # print "Active stops:", len(self._active_stops)
         return self._active_stops
 
     def get_route_from_trip_id(self, trip_id):

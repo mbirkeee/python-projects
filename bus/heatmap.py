@@ -618,13 +618,21 @@ def test5():
         ave = h.get_ave_score()
         print m, ave
 
+def test6():
+    h = Heatmap()
+    h.set_mode(12)
+    h.set_dataset(DATASET.BRT_1)
+    h.set_time_str("8:14")
+    h.run()
+    h.to_shapefile()
+    h.plot()
 
 if __name__ == "__main__":
 
-    # test5()
-    # raise ValueError("Done")
+    test6()
+    raise ValueError("Done")
 
-    mode = 9
+    mode = 11
     d1 = DATASET.JULY
     d2 = DATASET.BRT_1
 

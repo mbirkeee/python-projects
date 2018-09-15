@@ -13,6 +13,7 @@ class MODE(object):
     NINE        = 9
     TEN         = 10
     ELEVEN      = 11
+    TWELVE      = 12
 
 class BUFFER_METHOD(object):
     NONE         = "none"
@@ -118,5 +119,12 @@ MODE_DICT = {
         KEY.BUFFER_METHOD       : BUFFER_METHOD.NONE,
         KEY.SCORE_METHOD        : SCORE_METHOD.DIST_TO_CLOSEST_STOP,
         KEY.DISTANCE_METHOD     : 'crow',
-    }
+    },
+    MODE.TWELVE : {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.CIRCLE_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_HOUR,
+        KEY.SCORE_NEAREST_ONLY  : True,
+        KEY.DECAY_METHOD        : DECAY_METHOD.CROW_250,
+        KEY.STOP_DEMAND         : None
+    },
 }
