@@ -15,6 +15,7 @@ class MODE(object):
     ELEVEN      = 11
     TWELVE      = 12
 
+
 class BUFFER_METHOD(object):
     NONE         = "none"
     CIRCLE_400   = "circle_400"
@@ -48,6 +49,7 @@ class SCORE_METHOD(object):
     STOP_COUNT              = "simple_stop_count"
     DEPARTURES_PER_HOUR     = "departures_per_hour"
     DEPARTURES_PER_DAY      = "departures_per_day"
+    DEPARTURES_PER_WEEK     = "departures_per_week"
     DIST_TO_CLOSEST_STOP    = "dist_to_closest_stop"
 
 #-----------------------------------------------------------------------
@@ -125,6 +127,14 @@ MODE_DICT = {
         KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_HOUR,
         KEY.SCORE_NEAREST_ONLY  : True,
         KEY.DECAY_METHOD        : DECAY_METHOD.CROW_250,
-        KEY.STOP_DEMAND         : None
+        KEY.STOP_DEMAND         : None,
+    },
+    13 : {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.CIRCLE_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_HOUR,
+        KEY.SCORE_NEAREST_ONLY  : True,
+        KEY.DECAY_METHOD        : DECAY_METHOD.CROW_250,
+        KEY.STOP_DEMAND         : None,
+        KEY.NORMALIZE_VALUE     : 6.0,
     },
 }

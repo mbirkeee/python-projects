@@ -27,6 +27,7 @@ class KEY(object):
     DECAY_METHOD        = 'decay_method'
     DECAY_FACTOR        = 'decay_factor'
     DISTANCE_METHOD     = 'distance_method'
+    NORMALIZE_VALUE     = 'normalize_value'
 
     STOPS_ADDED         = 'stops_added'
     STOPS_REMOVED       = 'stops_removed'

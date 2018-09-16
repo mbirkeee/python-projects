@@ -243,28 +243,22 @@ class Heatmap(object):
         nearest_only = self.get_nearest_only()
         service = self.get_service_type()
 
+        judge.set_nearest_only(nearest_only)
+        judge.set_decay_method(decay_method)
+        judge.set_time_str(self._time_str)
+        judge.set_service(service)
+        judge.set_method(score_method)
+
         for da in das:
             rasters = da.get_rasters(100)
             stop_tuples = intersect.get_intersections(group=2, id=da.get_id())
             print "DA: %d stops: %d" % (da.get_id(), len(stop_tuples))
 
-            if self._route_ids:
+            if self._route_ids: # Only the scores for a subset of routes are being calculated
                 stop_tuples = self.filter_stop_tuples(stop_tuples, stops)
 
             for raster in rasters:
-                if score_method == SCORE_METHOD.STOP_COUNT:
-                    score = judge.get_score_stop_count(raster, stop_tuples, decay_method)
-                elif score_method == SCORE_METHOD.DEPARTURES_PER_HOUR:
-                    score = judge.get_score_departures_per_hour(
-                        raster, stop_tuples, service, self._time_str, decay_method, nearest_only)
-                elif score_method == SCORE_METHOD.DEPARTURES_PER_DAY:
-                    score = judge.get_score_departures_per_day(
-                        raster, stop_tuples, service, decay_method, nearest_only)
-                elif score_method == SCORE_METHOD.DIST_TO_CLOSEST_STOP:
-                    score = judge.get_score_closest_stop(raster, dist_method)
-
-                else:
-                    raise ValueError("Score method not supported: %s" % score_method)
+                score = judge.get_score(raster, stop_tuples)
 
                 if score > 0:
                     raster.set_score(score)

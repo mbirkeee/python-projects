@@ -28,12 +28,20 @@ class Point(object):
             self._utm_x = utm_x
             self._utm_y = utm_y
 
+        self._ogr_poly = None
+
+    def get_ogr_point(self):
+        return self.get_ogr_poly()
+
     def get_ogr_poly(self):
 
-        ogr_point = ogr.Geometry(ogr.wkbPoint)
-        ogr_point.AddPoint(self.get_x(), self.get_y())
+        if self._ogr_poly is None:
 
-        return ogr_point
+            ogr_point = ogr.Geometry(ogr.wkbPoint)
+            ogr_point.AddPoint(self.get_x(), self.get_y())
+            self._ogr_poly = ogr_point
+
+        return self._ogr_poly
 
     def get_lat(self):
         return self._lat

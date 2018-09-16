@@ -21,6 +21,7 @@ from transit_objects import TransitStop
 from transit_objects import TransitRoute
 from stop_times import StopTimes
 
+from my_utils import seconds_to_depart_time
 from brt_schedule import BRT_SCHEDULE
 
 class BrtSchedule(object):
@@ -320,7 +321,7 @@ class DatamanBrt(DatamanBase):
                 stop_id = self._created_stop_id_base
                 self._created_stop_id_base += 1
 
-                name = "Manually Created stop: %s" % repr(stop_id)
+                name = "Manually Created Stop: %s" % repr(stop_id)
                 stop = TransitStop(stop_id, name, Point(lat, lng))
 
                 if self._stop_dict.has_key(stop_id):
@@ -385,7 +386,7 @@ class DatamanBrt(DatamanBase):
             if lat is None or lng is None:
                 raise ValueError("Bad Stop!")
 
-            name = "Manually Created stop: %s" % repr(stop_id)
+            name = "Manually Created Stop: %s" % repr(stop_id)
             stop = TransitStop(stop_id, name, Point(lat, lng))
             self._stop_dict[stop_id] = stop
 
@@ -786,7 +787,7 @@ class DataManagerOpen(DatamanBase):
 
     def get_departs_per_hour(self, route, direction, stop, service, time_str):
         """
-        We must consider each diretion seperately
+        Must consider each direction seperately
         """
 
         # Get target depart time
@@ -805,6 +806,13 @@ class DataManagerOpen(DatamanBase):
             depart_sec = depart.get(KEY.DEPART_TIME)
             if depart_sec >= start_sec and depart_sec < end_sec:
                 depart_count += 1
+
+                # print "Start: %s target: %s stop: %s DEPARTS: %s" % \
+                #       ( seconds_to_depart_time(start_sec),
+                #         seconds_to_depart_time(target_sec),
+                #         seconds_to_depart_time(end_sec),
+                #         seconds_to_depart_time(depart_sec))
+
         return depart_count
 
     def get_departs_per_day(self, route, direction, stop, service):
@@ -822,117 +830,117 @@ class DataManagerOpen(DatamanBase):
         result += self.get_departs_per_day(route, 1, stop, SERVICE.SUN)
         return result
 
-    def _get_departs_per_hour_internal_OLD(self, route, stop_id, service, time_str, direction):
-        """
-        Attempting to get departures per hour based on interval between two departures
-        is not working well. There are just too many screwey scenarios.  For example there
-        are stops with departures on the same route/direction that leave a minute apart
-        and then fork to different destination.  It might be simpler to just cound departures
-        over a one hour interval
-        """
-
-        if isinstance(route, TransitRoute):
-            route_id = route.get_id()
-        else:
-            route_id = route
-
-        # Get target depart time
-        target_sec = 60.0 * self._get_time_minutes(time_str)
-
-        # Get all departures from this stop (they are sorted)
-        departures = self._stop_times.get_stop_departures(stop_id, service, direction=direction, route_id=route_id)
-
-        #self._sanity_check_departures(stop_id, departures)
-
-        # Make a list with depart time as first item in tuple
-        d = []
-        for depart in departures:
-            depart_sec = depart.get(KEY.DEPART_TIME)
-            d.append((depart_sec, depart))
-
-        first_after = None
-        second_after = None
-        first_before = None
-        second_before = None
-        seconds = None
-
-        # Look for first occurance of time that is greater depart time while
-        # keeping track of departures before and after
-        for i, item in enumerate(d):
-
-            second_before = first_before
-            first_before = seconds
-
-            seconds = item[0]
-
-            if seconds < target_sec:
-                try:
-                    x = d[i+1]
-                    first_after = x[0]
-                except:
-                    first_after = None
-
-                try:
-                    x = d[i+2]
-                    second_after = x[0]
-                except:
-                    second_after = None
-            else:
-                break
-
-
-        print "BEFORE: %s %s TIME: %s AFTER: %s %s" % \
-              (repr(second_before), repr(first_before), repr(target_sec), repr(first_after), repr(second_after))
-
-        interval = None
-
-        if first_after is not None and first_before is not None:
-            interval = first_after - first_before
-
-            if first_after <= target_sec:
-                self._dump_data(departures)
-
-            if interval <= 0:
-                self._dump_data(departures)
-
-        elif first_before is not None:
-            # Target time must be after last departure
-            pass # No hourly departures for this scenarion.... its too late in the day
-            # if second_before is not None:
-            #     interval = first_before - second_before
-            #     interval2 = target_sec - first_before
-            #     if interval2 > interval:
-            #         interval = None
-
-        elif first_after is not None:
-            # There are some departures after the target time (e.g, first thing in morning
-            if second_after is not None:
-                interval = second_after - first_after
-                interval2 = first_after - target_sec
-                # Only return hourly departures if the first departure is not too far away
-                if interval2 > interval:
-                    interval = None
-
-            # depart_hour = depart_min / 60
-            # leftover_min = depart_min - depart_hour * 60
-            # print "depart time %d:%02d" % (depart_hour, leftover_min)
-        departs_per_hour = 0
-
-        if interval is not None:
-            minutes = interval / 60
-
-            if minutes == 0:
-                for depart in departures:
-                    print repr(depart)
-
-            departs_per_hour = 60 / minutes
-
-        # Sanity tests
-        if departs_per_hour > 10:
-            print "GOT %d departures (stop ID): %s" % (departs_per_hour, stop_id)
-            self._dump_data(departures)
-
-        return departs_per_hour
+    # def _get_departs_per_hour_internal_OLD(self, route, stop_id, service, time_str, direction):
+    #     """
+    #     Attempting to get departures per hour based on interval between two departures
+    #     is not working well. There are just too many screwey scenarios.  For example there
+    #     are stops with departures on the same route/direction that leave a minute apart
+    #     and then fork to different destination.  It might be simpler to just cound departures
+    #     over a one hour interval
+    #     """
+    #
+    #     if isinstance(route, TransitRoute):
+    #         route_id = route.get_id()
+    #     else:
+    #         route_id = route
+    #
+    #     # Get target depart time
+    #     target_sec = 60.0 * self._get_time_minutes(time_str)
+    #
+    #     # Get all departures from this stop (they are sorted)
+    #     departures = self._stop_times.get_stop_departures(stop_id, service, direction=direction, route_id=route_id)
+    #
+    #     #self._sanity_check_departures(stop_id, departures)
+    #
+    #     # Make a list with depart time as first item in tuple
+    #     d = []
+    #     for depart in departures:
+    #         depart_sec = depart.get(KEY.DEPART_TIME)
+    #         d.append((depart_sec, depart))
+    #
+    #     first_after = None
+    #     second_after = None
+    #     first_before = None
+    #     second_before = None
+    #     seconds = None
+    #
+    #     # Look for first occurance of time that is greater depart time while
+    #     # keeping track of departures before and after
+    #     for i, item in enumerate(d):
+    #
+    #         second_before = first_before
+    #         first_before = seconds
+    #
+    #         seconds = item[0]
+    #
+    #         if seconds < target_sec:
+    #             try:
+    #                 x = d[i+1]
+    #                 first_after = x[0]
+    #             except:
+    #                 first_after = None
+    #
+    #             try:
+    #                 x = d[i+2]
+    #                 second_after = x[0]
+    #             except:
+    #                 second_after = None
+    #         else:
+    #             break
+    #
+    #
+    #     print "BEFORE: %s %s TIME: %s AFTER: %s %s" % \
+    #           (repr(second_before), repr(first_before), repr(target_sec), repr(first_after), repr(second_after))
+    #
+    #     interval = None
+    #
+    #     if first_after is not None and first_before is not None:
+    #         interval = first_after - first_before
+    #
+    #         if first_after <= target_sec:
+    #             self._dump_data(departures)
+    #
+    #         if interval <= 0:
+    #             self._dump_data(departures)
+    #
+    #     elif first_before is not None:
+    #         # Target time must be after last departure
+    #         pass # No hourly departures for this scenarion.... its too late in the day
+    #         # if second_before is not None:
+    #         #     interval = first_before - second_before
+    #         #     interval2 = target_sec - first_before
+    #         #     if interval2 > interval:
+    #         #         interval = None
+    #
+    #     elif first_after is not None:
+    #         # There are some departures after the target time (e.g, first thing in morning
+    #         if second_after is not None:
+    #             interval = second_after - first_after
+    #             interval2 = first_after - target_sec
+    #             # Only return hourly departures if the first departure is not too far away
+    #             if interval2 > interval:
+    #                 interval = None
+    #
+    #         # depart_hour = depart_min / 60
+    #         # leftover_min = depart_min - depart_hour * 60
+    #         # print "depart time %d:%02d" % (depart_hour, leftover_min)
+    #     departs_per_hour = 0
+    #
+    #     if interval is not None:
+    #         minutes = interval / 60
+    #
+    #         if minutes == 0:
+    #             for depart in departures:
+    #                 print repr(depart)
+    #
+    #         departs_per_hour = 60 / minutes
+    #
+    #     # Sanity tests
+    #     if departs_per_hour > 10:
+    #         print "GOT %d departures (stop ID): %s" % (departs_per_hour, stop_id)
+    #         self._dump_data(departures)
+    #
+    #     return departs_per_hour
 
     def get_active_stops(self):
 

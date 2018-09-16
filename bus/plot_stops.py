@@ -13,6 +13,8 @@ from dataset import SERVICE
 from intersect import Intersect
 from constants import KEY
 
+from shapefile_writer import ShapeFileWriter
+
 class Runner(object):
     """
     This program plots routes/stops
@@ -27,9 +29,18 @@ class Runner(object):
         self._markers = args.markers
         self._dataset = args.dataset
         self._buffer = args.buffer_method
+        self._all_stops = args.all_stops
+        self._output_shapefile = args.output_shapefile
+
         self._dataman = dataman_factory(self._dataset, link_stops=True, link_route_shapes=True)
 
     def run(self):
+
+        print "dataset:", self._dataset
+        print "markers", self._markers
+        print "buffer", self._buffer
+        print "all stops:", self._all_stops
+        print "output shapefile", self._output_shapefile
 
 
         if self._stop_id is None:
@@ -46,7 +57,10 @@ class Runner(object):
                     segment.set_attribute(ATTR.STROKE_OPACITY, 0.8)
                     plotter.add_polyline(segment)
 
-            stops = self._dataman.get_active_stops()
+            if self._all_stops:
+                stops = self._dataman.get_stops()
+            else:
+                stops = self._dataman.get_active_stops()
 
             for stop in stops:
                 polypoint.add_point(stop.get_point())
@@ -59,9 +73,15 @@ class Runner(object):
             polypoint.set_attribute(ATTR.RADIUS, 90)
             plotter.add_polypoint(polypoint)
 
-            print "Active stops:", len(stops)
+            if self._all_stops:
+                print "Total Stops:", len(stops)
+            else:
+                print "Active stops:", len(stops)
 
-            plotter.plot("temp/maps/stop_locations_%s.html" % self._date)
+            plotter.plot("temp/maps/stop_locations_%s.html" % self._dataset)
+
+            if self._output_shapefile:
+                self.to_shapefile(stops)
         else:
 
             plotter = Plotter()
@@ -106,6 +126,21 @@ class Runner(object):
                 for route in routes:
                     print "%3d %d   %s" % (route.get_number(), route.get_id(), route.get_name())
 
+    def to_shapefile(self, stops):
+
+        writer = ShapeFileWriter()
+
+        stop_list = []
+        for index, stop in enumerate(stops):
+            stop_list.append((stop.get_id(), stop))
+
+        stop_list = sorted(stop_list)
+
+        for item in stop_list:
+            writer.add_stop(item[1])
+
+        writer.write_stop_file("temp/shapefiles/stop_locations_%s.shp" % self._dataset)
+
 
 if __name__ == "__main__":
 
@@ -114,6 +149,9 @@ if __name__ == "__main__":
    parser.add_argument("-d", "--dataset", help="june/july/brt", type=str, required=True)
    parser.add_argument("-b", "--buffer_method", help="buffer method", type=str, required=False)
    parser.add_argument("-m", "--markers", help="Include stop markers (slow and messy)", required=False, action='store_true')
+   parser.add_argument("-a", "--all_stops", help="Default is just active stops", required=False, action='store_true')
+   parser.add_argument("-o", "--output_shapefile", help="Write a stop shapefile", required=False, action='store_true')
+
 
    args = parser.parse_args()
 

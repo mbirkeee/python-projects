@@ -5,10 +5,57 @@ class ShapeFileWriter(object):
     def __init__(self):
 
         self._raster_list = []
+        self._stop_list = []
 
     def add_raster(self, raster):
-
         self._raster_list.append(raster)
+
+    def add_stop(self, stop):
+        print "add stop", repr(stop)
+        self._stop_list.append(stop)
+
+    def write_stop_file(self, file_name):
+
+        driver = ogr.GetDriverByName('Esri Shapefile')
+        ds = driver.CreateDataSource(file_name)
+        # layer = ds.CreateLayer('', None, ogr.wkbPolygon)
+        layer = ds.CreateLayer('', None, ogr.wkbPoint)
+
+        # Add attributes
+        layer.CreateField(ogr.FieldDefn('fid', ogr.OFTInteger))
+        layer.CreateField(ogr.FieldDefn('lat', ogr.OFTInteger))
+        layer.CreateField(ogr.FieldDefn('lon', ogr.OFTInteger))
+        layer.CreateField(ogr.FieldDefn('name', ogr.OFTString))
+
+        defn = layer.GetLayerDefn()
+
+        ## If there are multiple geometries, put the "for" loop here
+
+        for i, stop in enumerate(self._stop_list):
+
+            stop_id = stop.get_id()
+            name = stop.get_name()
+            point = stop.get_point()
+            lat, lon = point.get_lat_lng()
+            ogr_point = point.get_ogr_point()
+
+            # Create a new feature (attribute and geometry)
+            feature = ogr.Feature(defn)
+            feature.SetField('fid', stop_id)
+            feature.SetField('lat', lat)
+            feature.SetField('lon', lon)
+            feature.SetField('name', name)
+
+            geom = ogr_point
+            feature.SetGeometry(geom)
+            layer.CreateFeature(feature)
+
+            feature = geom = None  # destroy these
+
+        # Save and close everything
+        ds = layer = feature = geom = None
+
+        print "Wrote %s" % file_name
 
     def write_stop_da_intersections(self, intersection_list, file_name):
 
