@@ -51,6 +51,7 @@ class SCORE_METHOD(object):
     DEPARTURES_PER_DAY      = "departures_per_day"
     DEPARTURES_PER_WEEK     = "departures_per_week"
     DIST_TO_CLOSEST_STOP    = "dist_to_closest_stop"
+    DECAYED_WAIT            = "decayed_wait"
 
 #-----------------------------------------------------------------------
 MODE_DICT = {
@@ -137,4 +138,22 @@ MODE_DICT = {
         KEY.STOP_DEMAND         : None,
         KEY.NORMALIZE_VALUE     : 6.0,
     },
+    14: {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.CIRCLE_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DECAYED_WAIT,
+        KEY.SCORE_NEAREST_ONLY  : True,
+        KEY.DECAY_METHOD        : DECAY_METHOD.CROW_250,
+        KEY.STOP_DEMAND         : None,
+        KEY.NORMALIZE_VALUE     : 6.0,
+        KEY.WAIT_BANDPASS       : 10.0,
+    },
+    15: {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.CIRCLE_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DECAYED_WAIT,
+        KEY.SCORE_NEAREST_ONLY  : True,
+        KEY.DECAY_METHOD        : DECAY_METHOD.CROW_250,
+        KEY.STOP_DEMAND         : None,
+        KEY.NORMALIZE_VALUE     : 6.0,
+        KEY.WAIT_BANDPASS       : 3.0,
+    }
 }

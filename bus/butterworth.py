@@ -56,7 +56,7 @@ def normalize(data):
 
     return d/m_val
 
-def comp(per_hour, dpass):
+def wait_decay(per_hour, dpass):
     """
     Compute the area under butterworth filter with x=1 and n=6
     """
@@ -161,7 +161,7 @@ def plot_wait(norm=False):
         for f in per_hour:
 
             # decay = get_factor(f, dpass)
-            decay = comp(f, dpass)
+            decay = wait_decay(f, dpass)
             # print f, decay
             decay_list.append(decay)
 

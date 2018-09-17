@@ -8,6 +8,8 @@ from stop_times import KEY
 from modes import SCORE_METHOD
 from modes import DECAY_METHOD
 
+from butterworth import wait_decay
+
 # DECAY = Filter()
 
 class Score(object):
@@ -20,6 +22,16 @@ class Score(object):
         self._time_str = None
         self._service = None
         self._method = None
+        self._normalize_value = None
+        self._wait_decay_normalize_value = None
+        self._wait_bandpass = None
+
+    # TODO:  All of these "set things" could be determined by just passing in the mode
+    def set_normalize_value(self, value):
+        self._normalize_value = value
+
+    def set_wait_decay_bandpass(self, value):
+        self._wait_bandpass = value
 
     def set_method(self, value):
         self._method = value
@@ -67,7 +79,8 @@ class Score(object):
         if self._method in [
             SCORE_METHOD.DEPARTURES_PER_HOUR,
             SCORE_METHOD.DEPARTURES_PER_DAY,
-            SCORE_METHOD.DEPARTURES_PER_WEEK]:
+            SCORE_METHOD.DEPARTURES_PER_WEEK,
+            SCORE_METHOD.DECAYED_WAIT]:
 
             score = self.get_score_departures(raster, stop_tuples)
 
@@ -160,12 +173,20 @@ class Score(object):
                 for direction in [0, 1]:
                     if self._method == SCORE_METHOD.DEPARTURES_PER_HOUR:
                         departs = self._dataman.get_departs_per_hour(route_id, direction, stop_id, self._service, self._time_str)
+                        if departs is not None and self._normalize_value is not None:
+                            departs = departs / self._normalize_value
+
                     elif self._method == SCORE_METHOD.DEPARTURES_PER_DAY:
                         departs = self._dataman.get_departs_per_day(route_id, direction, stop_id, self._service)
+
                     elif self._method == SCORE_METHOD.DEPARTURES_PER_HOUR:
                         departs = self._dataman.get_departs_per_week(route_id, direction, stop_id)
+
+                    elif self._method == SCORE_METHOD.DECAYED_WAIT:
+                        departs = self.get_score_decayed_wait(route_id, direction, stop_id)
+
                     else:
-                        raise ValueError("depart method %s not supported" % repr(depart_method))
+                        raise ValueError("depart method %s not supported" % repr(self._method))
 
                     if departs is None or departs == 0:
                         continue
@@ -173,7 +194,7 @@ class Score(object):
                     if departs > 6.0:
                         print "*"*80
 
-                    print "Route ID: %d Stop ID: %d :Departures: %f" % (route_id, stop_id, departs)
+                    print "Route ID: %d Stop ID: %d Departures: %f" % (route_id, stop_id, departs)
 
                     # Make a list of unique departures so that closest stop can be determined
                     key = "%d-%d" % (route_id, direction)
@@ -200,6 +221,21 @@ class Score(object):
         print "COMPUTED SCORE", total_score
         return total_score
 
+
+    def get_score_decayed_wait(self, route_id, direction, stop_id):
+        departs_per_hour = self._dataman.get_departs_per_hour(route_id, direction, stop_id, self._service, self._time_str)
+        print "departs per hour", departs_per_hour
+        if departs_per_hour is None:
+            return
+
+        if self._wait_decay_normalize_value is None:
+            self._wait_decay_normalize_value = wait_decay(self._normalize_value, self._wait_bandpass)
+
+        decay = wait_decay(departs_per_hour, self._wait_bandpass)
+
+        normalized_decay = decay / self._wait_decay_normalize_value
+
+        return normalized_decay
 
     def get_score_stop_count_with_decay(self, raster, stop_tuples):
 

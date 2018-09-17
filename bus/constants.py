@@ -28,6 +28,7 @@ class KEY(object):
     DECAY_FACTOR        = 'decay_factor'
     DISTANCE_METHOD     = 'distance_method'
     NORMALIZE_VALUE     = 'normalize_value'
+    WAIT_BANDPASS       = 'wait_bandpass'
 
     STOPS_ADDED         = 'stops_added'
     STOPS_REMOVED       = 'stops_removed'

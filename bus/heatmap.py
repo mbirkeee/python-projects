@@ -155,6 +155,14 @@ class Heatmap(object):
 
         return decay_method
 
+    def get_normalize_value(self):
+        mode_data = self._mode_dict.get(self._mode)
+        return mode_data.get(KEY.NORMALIZE_VALUE)
+
+    def get_wait_decay_bandpass(self):
+        mode_data = self._mode_dict.get(self._mode)
+        return mode_data.get(KEY.WAIT_BANDPASS)
+
     def get_buffer_method(self):
         mode_data = self._mode_dict.get(self._mode)
         return mode_data.get(KEY.BUFFER_METHOD)
@@ -248,6 +256,8 @@ class Heatmap(object):
         judge.set_time_str(self._time_str)
         judge.set_service(service)
         judge.set_method(score_method)
+        judge.set_normalize_value(self.get_normalize_value())
+        judge.set_wait_decay_bandpass(self.get_wait_decay_bandpass())
 
         for da in das:
             rasters = da.get_rasters(100)
@@ -614,19 +624,40 @@ def test5():
 
 def test6():
     h = Heatmap()
-    h.set_mode(12)
+    h.set_mode(14)
     h.set_dataset(DATASET.BRT_1)
     h.set_time_str("8:14")
     h.run()
     h.to_shapefile()
     h.plot()
 
+def test7():
+
+    h1 = Heatmap()
+    h1.set_mode(13)
+    h1.set_dataset(DATASET.BRT_1)
+    h1.set_time_str("8:14")
+    h1.run()
+    h1.to_shapefile()
+    h1.plot()
+
+    h2 = Heatmap()
+    h2.set_mode(15)
+    h2.set_dataset(DATASET.BRT_1)
+    h2.set_time_str("8:14")
+    h2.run()
+    h2.to_shapefile()
+    h2.plot()
+
+    h3 = h2 - h1
+    h3.plot("temp/maps/diff_14_14_BRT1.html")
+
 if __name__ == "__main__":
 
-    test6()
+    test7()
     raise ValueError("Done")
 
-    mode = 11
+    mode = 13
     d1 = DATASET.JULY
     d2 = DATASET.BRT_1
 
