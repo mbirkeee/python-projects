@@ -13,8 +13,8 @@ class Runner(object):
     def __init__(self):
 
         self._base = "http://opendata-saskatoon.cloudapp.net:8080/v1/SaskatoonOpenDataCatalogueBeta"
-        self._json_path = "data/open_data/2018_06_21/json"
-        self._csv_path = "data/open_data/2018_06_21/csv"
+        self._json_path = "data/open_data/2018_08_05/json"
+        self._csv_path = "data/open_data/2018_08_05/csv"
 
     def fetch(self, table):
 
@@ -218,13 +218,13 @@ if __name__ == "__main__":
     runner = Runner()
 #    runner.fetch("TransitStopTimes")
 #    runner.fetch("TransitTrips")
-#    runner.fetch("TransitStops")
+    runner.fetch("TransitStops")
     runner.fetch("TransitRoutes")
-#    runner.fetch("TransitShapes")
+    runner.fetch("TransitShapes")
 #    runner.fetch("TransitCalendar")
 
 #    runner.process("TransitStopTimes")
 #    runner.process("TransitTrips")
-#    runner.process('TransitStops')
+    runner.process('TransitStops')
     runner.process('TransitRoutes')
-#    runner.process('TransitShapes')
+    runner.process('TransitShapes')

@@ -4,6 +4,41 @@ import simplejson
 import pyproj
 import math
 
+from geometry import Polygon
+from geometry import Point
+
+# from dataset import BASE
+
+PROJ = pyproj.Proj("+init=EPSG:32613")
+
+def is_shapefile(base):
+    if base.find('shapefile') >= 0:
+        return True
+    return False
+
+# def base_path_from_date(date):
+#     if date.find('jul') >= 0:
+#         base = BASE.JULY
+#     elif date.find('jun') >= 0:
+#         base = BASE.JUNE
+#     else:
+#         base = BASE.BRT
+#     return base
+
+# Should be obsolete, points have distance method
+# def get_point_dist(point1, point2):
+#     if point1 is None or point2 is None: return 0.0
+#
+#     x1 = point1.get_x()
+#     y1 = point1.get_y()
+#
+#     x2 = point2.get_x()
+#     y2 = point2.get_y()
+#
+#     if x1 is None or x2 is None: return 0.0
+#
+#     return math.sqrt(math.pow((x1 - x2), 2) + math.pow((y1 - y2),2))
+
 def get_dist(point1, point2):
 
     if point1 is None or point2 is None: return 0.0
@@ -17,6 +52,13 @@ def get_dist(point1, point2):
     if x1 is None or x2 is None: return 0.0
 
     return math.sqrt(math.pow((x1 - x2), 2) + math.pow((y1 - y2),2))
+
+
+def seconds_to_depart_time(seconds):
+    minutes = seconds / 60
+    hours = int(minutes / 60)
+    remain = minutes - (60 * hours)
+    return "%d:%02d" % (hours, remain)
 
 def seconds_to_string(seconds):
     t = datetime.datetime.fromtimestamp(seconds)
@@ -66,8 +108,155 @@ def string_to_seconds(s):
 
     raise ValueError("Invalid time string: %s" % s)
 
+class DaDwellingCounts(object):
+    def __init__(self):
+        self._data = {}
+        self.load_file()
 
-class DaCentriods(object):
+    def load_file(self):
+        f = open('/Users/mikeb/Downloads/DA_dwelling_counts.csv')
+
+        line_count = 0
+        for line in f:
+            line_count += 1
+            if line_count == 1: continue
+
+            try:
+                print line.strip()
+                parts = line.split(",")
+                da_id = int(parts[0])
+                dwelling_count = int(parts[1].strip())
+                dwelling_size = float(parts[2].strip())
+
+                print da_id, dwelling_count, dwelling_size
+
+                if self._data.has_key(da_id):
+                    raise ValueError("already have da_id")
+
+                self._data[da_id] = (dwelling_count, dwelling_size)
+
+            except Exception as err:
+                print "failed to parse line"
+
+        f.close()
+
+    def get_for_da_id(self, da_id):
+        return self._data.get(da_id)
+
+class DaPopulations(object):
+    def __init__(self):
+
+        self._data_pop_by_da = {}
+        self.load_stats_can_pop_data()
+
+    def get_population_for_da_id(self, da_id):
+
+        return int(self._data_pop_by_da[da_id])
+
+    def load_stats_can_pop_data(self):
+
+        f = open("../data/2016_pop.csv", "r")
+
+        expected_parts = 15
+
+        for line in f:
+            # print "LINE", line.strip()
+            parts = line.split(",")
+            # print len(parts)
+
+            if len(parts) != expected_parts:
+                print "BAD LINE!!!!!", line
+                print len(parts)
+                continue
+
+            try:
+                da_id = int(parts[1].strip('"'))
+                pop = int(parts[12].strip('"'))
+            except Exception as err:
+                print "Failed for line:", line
+                continue
+                # raise ValueError("unexpected number of parts")
+
+            print "DA ID:", da_id, "POP:", pop
+
+            if self._data_pop_by_da.has_key(da_id):
+                raise ValueError("Already have da_id: %s" % da_id)
+
+            self._data_pop_by_da[da_id] = pop
+
+        f.close()
+
+class DaHeatmap(object):
+
+    def __init__(self):
+        self._data = {}
+        self._max_score = 50
+
+    def load_file(self, file_name):
+
+        f = open(file_name, "r")
+
+        count = 0
+        for line in f:
+            count += 1
+            if count == 1: continue
+            # print line.strip()
+
+            parts=line.split(",")
+            da_id = int(parts[1].strip())
+            score = float(parts[2].strip())
+
+            try:
+                # score = math.log10(score)
+                score = score
+            except Exception as err:
+                print err
+                score = 0
+
+            if score > self._max_score:
+                self._max_score = score
+
+            # print da_id, score
+            self._data[da_id] = score
+
+        f.close()
+
+        # print repr(self._data)
+
+    def get_da_id_list(self):
+
+        result = [k for k in self._data.iterkeys()]
+        return result
+
+    def get_score_normalized(self, da_id):
+        score = self._data.get(da_id)
+        normalized = score / self._max_score
+        return normalized
+
+    def get_score(self, da_id):
+        return self._data.get(da_id)
+
+class Filter(object):
+
+    def __init__(self, dpass=250, e=1, n=6):
+        self._dpass = dpass
+        self._e = e
+        self._n = n
+
+    def set_dpass(self, dpass):
+        self._dpass = dpass
+
+    def butterworth(self, distance):
+
+        r = float(distance)/float(self._dpass)
+        rp = math.pow(r, self._n)
+        result = 1.0 / math.sqrt(1.0 + self._e * rp)
+        return result
+
+    def run(self, distance):
+        return self.butterworth(distance)
+
+class DaCentroidsOld(object):
 
     def __init__(self):
         self._data_pop_by_da = {}
@@ -80,7 +269,7 @@ class DaCentriods(object):
 
     def load_stats_can_pop_data(self):
 
-        f = open("../data/2016_pop.csv", "r")
+        f = open("data/2016_pop.csv", "r")
 
         expected_parts = 15
 
@@ -175,8 +364,11 @@ class DaCentriods(object):
         data = self._data_centriods.get(da_id)
         return (data.get('x'), data.get('y'))
 
+    def get_data(self, da_id):
+        return self._data_centriods.get(da_id)
 
-class TransitData(object):
+
+class TransitDataOBSOLETE(object):
 
     def __init__(self):
         self._bus_stops = None
@@ -380,3 +572,5 @@ class UserGPS(object):
 
     def get_min_time(self):
         return self._min_time
+
+

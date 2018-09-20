@@ -1,0 +1,44 @@
+route_id,route_type,route_color,text_color,name_short,name_long
+10157,3,A21F6C,000000,1,City Centre / Exhibition
+10158,3,423889,000000,2,Meadowgreen / City Centre
+10159,3,36B274,000000,3,City Centre / Hudson Bay Park
+10160,3,8AB0DD,000000,11,Airport / City Centre
+10161,3,EE4F9C,000000,5,City Centre/ McCormack
+10162,3,8F9336,000000,6,Broadway / Market Mall
+10163,3,3FA89B,000000,7,Dundonald / City Centre
+10164,3,FF8000,000000,8,8th Street / City Centre
+10165,3,006480,000000,9,Riversdale / City Centre
+10166,3,811E1E,000000,10,Meadowgreen / City Centre
+10170,3,42D160,000000,12,River Heights / City Centre
+10171,3,72C1DD,000000,13,Lawson Heights / Broadway
+10172,3,9EC149,000000,14,North Industrial / City Centre
+10173,3,FF8000,000000,15,City Centre / Civic Op Centre
+10174,3,FF8000,000000,17,Stonebridge / University
+10175,3,FF8000,000000,18,College Park / University
+10177,3,672E82,000000,19,City Centre / Centre Mall
+10178,3,C1C0E1,000000,20,South Industrial / City Centre
+10179,3,4863E5,000000,21,University
+10180,3,D1C85D,000000,22,Confederation / City Centre
+10181,3,ED0874,000000,25,Sasktel  Centre
+10183,3,FFCCCC,000000,30,Lawson Heights / City Centre
+10197,3,F48FA8,000000,35,Silverwood / City Centre
+10201,3,A47CC1,000000,45,Arbor Creek / City Centre
+10202,3,FF8000,000000,50,Lakeview / University
+10209,3,000000,000000,514,Sasktel Centre / North Ind
+10215,3,FF8000,000000,55,Lakeridge/ University
+10221,3,359E30,000000,60,University / Confederation
+10222,3,FF8000,000000,61,University/ Blairmore
+10223,3,FF8000,000000,62,University / Montgomery
+10224,3,FF8000,000000,63,University / Hampton Village
+10225,3,FFFF99,000000,65,University / Kensington
+10226,3,FF8000,000000,81,Cumberland / Centre Mall
+10227,3,FF8000,000000,82,Main Street / Centre Mall
+10228,3,FF8000,000000,83,Centre Mall / Stonebridge
+10229,3,FF8000,000000,84,Briarwood / Centre Mall
+10230,3,FF8000,000000,86,Rosewood / Centre Mall
+10232,3,FF8000,000000,43,Evergreen / City Centre
+10233,3,FF8000,000000,4,City Centre
+10234,3,FF8000,000000,26,Forest Grove / University
+10235,3,FF8000,000000,27,Silverspring / University
+10236,3,FF8000,000000,44,Willowgrove / City Centre
+10314,3,FF8000,000000,808,Field House / City Centre
