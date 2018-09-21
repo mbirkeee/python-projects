@@ -449,6 +449,39 @@ class Heatmap(object):
 
         return self._raster_dict
 
+    def __div__(self, other):
+        print "Dividing heatmaps..."
+        result = Heatmap()
+
+        self_dict = self.get_raster_dict()
+        other_dict = other.get_raster_dict()
+
+        for key, raster in self_dict.iteritems():
+            self_score = raster.get_score()
+
+            if self_score == 0:
+                continue
+
+            other_raster = other_dict.get(key)
+            if other_raster is None:
+                other_score = 0
+            else:
+                other_score = other_raster.get_score()
+
+            if other_score == 0:
+                score = self_score
+            else:
+                score = self_score / other_score
+
+            result_raster = copy.copy(raster)
+            result_raster.set_score(score)
+            result.add_raster(result_raster)
+
+        # Unlike the subtract case, don't have to look at "other",
+        # because it it basically dividing 0 by "other"
+
+        return result
+
     def __sub__(self, other):
         """
         Subtract other heatmap from this heatmap
@@ -652,9 +685,16 @@ def test7():
     h3 = h2 - h1
     h3.plot("temp/maps/diff_14_14_BRT1.html")
 
+def test8():
+
+    h1 = Heatmap()
+    h2 = Heatmap()
+
+    h1.from_shapefile("temp/shapefiles/heatmaps")
+
 if __name__ == "__main__":
 
-    test7()
+    test8()
     raise ValueError("Done")
 
     mode = 13
