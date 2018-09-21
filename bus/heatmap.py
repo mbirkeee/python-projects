@@ -28,6 +28,64 @@ from modes import SCORE_METHOD
 from modes import DECAY_METHOD
 from modes import DECAY_LIST
 
+class HeatmapColor(object):
+    def __init__(self):
+
+        self._data = self.load_csv_file("CoolWarmUChar257.csv")
+
+    def load_csv_file(self, filename):
+        f = open("CoolWarmUChar257.csv")
+        line_count = 0
+
+        result = []
+
+        for line in f:
+            line_count += 1
+            if line_count == 1: continue
+
+            parts = line.split(",")
+            scalar = float(parts[0].strip())
+            r = int(parts[1].strip())
+            g = int(parts[2].strip())
+            b = int(parts[3].strip())
+
+            #print "%f %s %s %s" % (scalar, r, g, b)
+
+            result.append((scalar, r, g, b))
+
+        f.close()
+        return result
+
+    def get_color(self, value, max_val):
+
+        if value > 0:
+
+            if value > max_val:
+                return "#fff240"
+
+            score = float(value)/float(max_val)
+
+            score = 0.5 + score / 2.0
+
+            print "consider score", score
+
+            min_diff = None
+            min_item = None
+
+            # This is very brute force...
+            for item in self._data:
+                diff = abs(item[0] - score)
+                if min_diff is None or diff < min_diff:
+                    min_diff = diff
+                    min_item = item
+                    # print "setting min_item", repr(min_item)
+            result = "#%02x%02x%02x" % (min_item[1], min_item[2], min_item[3])
+
+            return result
+
+        else:
+            raise ValueError("handle negative values")
+
 class Heatmap(object):
 
     def __init__(self):
@@ -337,6 +395,8 @@ class Heatmap(object):
 
     def plot(self, file_name=None, plotter=None, include_das=True, max_score=None, min_score=None, log=False, sqrt=False):
 
+        heat_color = HeatmapColor()
+
         if file_name is None:
             file_name = "temp/maps/heatmap_mode_%s_%s.html" % (self._mode, self._dataset)
 
@@ -381,6 +441,16 @@ class Heatmap(object):
             if score < min_score:
                 score = min_score
 
+            # if sqrt:
+            #
+            #     color = heat_color.get_color(math.sqrt(score), math.sqrt(max_score))
+            #
+            # else:
+            #     color = heat_color.get_color(score, max_score)
+            #
+            # opacity = score / max_score
+
+
             if score > 0:
                 if log:
                     opacity = math.log10(score) / max_score_log
@@ -393,6 +463,7 @@ class Heatmap(object):
                     color = "#fff240"
                 else:
                     color = "#ff0000"
+                    color = "#000000"
             else:
                 opacity = -1.0 * score / max_score_abs
                 color = "#0000ff"
@@ -628,6 +699,7 @@ def test6():
     h.set_dataset(DATASET.BRT_1)
     h.set_time_str("8:14")
     h.run()
+
     h.to_shapefile()
     h.plot()
 
@@ -652,9 +724,14 @@ def test7():
     h3 = h2 - h1
     h3.plot("temp/maps/diff_14_14_BRT1.html")
 
+def test8():
+    h = Heatmap()
+    h.from_shapefile("temp/shapefiles/heatmaps/heatmap_mode_14_brt1.shp")
+    h.plot("temp/maps/temp.html", max_score=8)
+
 if __name__ == "__main__":
 
-    test7()
+    test8()
     raise ValueError("Done")
 
     mode = 13
