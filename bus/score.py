@@ -7,50 +7,29 @@ from stop_times import KEY
 
 from modes import SCORE_METHOD
 from modes import DECAY_METHOD
+from modes import ModeMan
 
 from butterworth import wait_decay
 
-# DECAY = Filter()
 
 class Score(object):
 
-    def __init__(self, dataman):
+    def __init__(self, dataman, mode):
         self._dataman = dataman
         self._filter = Filter(dpass=250)
-        self._nearest_only = None
-        self._decay_method = None
-        self._time_str = None
-        self._service = None
-        self._method = None
-        self._normalize_value = None
-        self._wait_decay_normalize_value = None
-        self._wait_bandpass = None
 
-    # TODO:  All of these "set things" could be determined by just passing in the mode
-    def set_normalize_value(self, value):
-        self._normalize_value = value
-
-    def set_wait_decay_bandpass(self, value):
-        self._wait_bandpass = value
-
-    def set_method(self, value):
-        self._method = value
-
-    def set_service(self, value):
-        self._service = value
-
-    def set_time_str(self, value):
-        self._time_str = value
-
-    def set_nearest_only(self, value):
-        self._nearest_only = value
-
-    def set_decay_method(self, value):
-        self._decay_method = value
+        self._wait_decay_normalize_value = None # Computed on demand
+        self._mode = mode
+        self._mode_man = ModeMan(self._mode)
 
     def get_decay_factor(self, point1, point2, decay_method):
 
-        if decay_method in [None, DECAY_METHOD.CROW_100, DECAY_METHOD.CROW_250]:
+        if decay_method in [None,
+            DECAY_METHOD.CROW_100,
+            DECAY_METHOD.CROW_200,
+            DECAY_METHOD.CROW_250,
+            DECAY_METHOD.CROW_400]:
+
             distance = point1.get_distance(point2, method="crow")
 
         elif decay_method in [DECAY_METHOD.GRID_250]:
@@ -70,13 +49,24 @@ class Score(object):
             self._filter.set_dpass(100)
             decay = self._filter.butterworth(distance)
 
+        elif decay_method == DECAY_METHOD.CROW_200:
+            self._filter.set_dpass(200)
+            decay = self._filter.butterworth(distance)
+
+        elif decay_method == DECAY_METHOD.CROW_400:
+            self._filter.set_dpass(400)
+            decay = self._filter.butterworth(distance)
+
         else:
             raise ValueError("decay method not supported: %s" % repr(decay_method))
 
         return distance, decay
 
     def get_score(self, raster, stop_tuples):
-        if self._method in [
+
+        method = self._mode_man.get_score_method()
+
+        if method in [
             SCORE_METHOD.DEPARTURES_PER_HOUR,
             SCORE_METHOD.DEPARTURES_PER_DAY,
             SCORE_METHOD.DEPARTURES_PER_WEEK,
@@ -84,14 +74,15 @@ class Score(object):
 
             score = self.get_score_departures(raster, stop_tuples)
 
-        elif self._method == SCORE_METHOD.STOP_COUNT:
+        elif method == SCORE_METHOD.STOP_COUNT:
             score = self.get_score_stop_count(raster, stop_tuples)
 
-        elif self._method == SCORE_METHOD.DIST_TO_CLOSEST_STOP:
+        elif method == SCORE_METHOD.DIST_TO_CLOSEST_STOP:
+            dist_method = self._mode_man.get_distance_method()
             score = self.get_score_closest_stop(raster, dist_method)
 
         else:
-            raise ValueError("Score method not supported: %s" % self._method)
+            raise ValueError("Score method not supported: %s" % method)
 
         return score
 
@@ -151,6 +142,11 @@ class Score(object):
 
             print "^^^^^^^^^^^^^^^^^^^^^^^^^"
 
+        score_method = self._mode_man.get_score_method()
+        decay_method = self._mode_man.get_decay_method()
+        service_type = self._mode_man.get_service_type()
+        normalize_value = self._mode_man.get_normalize_value()
+        service_time = self._mode_man.get_service_time()
 
         for item in stop_tuples:
             stop_p = item[0]
@@ -164,29 +160,30 @@ class Score(object):
                 # The intersections are for the DAs and stops, not the rasters.
                 continue
 
-            distance, decay_factor = self.get_decay_factor(stop.get_point(), raster_point, self._decay_method)
+
+            distance, decay_factor = self.get_decay_factor(stop.get_point(), raster_point, decay_method)
 
             route_ids = stop.get_route_ids()
             for route_id in route_ids:
                 print "Stop %d serves route: %d" % (stop_id, route_id)
 
                 for direction in [0, 1]:
-                    if self._method == SCORE_METHOD.DEPARTURES_PER_HOUR:
-                        departs = self._dataman.get_departs_per_hour(route_id, direction, stop_id, self._service, self._time_str)
-                        if departs is not None and self._normalize_value is not None:
-                            departs = departs / self._normalize_value
+                    if score_method == SCORE_METHOD.DEPARTURES_PER_HOUR:
+                        departs = self._dataman.get_departs_per_hour(route_id, direction, stop_id, service_type, service_time)
+                        if departs is not None and normalize_value is not None:
+                            departs = departs / normalize_value
 
-                    elif self._method == SCORE_METHOD.DEPARTURES_PER_DAY:
-                        departs = self._dataman.get_departs_per_day(route_id, direction, stop_id, self._service)
+                    elif score_method == SCORE_METHOD.DEPARTURES_PER_DAY:
+                        departs = self._dataman.get_departs_per_day(route_id, direction, stop_id, service_type)
 
-                    elif self._method == SCORE_METHOD.DEPARTURES_PER_HOUR:
+                    elif score_method == SCORE_METHOD.DEPARTURES_PER_HOUR:
                         departs = self._dataman.get_departs_per_week(route_id, direction, stop_id)
 
-                    elif self._method == SCORE_METHOD.DECAYED_WAIT:
+                    elif score_method == SCORE_METHOD.DECAYED_WAIT:
                         departs = self.get_score_decayed_wait(route_id, direction, stop_id)
 
                     else:
-                        raise ValueError("depart method %s not supported" % repr(self._method))
+                        raise ValueError("Score method %s not supported" % repr(score_method))
 
                     if departs is None or departs == 0:
                         continue
@@ -208,8 +205,10 @@ class Score(object):
                     depart_dict[key] = stop_list
 
         # Second pass.. Loop through all the results to filter out more distant ones
+        nearest_only = self._mode_man.get_nearest_only()
+
         for key, items in depart_dict.iteritems():
-            if self._nearest_only:
+            if nearest_only:
                 items = [self.get_closest(items, key)]
 
             for item in items:
@@ -223,16 +222,21 @@ class Score(object):
 
 
     def get_score_decayed_wait(self, route_id, direction, stop_id):
-        departs_per_hour = self._dataman.get_departs_per_hour(route_id, direction, stop_id, self._service, self._time_str)
+
+        service_type = self._mode_man.get_service_type()
+        wait_bandpass = self._mode_man.get_wait_bandpass()
+        service_time = self._mode_man.get_service_time()
+
+        departs_per_hour = self._dataman.get_departs_per_hour(route_id, direction, stop_id, service_type, service_time)
         print "departs per hour", departs_per_hour
         if departs_per_hour is None:
             return
 
         if self._wait_decay_normalize_value is None:
-            self._wait_decay_normalize_value = wait_decay(self._normalize_value, self._wait_bandpass)
+            normalize_value = self._mode_man.get_normalize_value()
+            self._wait_decay_normalize_value = wait_decay(normalize_value, wait_bandpass)
 
-        decay = wait_decay(departs_per_hour, self._wait_bandpass)
-
+        decay = wait_decay(departs_per_hour, wait_bandpass)
         normalized_decay = decay / self._wait_decay_normalize_value
 
         return normalized_decay
