@@ -1,5 +1,6 @@
 
 class KEY(object):
+    SERVICE_TIME        = "service_time"
     SERVICE_TYPE        = 'serv_type'
     DEPART_TIME         = 'depart_time'
     ROUTE_ID            = 'route_id'
