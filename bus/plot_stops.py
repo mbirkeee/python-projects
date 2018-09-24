@@ -15,6 +15,8 @@ from constants import KEY
 
 from shapefile_writer import ShapeFileWriter
 
+from make_stop_intersections import BufferManager
+
 class Runner(object):
     """
     This program plots routes/stops
@@ -84,6 +86,8 @@ class Runner(object):
                 self.to_shapefile(stops)
         else:
 
+            buffer_man = BufferManager(buffer_method=self._buffer, dataset=self._dataset)
+
             plotter = Plotter()
             stop = self._dataman.get_stop(self._stop_id)
             m1 = "%s" % repr(stop.get_id())
@@ -99,6 +103,10 @@ class Runner(object):
                 for item in intersecting_das:
                     p = item[0]
                     plotter.add_polygon(p)
+
+                stop.make_buffer(self._buffer, buffer_manager=buffer_man)
+                buffer_p = stop.get_buffer()
+                plotter.add_polygon(buffer_p)
 
                 plotter.plot("temp/maps/stop_%d_buffer_%s_%s.html" % (stop.get_id(), self._buffer, self._dataset))
             else:

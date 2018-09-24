@@ -134,6 +134,8 @@ class Intersect(object):
                 # print "    compare to group2 id:", group2_id, polygon_2.get_area()
                 # Do these polygons intersect?
 
+                print "intersect stop: %d da: %d" % (group1_id, group2_id)
+
                 intersection = polygon_1.intersect(polygon_2)
 
                 if intersection:

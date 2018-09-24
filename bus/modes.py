@@ -4,17 +4,19 @@ from constants import KEY
 from dataset import SERVICE
 
 class BUFFER_METHOD(object):
-    NONE         = "none"
-    CIRCLE_400   = "circle_400"
-    SQUARE_709   = "square_709"
-    DIAMOND_500  = "diamond_500"
+    NONE            = "none"
+    CIRCLE_400      = "circle_400"
+    SQUARE_709      = "square_709"
+    DIAMOND_500     = "diamond_500"
+    NETWORK_400     = "network_400"
 
 # List of supported buffer methods
 BUFFER_LIST = [
     BUFFER_METHOD.NONE,
     BUFFER_METHOD.CIRCLE_400,
     BUFFER_METHOD.SQUARE_709,
-    BUFFER_METHOD.DIAMOND_500
+    BUFFER_METHOD.DIAMOND_500,
+    BUFFER_METHOD.NETWORK_400
 ]
 
 class DECAY_METHOD(object):

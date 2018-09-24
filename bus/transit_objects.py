@@ -134,7 +134,7 @@ class TransitStop(object):
         except:
             pass
 
-    def make_buffer(self, buffer_method):
+    def make_buffer(self, buffer_method, buffer_manager=None):
 
         if buffer_method == BUFFER_METHOD.CIRCLE_400:
             self.make_round_buffer(400)
@@ -142,11 +142,13 @@ class TransitStop(object):
             self.make_square_buffer(709)
         elif buffer_method == BUFFER_METHOD.DIAMOND_500:
             self.make_diamond_buffer(500)
+        elif buffer_method == BUFFER_METHOD.NETWORK_400:
+            self.make_network_buffer(400, buffer_manager)
         else:
 
             for method in BUFFER_LIST:
                 print "Supported buffer method:", method
-            raise ValueError("mode %d buffer %s not supported" % (self._mode, buffer_method))
+            raise ValueError("buffer method %s not supported" % buffer_method)
 
 
     def make_round_buffer(self, size):
@@ -160,6 +162,10 @@ class TransitStop(object):
     def make_diamond_buffer(self, size):
         point = self.get_point()
         self._buffer_p = point.get_diamond_buffer(size)
+
+    def make_network_buffer(self, size, buffer_man=None):
+        my_id = self.get_id()
+        self._buffer_p = buffer_man.get_buffer(my_id)
 
     def compute_demand(self, intersect, filter):
 
