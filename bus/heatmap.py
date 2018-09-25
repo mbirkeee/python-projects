@@ -24,7 +24,7 @@ from geometry import Point
 from geometry import Polygon
 
 from modes import BUFFER_METHOD
-
+from make_stop_intersections import BufferManager
 
 class HeatmapColor(object):
     def __init__(self):
@@ -198,9 +198,13 @@ class Heatmap(object):
             print "No buffers required"
             return
 
+        buffer_man = None
+        if buffer_method in [BUFFER_METHOD.NETWORK_400]:
+            buffer_man = BufferManager(buffer_method, self._dataset)
+
         print "Making stop buffers for %d stops..." % len(stops)
         for stop in stops:
-            stop.make_buffer(buffer_method)
+            stop.make_buffer(buffer_method, buffer_manager=buffer_man)
 
         print "Stop buffers complete"
 
@@ -251,7 +255,6 @@ class Heatmap(object):
                 return
 
         judge = Score(self._dataman, self._mode)
-        judge.set_time_str(self._time_str)
 
         for da in das:
             rasters = da.get_rasters(100)
@@ -664,9 +667,8 @@ def test5():
 
 def test6():
     h = Heatmap()
-    h.set_mode(14)
-    h.set_dataset(DATASET.BRT_1)
-    h.set_time_str("8:14")
+    h.set_mode(20)
+    h.set_dataset(DATASET.JUNE)
     h.run()
 
     h.to_shapefile()
@@ -759,7 +761,7 @@ def test8():
 
 if __name__ == "__main__":
 
-    test7()
+    test6()
     raise ValueError("Done")
 
     mode = 13

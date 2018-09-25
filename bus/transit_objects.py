@@ -142,6 +142,8 @@ class TransitStop(object):
             self.make_square_buffer(709)
         elif buffer_method == BUFFER_METHOD.DIAMOND_500:
             self.make_diamond_buffer(500)
+        elif buffer_method == BUFFER_METHOD.DIAMOND_400:
+            self.make_diamond_buffer(400)
         elif buffer_method == BUFFER_METHOD.NETWORK_400:
             self.make_network_buffer(400, buffer_manager)
         else:

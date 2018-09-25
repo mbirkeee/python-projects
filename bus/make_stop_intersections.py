@@ -33,6 +33,7 @@ class BufferManager(object):
         if buffer_p is None:
             raise ValueError("No buffer for stop ID: %s" % repr(stop_id))
 
+        print "Buffer manager got buffer from stop: %d" % stop_id
         return buffer_p
 
     def load_shapefile(self):

@@ -8,6 +8,7 @@ class BUFFER_METHOD(object):
     CIRCLE_400      = "circle_400"
     SQUARE_709      = "square_709"
     DIAMOND_500     = "diamond_500"
+    DIAMOND_400     = "diamond_400"
     NETWORK_400     = "network_400"
 
 # List of supported buffer methods
@@ -16,6 +17,7 @@ BUFFER_LIST = [
     BUFFER_METHOD.CIRCLE_400,
     BUFFER_METHOD.SQUARE_709,
     BUFFER_METHOD.DIAMOND_500,
+    BUFFER_METHOD.DIAMOND_400,
     BUFFER_METHOD.NETWORK_400
 ]
 
@@ -154,6 +156,22 @@ MODE_DICT = {
         KEY.BUFFER_METHOD       : BUFFER_METHOD.CIRCLE_400,
         KEY.SCORE_METHOD        : SCORE_METHOD.DECAYED_WAIT,
         KEY.DECAY_METHOD        : DECAY_METHOD.CROW_400,
+        KEY.STOP_DEMAND         : None,
+        KEY.NORMALIZE_VALUE     : 6.0,
+        KEY.WAIT_BANDPASS       : 3.0,
+    },
+    19: {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DECAYED_WAIT,
+        KEY.DECAY_METHOD        : DECAY_METHOD.GRID_250,
+        KEY.STOP_DEMAND         : None,
+        KEY.NORMALIZE_VALUE     : 6.0,
+        KEY.WAIT_BANDPASS       : 3.0,
+    },
+    20: {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.DIAMOND_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DECAYED_WAIT,
+        KEY.DECAY_METHOD        : DECAY_METHOD.GRID_250,
         KEY.STOP_DEMAND         : None,
         KEY.NORMALIZE_VALUE     : 6.0,
         KEY.WAIT_BANDPASS       : 3.0,
