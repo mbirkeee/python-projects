@@ -221,10 +221,11 @@ class Score(object):
         service_type = self._mode_man.get_service_type()
         wait_bandpass = self._mode_man.get_wait_bandpass()
         service_time = self._mode_man.get_service_time()
+        # print "THIS IS THE SERVICE TIME", service_time
 
         departs_per_hour = self._dataman.get_departs_per_hour(route_id, direction, stop_id, service_type, service_time)
-        print "departs per hour", departs_per_hour
-        if departs_per_hour is None:
+        # print "departs per hour", departs_per_hour
+        if not departs_per_hour:
             return
 
         if self._wait_decay_normalize_value is None:
