@@ -1,3 +1,4 @@
+import os
 import copy
 import shapefile
 import math
@@ -24,6 +25,7 @@ from geometry import Point
 from geometry import Polygon
 
 from modes import BUFFER_METHOD
+# from constants import KEY
 
 
 class HeatmapColor(object):
@@ -94,8 +96,9 @@ class Heatmap(object):
         # Used for performing subtraction etc.
         self._raster_dict = {}
 
-        self._mode = None
-
+        # self._mode = None
+        # self._service_time = None
+        # self._service_date = None
         self._dataset = None
         self._base_path = None
         self._dataman = None
@@ -112,8 +115,13 @@ class Heatmap(object):
         if shapefile:
             self.from_shapefile(shapefile)
 
-    def add_route_id(self, route_id):
+    def set_service_time(self, service_time):
+        self._mode_man.set_service_time(service_time)
 
+    def set_service_day(self, service_day):
+        self._mode_man.set_service_day(service_day)
+
+    def add_route_id(self, route_id):
         self._route_ids.append(route_id)
         self._route_ids = list(set(self._route_ids))
 
@@ -158,6 +166,42 @@ class Heatmap(object):
         self._min_score = min_score
         self._ave_score = ave_score
 
+    def make_file_name(self, start):
+        # print "make name starting with", start
+
+        parts = start.split(".")
+        if len(parts) != 2:
+            raise ValueError("invalid name template")
+
+        base = parts[0]
+        extension = parts[1]
+        # print "the extension is ", extension
+
+        parts = base.split("/")
+        # print "base parts", parts
+        last_part = parts[-1]
+        # print "last part >>%s<<" % last_part
+
+        mode = self._mode_man.get_mode()
+        time = self._mode_man.get_service_time_str()
+        day = self._mode_man.get_service_day_str()
+
+        if len(last_part) > 0:
+            last_part += "_"
+
+        last_part += "mode_%d_time_%s_%s.%s" % (mode, time, day, extension)
+        # print "last_part", last_part
+
+        result = ['temp']
+        result.extend(parts[:-1])
+        result.append(last_part)
+        # print "result", result
+
+        file_name = "/".join(result)
+
+        # print "file_name_done", file_name
+        return file_name
+
     def dump_score_csv(self, file_name=None):
 
         x = []
@@ -168,7 +212,9 @@ class Heatmap(object):
         x.reverse()
 
         if file_name is None:
-            file_name = "temp/csv/score_mode_%s_%s.csv" % (self._mode, self._dataset)
+            file_name = self.make_file_name("csv/score")
+
+            # file_name = "temp/csv/score_mode_%s_%s_%s_%s.csv" % (self._mode, self._dataset)
 
         f = open(file_name, "w")
         f.write("index,score,da_id,raster_id\n")
@@ -182,12 +228,10 @@ class Heatmap(object):
         print "Wrote %d scores to: %s" % (len(x), file_name)
 
     def set_mode(self, mode):
-        if self._mode is not None:
-            print "Mode %d cannot be changed" % self._mode
+        if self._mode_man.get_mode() is not None:
+            print "Mode %d cannot be changed" % self._mode_man.get_mode()
 
-        mode = int(mode)
         self._mode_man.set_mode(mode)
-        self._mode = mode
 
     def set_dataset(self, dataset):
         self._dataset = dataset
@@ -250,8 +294,7 @@ class Heatmap(object):
                 print "quitting"
                 return
 
-        judge = Score(self._dataman, self._mode)
-        judge.set_time_str(self._time_str)
+        judge = Score(self._dataman, self._mode_man)
 
         for da in das:
             rasters = da.get_rasters(100)
@@ -334,7 +377,9 @@ class Heatmap(object):
         heat_color = HeatmapColor()
 
         if file_name is None:
-            file_name = "temp/maps/heatmap_mode_%s_%s.html" % (self._mode, self._dataset)
+            file_name = self.make_file_name("maps/heatmap.html")
+
+            # file_name = "temp/maps/heatmap_mode_%s_%s.html" % (self._mode, self._dataset)
 
         if plotter is None:
             write_file = True
@@ -430,7 +475,8 @@ class Heatmap(object):
         """
 
         if file_name is None:
-            file_name = "temp/shapefiles/heatmaps/heatmap_mode_%s_%s.shp" % (self._mode, self._dataset)
+            file_name = self.make_file_name("shapefiles/heatmaps/heatmap.shp")
+            # file_name = "temp/shapefiles/heatmaps/heatmap_mode_%s_%s.shp" % (self._mode, self._dataset)
 
         writer = ShapeFileWriter()
         for raster in self._raster_list:
@@ -677,17 +723,17 @@ def test7():
     h1 = Heatmap()
     h1.set_mode(15)
     h1.set_dataset(DATASET.BRT_1)
-    h1.set_time_str("8:00")
+    h1.set_service_time("8:00")
     h1.run()
-    h1.to_shapefile("temp/shapefiles/heatmaps/mode_15_8_00.shp")
+    h1.to_shapefile()
     h1.plot()
 
     h2 = Heatmap()
     h2.set_mode(15)
     h2.set_dataset(DATASET.BRT_1)
-    h2.set_time_str("11:15")
+    h2.set_service_time("11:15")
     h2.run()
-    h2.to_shapefile("temp/shapefiles/heatmaps/mode_15_11_15.shp")
+    h2.to_shapefile()
     h2.plot()
 
     h3 = h1 - h2

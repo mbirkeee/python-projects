@@ -1,4 +1,5 @@
 import pprint
+import copy
 
 from constants import KEY
 from dataset import SERVICE
@@ -164,7 +165,7 @@ class ModeMan(object):
 
     def __init__(self, mode=None):
 
-        self._mode_dict = MODE_DICT
+        self._mode_dict = copy.copy(MODE_DICT)
         self.validate()
 
         self._mode = mode
@@ -172,11 +173,41 @@ class ModeMan(object):
             self.set_mode(mode)
 
     def set_mode(self, mode):
+        mode = int(mode)
         if not self.valid(mode):
             print "Invalid mode. Supported modes are:"
             self.print_modes()
             raise ValueError("Invalid mode")
         self._mode = mode
+
+    def get_mode(self):
+        return self._mode
+
+    def set_service_time(self, service_time):
+        mode_data = self._mode_dict.get(self._mode)
+        mode_data[KEY.SERVICE_TIME] = service_time
+        self._mode_dict[self._mode] = mode_data
+
+    def set_service_day(self, service_day):
+        mode_data = self._mode_dict.get(self._mode)
+        mode_data[KEY.SERVICE_TYPE] = service_day
+        self._mode_dict[self._mode] = mode_data
+
+    def get_service_day_str(self):
+        day = self.get_service_type()
+
+        if day == SERVICE.MWF:
+            return "mwf"
+        elif day == SERVICE.SAT:
+            return "sat"
+        elif day == SERVICE.SUN:
+            return "sun"
+        return "unknown_day"
+
+    def get_service_time_str(self):
+        t = self.get_service_time()
+        #return t
+        return t.replace(":", "_")
 
     def compare_modes(self, mode1, mode2, key1, key2):
 

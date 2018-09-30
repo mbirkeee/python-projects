@@ -1,26 +1,21 @@
 import math
 
 from my_utils import Filter
-from stop_times import StopTimes
-from stop_times import SERVICE
 from stop_times import KEY
 
 from modes import SCORE_METHOD
 from modes import DECAY_METHOD
-from modes import ModeMan
 
 from butterworth import wait_decay
 
-
 class Score(object):
 
-    def __init__(self, dataman, mode):
+    def __init__(self, dataman, mode_man):
         self._dataman = dataman
-        self._filter = Filter(dpass=250)
+        self._mode_man = mode_man
 
+        self._filter = Filter(dpass=250)
         self._wait_decay_normalize_value = None # Computed on demand
-        self._mode = mode
-        self._mode_man = ModeMan(self._mode)
 
     def get_decay_factor(self, point1, point2, decay_method):
 

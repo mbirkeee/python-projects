@@ -130,11 +130,8 @@ class Intersect(object):
                     raise ValueError("No polygon for item2: %s" % type(item2))
                 # self._group2_id_map[group2_id] = item2
 
-
                 # print "    compare to group2 id:", group2_id, polygon_2.get_area()
                 # Do these polygons intersect?
-
-                print "intersect stop: %d da: %d" % (group1_id, group2_id)
 
                 intersection = polygon_1.intersect(polygon_2)
 
