@@ -11,27 +11,32 @@ class Runner(object):
 
     def __init__(self):
 
-        self._postal_codes = self.load_postal_codes("data/csv/interact_users_2018_09_24.csv")
+        self._postal_codes = self.load_postal_codes("data/csv/interact_users_2018_10_01.csv")
 
     def load_postal_codes(self, filename):
 
         result = {}
 
         line_count = 0
+        user_count = 0
         f = open(filename, "r")
         for line in f:
             line_count +=1
             if line_count == 1: continue
             code = line.strip()
 
+            if len(code) == 0: continue
+
             count = result.get(code, 0)
             count += 1
             result[code] = count
-
+            user_count += 1
         f.close()
 
+        print "---"
         for k, v in result.iteritems():
             print k, v
+        print "---", user_count
 
         return result
 
@@ -54,7 +59,7 @@ class Runner(object):
 
         user_points = Polypoint()
 
-        fout = open("interact_user_locations_2018_09_24.csv", "w")
+        fout = open("interact_user_locations_2018_10_01.csv", "w")
         fout.write("fid,lat,lng\n")
         fid = 0
 
@@ -109,9 +114,9 @@ class Runner(object):
 
         for k, v in self._postal_codes.iteritems():
             if k in match_list:
-                print "%s: FOUND" % k
+                print "%s: FOUND" % k, v
             else:
-                print "%s: NOT FOUND" % k
+                print "%s: NOT FOUND" % k, v
 
         print "match_count", match_count
 
