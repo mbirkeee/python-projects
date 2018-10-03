@@ -189,7 +189,7 @@ class Heatmap(object):
         if len(last_part) > 0:
             last_part += "_"
 
-        last_part += "mode_%d_time_%s_%s.%s" % (mode, time, day, extension)
+        last_part += "mode_%d_time_%s_%s_%s.%s" % (mode, time, day, self._dataset, extension)
         # print "last_part", last_part
 
         result = ['temp']
@@ -714,7 +714,7 @@ def test5():
 
 def test6():
     h = Heatmap()
-    h.set_mode(20)
+    h.set_mode(23)
     h.set_dataset(DATASET.JUNE)
     h.run()
 
@@ -772,11 +772,12 @@ class RasterPlot(object):
             x = range(len(y))
 
             # line, = ax.semilogy(x, y, label=label)
-            #line, = ax.loglog(x, y, label=label)
-            # line, = ax.plot(x, y, label=label)
-            line, = ax.semilogx(x, y, label=label)
+            # line, = ax.loglog(x, y, label=label)
+            line, = ax.plot(x, y, label=label)
+            # line, = ax.semilogx(x, y, label=label)
 
-        ax.legend(loc='lower left')
+        # ax.legend(loc='lower left')
+        ax.legend(loc='upper right')
 
         plt.title(self._title)
         plt.ylabel(self._label_y)
@@ -786,18 +787,30 @@ class RasterPlot(object):
 
 def test8():
 
-    h1 = Heatmap("temp/shapefiles/heatmaps/heatmap_mode_15_brt1.shp")
-    raise ValueError("temp stop")
-    h2 = Heatmap("temp/shapefiles/heatmaps/heatmap_mode_16_brt1.shp")
-    h3 = Heatmap("temp/shapefiles/heatmaps/heatmap_mode_17_brt1.shp")
-    h4 = Heatmap("temp/shapefiles/heatmaps/heatmap_mode_18_brt1.shp")
+    h1 = Heatmap("temp/shapefiles/heatmaps/heatmap_mode_20_time_8_00_mwf_june.shp")
+    h2 = Heatmap("temp/shapefiles/heatmaps/heatmap_mode_19_time_8_00_mwf_june.shp")
+    h3 = Heatmap("temp/shapefiles/heatmaps/heatmap_mode_21_time_8_00_mwf_june.shp")
+
+    h4 = Heatmap("temp/shapefiles/heatmaps/heatmap_mode_15_time_8_00_mwf_june.shp")
+    h5 = Heatmap("temp/shapefiles/heatmaps/heatmap_mode_22_time_8_00_mwf_june.shp")
+    h6 = Heatmap("temp/shapefiles/heatmaps/heatmap_mode_23_time_8_00_mwf_june.shp")
+
+#    h3 = Heatmap("temp/shapefiles/heatmaps/heatmap_mode_17_brt1.shp")
+#    h4 = Heatmap("temp/shapefiles/heatmaps/heatmap_mode_18_brt1.shp")
 
 
     plotter = RasterPlot()
-    plotter.add_heatmap(h3, "dpass = 100")
-    plotter.add_heatmap(h2, "dpass = 200")
-    plotter.add_heatmap(h1, "dpass = 250")
-    plotter.add_heatmap(h4, "dpass = 400")
+
+    plotter.add_heatmap(h1, "Diamond Buffer - grid")
+    plotter.add_heatmap(h2, "Network Buffer - grid")
+    plotter.add_heatmap(h3, "Circle Buffer - grid")
+
+    plotter.add_heatmap(h4, "Circle Buffer - crow")
+    plotter.add_heatmap(h5, "Network Buffer - crow")
+    plotter.add_heatmap(h6, "Diamond Buffer - crow")
+
+#    plotter.add_heatmap(h3, "dpass = 100")
+#    plotter.add_heatmap(h4, "dpass = 400")
 
     plotter.plot()
 
@@ -808,7 +821,7 @@ def test8():
 
 if __name__ == "__main__":
 
-    test6()
+    test8()
     raise ValueError("Done")
 
     mode = 13
