@@ -3,6 +3,7 @@ import copy
 import shapefile
 import math
 import pprint
+import numpy as np
 
 import matplotlib.pyplot as plt
 
@@ -127,23 +128,23 @@ class Heatmap(object):
 
     def get_max_score(self):
         if self._max_score is None:
-            self.get_scores()
+            self.process_scores()
 
         return self._max_score
 
     def get_min_score(self):
         if self._min_score is None:
-            self.get_scores()
+            self.process_scores()
 
         return self._min_score
 
     def get_ave_score(self):
         if self._ave_score is None:
-            self.get_scores()
+            self.process_scores()
 
         return self._ave_score
 
-    def get_scores(self):
+    def process_scores(self):
 
         min_score = None
         max_score = None
@@ -152,7 +153,6 @@ class Heatmap(object):
         for raster in self._raster_list:
             # print raster_id
             score = raster.get_score()
-
             if max_score is None or score > max_score:
                 max_score = score
 
@@ -165,6 +165,10 @@ class Heatmap(object):
         self._max_score = max_score
         self._min_score = min_score
         self._ave_score = ave_score
+
+        print self._min_score
+        print self._ave_score
+        print self._max_score
 
     def make_file_name(self, start):
         # print "make name starting with", start
@@ -252,11 +256,22 @@ class Heatmap(object):
 
         print "Stop buffers complete"
 
-    def run(self):
+    def run(self, force=False):
 
         if self._run_flag:
             print "Heatmap already generated, cannot run again"
             return
+
+        # See if the shapefile already exists
+        shapefile_name = None
+        if not force:
+            shapefile_name = self.make_file_name("shapefiles/heatmaps/heatmap.shp")
+            if not os.path.exists(shapefile_name):
+                shapefile_name = None
+
+        if shapefile_name:
+            self.from_shapefile(shapefile_name)
+            return False
 
         self._run_flag = True
         self._dataman = dataman_factory(self._dataset)
@@ -296,7 +311,7 @@ class Heatmap(object):
             else:
                 print "CANNOT compute intersections with subset of stops"
                 print "quitting"
-                return
+                return False
 
         judge = Score(self._dataman, self._mode_man)
 
@@ -314,6 +329,8 @@ class Heatmap(object):
                 if score > 0:
                     raster.set_score(score)
                     self.add_raster(raster)
+
+        return True
 
     def filter_stop_tuples(self, stop_tuples, stops):
         result = []
@@ -417,6 +434,7 @@ class Heatmap(object):
             p = raster.get_polygon()
 
             score = raster.get_score()
+
             if score == 0:
                 continue
 
@@ -442,7 +460,9 @@ class Heatmap(object):
                 elif sqrt:
                     opacity = math.sqrt(score) / max_score_sqrt
                 else:
-                    opacity = score / max_score_abs
+                    opacity = float(score) / float(max_score_abs)
+
+                # print "--->>", score, opacity, max_score, max_score_abs
 
                 if score >= max_score:
                     color = "#fff240"
@@ -579,6 +599,7 @@ class Heatmap(object):
         return result
 
 def test2():
+
 
 
 
@@ -753,9 +774,58 @@ class RasterPlot(object):
     def add_heatmap(self, heatmap, label):
         self._heatmaps.append((heatmap, label))
 
+
+    def plot_histogram(self, bins=25):
+        score_min = None
+        score_max = None
+
+        fig, ax = plt.subplots(figsize=(10, 6))
+
+        for item in self._heatmaps:
+            h = item[0]
+            raster_dict = h.get_raster_dict()
+            for key, r in raster_dict.iteritems():
+                score = r.get_score()
+                if score_max is None or score > score_max:
+                    score_max = score
+
+                if score_min is None or score < score_min:
+                    score_min = score
+
+        bin_size = (score_max - score_min) / bins
+
+        x = np.zeros(bins)
+        for i in xrange(bins):
+            x[i] = score_min + 0.5 * bin_size + i * bin_size
+
+
+        print x
+
+        for item in self._heatmaps:
+            h = item[0]
+            label = item[1]
+            y = np.zeros(bins)
+            raster_dict = h.get_raster_dict()
+            for key, r in raster_dict.iteritems():
+                score = r.get_score()
+
+                for i in xrange(bins):
+                    if score < ( score_min + (i + 1) * bin_size ):
+                        y[i] += 1
+                        break
+
+            print y
+            line, = ax.plot(x, y, label=label)
+
+        plt.title(self._title)
+        plt.ylabel(self._label_y)
+        plt.xlabel(self._label_x)
+
+        plt.show()
+
     def plot(self):
 
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=(10, 6))
 
         for item in self._heatmaps:
             h = item[0]
@@ -773,8 +843,8 @@ class RasterPlot(object):
 
             # line, = ax.semilogy(x, y, label=label)
             # line, = ax.loglog(x, y, label=label)
-            line, = ax.plot(x, y, label=label)
-            # line, = ax.semilogx(x, y, label=label)
+            # line, = ax.plot(x, y, label=label)
+            line, = ax.semilogx(x, y, label=label)
 
         # ax.legend(loc='lower left')
         ax.legend(loc='upper right')
@@ -819,9 +889,22 @@ def test8():
     # print "max score", h3.get_max_score()
     # print "ave score", h3.get_ave_score()
 
+def test9():
+
+    h1 = Heatmap("temp/shapefiles/heatmaps/heatmap_mode_20_time_8_00_mwf_brt.shp")
+    h2 = Heatmap("temp/shapefiles/heatmaps/heatmap_mode_20_time_8_00_mwf_june.shp")
+
+    h3 = h2-h1
+
+    plotter = RasterPlot()
+
+    plotter.add_heatmap(h3, "Diamond Buffer - grid")
+    # plotter.plot()
+    plotter.plot_histogram(bins = 100)
+
 if __name__ == "__main__":
 
-    test8()
+    test9()
     raise ValueError("Done")
 
     mode = 13

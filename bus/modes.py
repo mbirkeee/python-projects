@@ -200,7 +200,31 @@ MODE_DICT = {
         KEY.STOP_DEMAND         : None,
         KEY.NORMALIZE_VALUE     : 6.0,
         KEY.WAIT_BANDPASS       : 3.0,
-    }
+    },
+    24: {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.DIAMOND_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DECAYED_WAIT,
+        KEY.DECAY_METHOD        : DECAY_METHOD.GRID_250,
+        KEY.STOP_DEMAND         : None,
+        KEY.NORMALIZE_VALUE     : 6.0,
+        KEY.WAIT_BANDPASS       : 1.0,
+    },
+    25: {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.DIAMOND_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DECAYED_WAIT,
+        KEY.DECAY_METHOD        : DECAY_METHOD.GRID_250,
+        KEY.STOP_DEMAND         : None,
+        KEY.NORMALIZE_VALUE     : 6.0,
+        KEY.WAIT_BANDPASS       : 5.0,
+    },
+    26: {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.DIAMOND_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DECAYED_WAIT,
+        KEY.DECAY_METHOD        : DECAY_METHOD.GRID_250,
+        KEY.STOP_DEMAND         : None,
+        KEY.NORMALIZE_VALUE     : 6.0,
+        KEY.WAIT_BANDPASS       : 10.0,
+    },
 }
 
 class ModeMan(object):
