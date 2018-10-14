@@ -11,7 +11,7 @@ class Runner(object):
 
     def __init__(self):
 
-        self._postal_codes = self.load_postal_codes("data/csv/interact_users_2018_10_01.csv")
+        self._postal_codes = self.load_postal_codes("data/csv/interact_users_2018_10_09.csv")
 
     def load_postal_codes(self, filename):
 
@@ -24,7 +24,7 @@ class Runner(object):
             line_count +=1
             if line_count == 1: continue
             code = line.strip()
-
+            code = code.strip(',')
             if len(code) == 0: continue
 
             count = result.get(code, 0)
