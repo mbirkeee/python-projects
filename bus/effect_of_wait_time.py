@@ -2,7 +2,7 @@ import random
 
 from heatmap import Heatmap
 from heatmap import RasterPlot
-
+from modes import ModeMan
 from dataset import DATASET
 
 modes = [
@@ -11,6 +11,11 @@ modes = [
     (25, "5 Minutes"),
     (26, "10 Minutes"),
 ]
+
+mode_mgr = ModeMan()
+mode_mgr.mode_list_summary([item[0] for item in modes])
+
+raise ValueError("temp stop")
 
 heatmaps = []
 
@@ -62,4 +67,5 @@ for key, raster in rasters_dist_10.iteritems():
 h_10.process_scores()
 
 h_10.plot("temp/maps/change_10_1.html", max_score=50)
+
 

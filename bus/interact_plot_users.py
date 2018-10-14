@@ -51,6 +51,8 @@ class Runner(object):
 
         print "number of records:", len(records)
 
+        raise ValueError("temp stop")
+        
         if len(records) != len(shapes):
             raise ValueError("len records != len shapes")
 

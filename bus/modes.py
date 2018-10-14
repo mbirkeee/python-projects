@@ -238,6 +238,46 @@ class ModeMan(object):
         if mode is not None:
             self.set_mode(mode)
 
+    def mode_list_summary(self, mode_list):
+
+        mode_list = sorted(mode_list)
+
+        getters = [
+            ("BUFFER",      self.get_buffer_method),
+            ("SCORE",       self.get_score_method),
+            ("DISTANCE",    self.get_distance_method),
+            ("DECAY",       self.get_decay_method),
+            ("NEAREST",     self.get_nearest_only),
+            ("DAY",         self.get_service_type),
+            ("TIME",        self.get_service_time),
+            ("WAIT_BPASS",  self.get_wait_bandpass),
+            ("WAIT_NORM",   self.get_normalize_value),
+            ("STOP DEMAND", self.get_stop_demand)
+
+        ]
+
+        for item in getters:
+            desc = item[0]
+            getter = item[1]
+
+            method_dict = {}
+
+            for mode in mode_list:
+                try:
+                    method = getter(mode=mode)
+                except:
+                    method = "None"
+
+                modes = method_dict.get(method, [])
+                modes.append(mode)
+                method_dict[method] = modes
+
+            for k, v in method_dict.iteritems():
+                modes = "%s" % repr(v)
+                param = "%-15s %-20s %s" % (desc, k, modes)
+                print param
+
+
     def set_mode(self, mode):
         mode = int(mode)
         if not self.valid(mode):
@@ -334,63 +374,79 @@ class ModeMan(object):
         pp = pprint.PrettyPrinter(indent=4)
         pp.pprint(self._mode_dict)
 
-    def get_buffer_method(self):
+    def get_buffer_method(self, mode=None):
+        if not mode: mode = self._mode
         # Buffer method defaults to BUFFER_METHOD.NONE
-        mode_data = self._mode_dict.get(self._mode)
+        mode_data = self._mode_dict.get(mode)
         return mode_data.get(KEY.BUFFER_METHOD, BUFFER_METHOD.NONE)
 
-    def get_score_method(self):
+    def get_score_method(self, mode=None):
         # Score method must be defined (if requested)
-        mode_data = self._mode_dict.get(self._mode)
+        if not mode: mode = self._mode
+        mode_data = self._mode_dict.get(mode)
         method = mode_data.get(KEY.SCORE_METHOD)
         if method is None:
-            raise ValueError("Score method not defined for mode: %s" % repr(self._mode))
+            raise ValueError("Score method not defined for mode: %s" % repr(mode))
         return method
 
-    def get_distance_method(self):
+    def get_distance_method(self, mode=None):
         # Distance method must be defined (if requested)
-        mode_data = self._mode_dict.get(self._mode)
+        if not mode: mode = self._mode
+        mode_data = self._mode_dict.get(mode)
         method = mode_data.get(KEY.DISTANCE_METHOD)
         if method is None:
-            raise ValueError("Score method not defined for mode: %s" % repr(self._mode))
+            raise ValueError("Score method not defined for mode: %s" % repr(mode))
         return method
 
-    def get_decay_method(self):
+    def get_decay_method(self, mode=None):
         # Distance method must be defined (if requested)
-        mode_data = self._mode_dict.get(self._mode)
+        if not mode: mode = self._mode
+        mode_data = self._mode_dict.get(mode)
         method = mode_data.get(KEY.DECAY_METHOD)
         if method is None:
-            raise ValueError("Decay method not defined for mode: %s" % repr(self._mode))
+            raise ValueError("Decay method not defined for mode: %s" % repr(mode))
         return method
 
-    def get_service_type(self):
+    def get_service_type(self, mode=None):
         # Service defaults to MWF
-        mode_data = self._mode_dict.get(self._mode)
+        if not mode: mode = self._mode
+        mode_data = self._mode_dict.get(mode)
         method = mode_data.get(KEY.SERVICE_TYPE, SERVICE.MWF)
         return method
 
-    def get_normalize_value(self):
+    def get_normalize_value(self, mode=None):
         # Normalize value can be None
-        mode_data = self._mode_dict.get(self._mode)
+        if not mode: mode = self._mode
+        mode_data = self._mode_dict.get(mode)
         method = mode_data.get(KEY.NORMALIZE_VALUE)
         return method
 
-    def get_wait_bandpass(self):
+    def get_wait_bandpass(self, mode=None):
         # Wait bandpass must be defined (if requested)
-        mode_data = self._mode_dict.get(self._mode)
+        if not mode: mode = self._mode
+        mode_data = self._mode_dict.get(mode)
         value = mode_data.get(KEY.WAIT_BANDPASS)
         if value is None:
-            raise ValueError("Decay method not defined for mode: %s" % repr(self._mode))
+            raise ValueError("Decay method not defined for mode: %s" % repr(mode))
         return value
 
-    def get_nearest_only(self):
+    def get_nearest_only(self, mode=None):
         # Nearest only defaults to TRUE!!!
-        mode_data = self._mode_dict.get(self._mode)
+        if not mode: mode = self._mode
+        mode_data = self._mode_dict.get(mode)
         method = mode_data.get(KEY.SCORE_NEAREST_ONLY, True)
         return method
 
-    def get_service_time(self):
+    def get_service_time(self, mode=None):
         # Service time defaults to "8:00"  (8 AM)
-        mode_data = self._mode_dict.get(self._mode)
+        if not mode: mode = self._mode
+        mode_data = self._mode_dict.get(mode)
         method = mode_data.get(KEY.SERVICE_TIME, "8:00")
+        return method
+
+    def get_stop_demand(self, mode=None):
+        # Service time defaults to "8:00"  (8 AM)
+        if not mode: mode = self._mode
+        mode_data = self._mode_dict.get(mode)
+        method = mode_data.get(KEY.STOP_DEMAND, None)
         return method
