@@ -116,7 +116,7 @@ class Point(object):
         elif method == 'grid':
             return abs(x1 - x2) + abs(y1 - y2)
         else:
-            raise ValueError("distanve method not supported: %s" % repr(method))
+            raise ValueError("distance method not supported: %s" % repr(method))
 
 
 class Polyline(object):
@@ -137,6 +137,19 @@ class Polyline(object):
 
     def get_attribute(self, key, default=None):
         return self._attributes.get(key, default)
+
+    def get_centroid(self):
+
+        utm_x_total = 0
+        utm_y_total = 0
+        for point in self._points:
+            utm_x_total += point.get_x()
+            utm_y_total += point.get_y()
+
+        utm_x_ave = utm_x_total / float(len(self._points))
+        utm_y_ave = utm_y_total / float(len(self._points))
+
+        return Point(utm_x_ave, utm_y_ave)
 
 class Polypoint(Polyline):
     pass

@@ -11,9 +11,63 @@ class Runner(object):
 
     def __init__(self):
 
-        self._postal_codes = self.load_postal_codes("data/csv/interact_users_2018_10_09.csv")
+        self._postal_codes = self.load_user_postal_codes("data/csv/interact_users_2018_10_09.csv")
+        self._pc_dict = self._postal_code_txt_to_csv("data/csv/pcc_saskatoon_062017.txt", "data/csv/postal_codes_centroids_2017.csv")
 
-    def load_postal_codes(self, filename):
+
+    def _to_numeric(self, input):
+
+        result = ""
+        for c in input:
+            if c.isdigit() or c == '.' or c == '-':
+                result += c
+
+        return result
+
+    def _postal_code_txt_to_csv(self, filename_in, filename_out):
+        """
+        Read in the raw postal code txt file from the post office.  Assume that it
+        has already been grepped for SASKATOON.
+
+        Write the cleaned results into a CVS file
+        """
+
+        pc_dict = {}
+
+        fin = open(filename_in, "r")
+        # fout = open(filename_out, "w")
+
+        for line in fin:
+            line = line.strip()
+            # print line
+            parts = line.split()
+            # print parts
+
+            postal = parts[0]
+            postal_part1 = postal[:3]
+            postal_part2 = postal[3:6]
+            lat = float(self._to_numeric(parts[3]))
+            lng = float(self._to_numeric(parts[4]))
+
+            # print postal_part1, postal_part2
+
+            postal_code = postal_part1 + " " + postal_part2
+
+            # print postal_code, lat, lng
+
+            points = pc_dict.get(postal_code, [])
+            points.append((lat, lng))
+            pc_dict[postal_code] = points
+
+        fin.close()
+
+        for k, v in pc_dict.iteritems():
+            print k, len(v)
+
+        print len(pc_dict)
+        return pc_dict
+
+    def load_user_postal_codes(self, filename):
 
         result = {}
 
@@ -40,7 +94,53 @@ class Runner(object):
 
         return result
 
+    def run_new(self):
+        """
+        Use the latest postal code data.  Note that some postal codes
+        hace multiple GPS positions... use centroid
+        """
+        plotter = Plotter()
+        locations = Polypoint()
+
+        fout = open("interact_user_locations_2018_10_14.csv", "w")
+        fout.write("fid,lat,lng\n")
+        fid = 0
+
+        for user_postal_code, count in self._postal_codes.iteritems():
+            print "user postal code", user_postal_code, count
+
+            location = self._pc_dict.get(user_postal_code)
+            if location is None:
+                raise ValueError("not found")
+
+            ppoint = Polypoint()
+            for p in location:
+                ppoint.add_point(Point(p[0], p[1]))
+
+            centroid = ppoint.get_centroid()
+
+            for x in xrange(count ):
+                y_move = int(x/2)
+                x_move =  x - y_move * 2
+                # print x_move, y_move
+
+                point = Point(centroid.get_x() + 100 * x_move, centroid.get_y() + 100 * y_move)
+                locations.add_point(point)
+                fout.write("%d,%f,%f\n" %(fid, point.get_lat(), point.get_lng()))
+                fid += 1
+
+            locations.add_point(centroid)
+
+        locations.set_attribute(ATTR.FILL_COLOR, "#0000ff")
+        locations.set_attribute(ATTR.FILL_OPACITY, 1.0)
+
+        fout.close()
+        plotter.add_polypoint(locations)
+        plotter.plot("temp/maps/postal.html")
+
+
     def run(self):
+
 
         plotter = Plotter()
         file_name = "data/shapefiles/postal_codes/Postal_Codes_Polygons_Nov-2012.shp"
@@ -52,7 +152,7 @@ class Runner(object):
         print "number of records:", len(records)
 
         raise ValueError("temp stop")
-        
+
         if len(records) != len(shapes):
             raise ValueError("len records != len shapes")
 
@@ -125,4 +225,5 @@ class Runner(object):
 if __name__ == "__main__":
 
     runner = Runner()
-    runner.run()
+    runner.run_new()
+    # runner.run()
