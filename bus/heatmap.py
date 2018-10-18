@@ -397,6 +397,113 @@ class Heatmap(object):
 
             self._raster_list.append(raster)
 
+    def get_da_scores(self):
+
+        da_dict = {}
+
+        for raster in self._raster_list:
+            # print dir(raster)
+            p = raster.get_polygon()
+            da_id = raster.get_parent_id()
+            score = raster.get_score()
+            area = p.get_area()
+            # print da_id, score, area
+
+            da_data = da_dict.get(da_id, {})
+            total_score = da_data.get('total_score', 0.0)
+            total_score += area * score
+            da_data['total_score'] = total_score
+            total_area = da_data.get('total_area', 0.0)
+            total_area += area
+            da_data['total_area'] = total_area
+            da_dict[da_id] = da_data
+
+        for da_id, da_data in da_dict.iteritems():
+            ave_score = da_data.get('total_score') / da_data.get('total_area')
+            da_data['ave_score'] = ave_score
+
+        if self._da_man is None:
+            self._da_man = DaData()
+
+        # Get a list of all DAs
+        das = self._da_man.get_das()
+
+        da_list = []
+        for da in das:
+            da_id = da.get_id()
+            da_data = da_dict.get(da_id)
+            if da_data is None:
+                # print "NO DATA FOR DA", da_id
+                ave_score = 0.0
+            else:
+                ave_score = da_data.get('ave_score')
+
+            da_list.append((da_id, ave_score))
+
+        da_list = sorted(da_list)
+
+        for item in da_list:
+            print item
+
+        return da_list
+
+    def pearson_da(self, other):
+        from scipy.stats import pearsonr
+
+        my_scores = self.get_da_scores()
+        other_scores = other.get_da_scores()
+
+        my_scores = [item[1] for item in my_scores]
+        other_scores = [item[1] for item in other_scores]
+
+        result = pearsonr(my_scores, other_scores)
+        print result
+
+
+
+    def plot_das(self, file_name):
+
+        if self._da_man is None:
+            self._da_man = DaData()
+
+        # Compute the average score for the DAs
+        da_score_list = self.get_da_scores()
+
+        max_score = None
+        min_score = None
+
+        # Get the max and min score
+        for item in da_score_list:
+            # print da_id, da_data
+            score = item[1]
+
+            if max_score is None or score > max_score:
+                max_score = score
+
+            if min_score is None or score < min_score:
+                min_score = score
+
+        # Make a plotter object
+        plotter = Plotter()
+        for item in da_score_list:
+
+            da_id = item[0]
+            score = item[1]
+            # Get the DA polygon
+            da = self._da_man.get_da(da_id)
+            p = da.get_polygon()
+
+            opacity = float(score) / float(max_score)
+
+            p.set_attribute(ATTR.FILL_COLOR, "#FF0000")
+            p.set_attribute(ATTR.FILL_OPACITY, opacity)
+            p.set_attribute(ATTR.STROKE_WEIGHT, 1)
+            p.set_attribute(ATTR.STROKE_COLOR, "#202020")
+            p.set_attribute(ATTR.STROKE_OPACITY, 1)
+            plotter.add_polygon(p)
+
+        plotter.plot(file_name)
+
     def plot(self, file_name=None, plotter=None, include_das=True, max_score=None, min_score=None, log=False, sqrt=False):
 
         heat_color = HeatmapColor()
@@ -908,17 +1015,12 @@ def test9():
 
 def test10():
 
-    h = Heatmap()
-    h.from_shapefile("temp/shapefiles/heatmaps/heatmap_mode_13_time_8_00_mwf_brt1.shp")
-    h.to_csv("heatmap_mode_13_time_8_00_mwf_brt1.csv")
 
-    raise ValueError("temp stop")
+    h = Heatmap("temp/shapefiles/heatmaps/heatmap_mode_15_time_11_15_mwf_brt1.shp")
+    h1 = Heatmap("temp/shapefiles/heatmaps/heatmap_mode_15_time_8_00_mwf_brt1.shp")
+    h1.plot_das("temp/maps/plot_da.html")
 
-    h.set_mode(13)
-    h.set_dataset(DATASET.BRT_1)
-    h.run()
-    h.plot()
-    h.to_shapefile()
+    x, y = h.pearson_da(h1)
 
 if __name__ == "__main__":
 
