@@ -63,6 +63,7 @@ class DA(object):
         self._polygon = None
         self._clipped_polygon = None
         self._population = None
+        self._transit_users = None
         self._rasters = []
 
     def set_clipped_polygon(self, polygon):
@@ -145,8 +146,17 @@ class DA(object):
     def set_population(self, population):
         self._population = population
 
+    def set_transit_users(self, transit_users):
+        self._transit_users = transit_users
+
     def get_population(self):
         return self._population
+
+    def get_transit_users(self):
+        return self._transit_users
+
+    def get_percent_transit_users(self):
+        return 100.0 * (float(self.get_transit_users())/float(self.get_population()))
 
     def get_centriod(self):
         raise ValueError("fixman")
@@ -178,6 +188,7 @@ class DaData(object):
 
         self.load_file("data/DA_polygon_points.csv")
         self.load_file_centroids("data/DA_centroids.csv")
+        self.load_file_transit_data("data/2016_da_transit.csv")
 
         # This data can be used to clip DA polygons to get a much more realistic
         # approximation of the populated areas
@@ -429,10 +440,41 @@ class DaData(object):
     def get_das(self):
         return [da for da in self._da_dict.itervalues()]
 
-
     def get_da(self, da_id):
         return self._da_dict.get(da_id)
 
+    def load_file_transit_data(self, file_name):
+
+        f = open(file_name, "r")
+
+        count = 0
+        for line in f:
+            count += 1
+            if count == 1: continue
+
+            parts=line.split(",")
+            # print parts
+
+            da_id =int(parts[1].strip())
+            transit_riders = int(parts[2].strip())
+            pop = int(parts[3].strip())
+
+            print da_id, transit_riders, pop
+
+            da = self.get_da(da_id)
+            if da is None:
+                raise ValueError("cant find DA: %d" % da_id)
+
+            if da.get_population() != pop:
+                raise ValueError("pop mismatch")
+
+            da.set_transit_users(4 * transit_riders)
+
+        f.close()
+
+        # das = self.get_das()
+        # if (count - 1)  != len(das):
+        #     raise ValueError("size mismatch: count: %d DAs: %d" % (count, len(das)))
 
 
     def load_file_centroids(self, file_name):
@@ -464,3 +506,50 @@ class DaData(object):
         f.close()
 
         print "DaData loaded %d centroids from %s" % (count, file_name)
+
+    def get_transit_percentages(self):
+
+        result = []
+        das = self.get_das()
+        for da in das:
+            percent = da.get_percent_transit_users()
+            da_id = da.get_id()
+            result.append((da_id, percent))
+
+        result = sorted(result)
+        return result
+
+    def plot_percent_transit_users(self, file_name):
+        from plotter import Plotter
+
+        plotter = Plotter()
+
+        min_percentage = None
+        max_percentage = None
+
+        percentages = self.get_transit_percentages()
+
+        for item in percentages:
+            percent = item[1]
+
+            if max_percentage is None or percent > max_percentage:
+                max_percentage = percent
+
+            if min_percentage is None or percent < min_percentage:
+                min_percentage = percent
+
+        for item in percentages:
+            percent = item[1]
+            da_id = item[0]
+
+            print da_id, percent
+
+def test1():
+
+    daman = DaData()
+    daman.plot_percent_transit_users("temp/maps/transit_users_da.html")
+
+
+if __name__ == "__main__":
+
+    test1()

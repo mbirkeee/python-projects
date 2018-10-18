@@ -11,7 +11,7 @@ class Runner(object):
 
     def __init__(self):
 
-        self._postal_codes = self.load_user_postal_codes("data/csv/interact_users_2018_10_09.csv")
+        self._postal_codes = self.load_user_postal_codes("data/csv/interact_users_2018_10_15.csv")
         self._pc_dict = self._postal_code_txt_to_csv("data/csv/pcc_saskatoon_062017.txt", "data/csv/postal_codes_centroids_2017.csv")
 
 
@@ -61,8 +61,18 @@ class Runner(object):
 
         fin.close()
 
+        fout = open(filename_out, "w")
+
+        fout.write("fid,postal_code,lat,lng\n")
+
+        index = 1
         for k, v in pc_dict.iteritems():
-            print k, len(v)
+            for item in v:
+                print k, item
+                fout.write("%d,%s,%f,%f\n" % (index, k, item[0], item[1]))
+                index += 1
+            # print k, len(v)
+        fout.close()
 
         print len(pc_dict)
         return pc_dict
@@ -102,7 +112,7 @@ class Runner(object):
         plotter = Plotter()
         locations = Polypoint()
 
-        fout = open("interact_user_locations_2018_10_14.csv", "w")
+        fout = open("interact_user_locations_2018_10_15.csv", "w")
         fout.write("fid,lat,lng\n")
         fid = 0
 
@@ -111,7 +121,9 @@ class Runner(object):
 
             location = self._pc_dict.get(user_postal_code)
             if location is None:
-                raise ValueError("not found")
+                print "NOT FOUND: %s" % user_postal_code
+                # raise ValueError("not found")
+                continue
 
             ppoint = Polypoint()
             for p in location:

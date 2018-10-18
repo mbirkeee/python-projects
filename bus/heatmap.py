@@ -206,27 +206,31 @@ class Heatmap(object):
         # print "file_name_done", file_name
         return file_name
 
-    def dump_score_csv(self, file_name=None):
+    def to_csv(self, file_name=None):
 
         x = []
         for raster in self._raster_list:
-            x.append((raster.get_score(), raster.get_parent_id(), raster.get_id()))
+            centroid = raster.get_centroid()
+            # print repr(centroid)
+            lat = centroid.get_lat()
+            lng = centroid.get_lng()
+            x.append((raster.get_score(), raster.get_parent_id(), raster.get_id(), lat, lng))
 
         x = sorted(x)
         x.reverse()
 
         if file_name is None:
-            file_name = self.make_file_name("csv/score")
-
-            # file_name = "temp/csv/score_mode_%s_%s_%s_%s.csv" % (self._mode, self._dataset)
+            file_name = self.make_file_name("csv/heatmaps/heatmap.csv")
 
         f = open(file_name, "w")
-        f.write("index,score,da_id,raster_id\n")
+        f.write("index,score,da_id,raster_id,lat,lng\n")
         for i, item in enumerate(x):
             score = item[0]
             da_id = item[1]
             raster_id = item[2]
-            f.write("%d,%f,%d,%d\n" % (i, score, da_id, raster_id) )
+            lat = item[3]
+            lng = item[4]
+            f.write("%d,%f,%d,%d,%f,%f\n" % (i, score, da_id, raster_id,lat,lng) )
         f.close()
 
         print "Wrote %d scores to: %s" % (len(x), file_name)
@@ -902,9 +906,23 @@ def test9():
     # plotter.plot()
     plotter.plot_histogram(bins = 100)
 
+def test10():
+
+    h = Heatmap()
+    h.from_shapefile("temp/shapefiles/heatmaps/heatmap_mode_13_time_8_00_mwf_brt1.shp")
+    h.to_csv("heatmap_mode_13_time_8_00_mwf_brt1.csv")
+
+    raise ValueError("temp stop")
+
+    h.set_mode(13)
+    h.set_dataset(DATASET.BRT_1)
+    h.run()
+    h.plot()
+    h.to_shapefile()
+
 if __name__ == "__main__":
 
-    test9()
+    test10()
     raise ValueError("Done")
 
     mode = 13
