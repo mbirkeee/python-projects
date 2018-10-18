@@ -4,6 +4,7 @@ import shapefile
 import math
 import pprint
 import numpy as np
+import random
 
 import matplotlib.pyplot as plt
 
@@ -206,6 +207,19 @@ class Heatmap(object):
         # print "file_name_done", file_name
         return file_name
 
+    def to_da_csv(self, file_name=None):
+
+        scores = self.get_da_scores()
+        f = open(file_name, "w")
+
+        index = 1
+        f.write("fid,da_id,score\n")
+        for item in scores:
+            f.write("%d,%d,%f\n" % (index, item[0], float(item[1])))
+            index += 1
+
+        f.close()
+
     def to_csv(self, file_name=None):
 
         x = []
@@ -401,11 +415,27 @@ class Heatmap(object):
 
         da_dict = {}
 
+        max_score = None
+
+        for raster in self._raster_list:
+            score = raster.get_score()
+            if max_score is None or score > max_score:
+                max_score = score
+
+        clipped_count = 0
+
+        max_score = 0.6 * max_score
+
         for raster in self._raster_list:
             # print dir(raster)
             p = raster.get_polygon()
             da_id = raster.get_parent_id()
             score = raster.get_score()
+
+            if score > max_score:
+                score = max_score
+                clipped_count += 1
+
             area = p.get_area()
             # print da_id, score, area
 
@@ -438,6 +468,7 @@ class Heatmap(object):
             else:
                 ave_score = da_data.get('ave_score')
 
+            # ave_score = random.randint(0, 10)
             da_list.append((da_id, ave_score))
 
         da_list = sorted(da_list)
@@ -445,18 +476,55 @@ class Heatmap(object):
         for item in da_list:
             print item
 
+        print "CLIPPED COUNT", clipped_count
         return da_list
 
-    def pearson_da(self, other):
+    def pearson_da(self, other=None):
+
         from scipy.stats import pearsonr
 
         my_scores = self.get_da_scores()
-        other_scores = other.get_da_scores()
 
-        my_scores = [item[1] for item in my_scores]
-        other_scores = [item[1] for item in other_scores]
+        outliers = [(item[1], item[0]) for item in my_scores]
+        outliers = sorted(outliers)
 
-        result = pearsonr(my_scores, other_scores)
+        for item in outliers:
+            print item
+
+        outlier_das = outliers[-6:]
+        outlier_das = [item[1] for item in outlier_das]
+
+        print "outlier_das"
+        print outlier_das
+
+        if other:
+            other_scores = other.get_da_scores()
+        else:
+            if self._da_man is None:
+                self._da_man = DaData()
+            other_scores = self._da_man.get_transit_percentages()
+
+        # my_sc = []
+        # for item in my_scores:
+        #     score = item[1]
+        #     da_id = item[0]
+        #     if da_id in outlier_das:
+        #         continue
+        #     my_sc.append(score)
+        #
+        # other_sc = []
+        # for item in other_scores:
+        #     score = item[1]
+        #     da_id = item[0]
+        #     if da_id in outlier_das:
+        #         continue
+        #     other_sc.append(score)
+
+
+        my_sc = [item[1] for item in my_scores]
+        other_sc = [item[1] for item in other_scores]
+
+        result = pearsonr(my_sc, other_sc)
         print result
 
 
@@ -1020,11 +1088,25 @@ def test10():
     h1 = Heatmap("temp/shapefiles/heatmaps/heatmap_mode_15_time_8_00_mwf_brt1.shp")
     h1.plot_das("temp/maps/plot_da.html")
 
-    x, y = h.pearson_da(h1)
+    x, y = h.pearson_da(other = h1)
+
+
+def test11():
+    h = Heatmap("temp/shapefiles/heatmaps/heatmap_mode_4_time_8_00_mwf_june.shp")
+    h.plot("temp/maps/heatmap_mode_4_time_8_00_mwf_june.html")
+    h.to_da_csv("mode_4_june_da.csv")
+
+
+    # h = Heatmap()
+    # h.set_dataset(DATASET.JUNE)
+    # h.set_mode(27)
+    # h.run()
+    # h.to_shapefile()
+    # x, y = h.pearson_da()
 
 if __name__ == "__main__":
 
-    test10()
+    test11()
     raise ValueError("Done")
 
     mode = 13

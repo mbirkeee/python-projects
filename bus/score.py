@@ -27,7 +27,7 @@ class Score(object):
 
             distance = point1.get_distance(point2, method="crow")
 
-        elif decay_method in [DECAY_METHOD.GRID_250]:
+        elif decay_method in [DECAY_METHOD.GRID_250, DECAY_METHOD.GRID_100]:
             distance = point1.get_distance(point2, method="grid")
 
         else:
@@ -40,7 +40,7 @@ class Score(object):
             self._filter.set_dpass(250)
             decay = self._filter.butterworth(distance)
 
-        elif decay_method == DECAY_METHOD.CROW_100:
+        elif decay_method in [DECAY_METHOD.CROW_100, DECAY_METHOD.GRID_100]:
             self._filter.set_dpass(100)
             decay = self._filter.butterworth(distance)
 
@@ -171,7 +171,7 @@ class Score(object):
                     elif score_method == SCORE_METHOD.DEPARTURES_PER_DAY:
                         departs = self._dataman.get_departs_per_day(route_id, direction, stop_id, service_type)
 
-                    elif score_method == SCORE_METHOD.DEPARTURES_PER_HOUR:
+                    elif score_method == SCORE_METHOD.DEPARTURES_PER_WEEK:
                         departs = self._dataman.get_departs_per_week(route_id, direction, stop_id)
 
                     elif score_method == SCORE_METHOD.DECAYED_WAIT:
@@ -264,8 +264,8 @@ class Score(object):
 
     def get_score_stop_count(self, raster, stop_tuples):
 
-        if self._decay_method is not None:
-            raise ValueError("decay method not supported")
+        # if self._decay_method is not None:
+        #     raise ValueError("decay method not supported")
 
         score = 0
         raster_p = raster.get_polygon()

@@ -29,6 +29,7 @@ class DECAY_METHOD(object):
     CROW_200    = "crow_200"    # Euclidian distance, butterworth dpass = 200
     CROW_400    = "crow_400"    # Euclidian distance, butterworth dpass = 200
     GRID_250    = "grid_250"    #
+    GRID_100    = "grid_100"
 
 class SCORE_METHOD(object):
     STOP_COUNT              = "simple_stop_count"
@@ -59,7 +60,8 @@ MODE_DICT = {
         KEY.BUFFER_METHOD       : BUFFER_METHOD.CIRCLE_400,
         KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_HOUR,
         KEY.SCORE_NEAREST_ONLY  : False,
-        KEY.STOP_DEMAND         : None
+        KEY.STOP_DEMAND         : None,
+        KEY.DECAY_METHOD        : None
     },
     5 : {
         KEY.BUFFER_METHOD       : BUFFER_METHOD.CIRCLE_400,
@@ -219,6 +221,50 @@ MODE_DICT = {
     },
     26: {
         KEY.BUFFER_METHOD       : BUFFER_METHOD.DIAMOND_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DECAYED_WAIT,
+        KEY.DECAY_METHOD        : DECAY_METHOD.GRID_250,
+        KEY.STOP_DEMAND         : None,
+        KEY.NORMALIZE_VALUE     : 6.0,
+        KEY.WAIT_BANDPASS       : 10.0,
+    },
+    27: {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_HOUR,
+        KEY.DECAY_METHOD        : DECAY_METHOD.GRID_250,
+        KEY.STOP_DEMAND         : None,
+    },
+    28: {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_HOUR,
+        KEY.DECAY_METHOD        : DECAY_METHOD.GRID_250,
+        KEY.STOP_DEMAND         : None,
+        KEY.SCORE_NEAREST_ONLY  : False
+    },
+    29: {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_WEEK,
+        KEY.DECAY_METHOD        : DECAY_METHOD.GRID_250,
+        KEY.STOP_DEMAND         : None,
+        KEY.SCORE_NEAREST_ONLY  : False
+    },
+    30: {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DECAYED_WAIT,
+        KEY.DECAY_METHOD        : DECAY_METHOD.GRID_250,
+        KEY.STOP_DEMAND         : None,
+        KEY.NORMALIZE_VALUE     : 6.0,
+        KEY.WAIT_BANDPASS       : 5.0,
+    },
+    31: {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DECAYED_WAIT,
+        KEY.DECAY_METHOD        : DECAY_METHOD.GRID_100,
+        KEY.STOP_DEMAND         : None,
+        KEY.NORMALIZE_VALUE     : 6.0,
+        KEY.WAIT_BANDPASS       : 5.0,
+    },
+    32: {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_400,
         KEY.SCORE_METHOD        : SCORE_METHOD.DECAYED_WAIT,
         KEY.DECAY_METHOD        : DECAY_METHOD.GRID_250,
         KEY.STOP_DEMAND         : None,
@@ -403,8 +449,8 @@ class ModeMan(object):
         if not mode: mode = self._mode
         mode_data = self._mode_dict.get(mode)
         method = mode_data.get(KEY.DECAY_METHOD)
-        if method is None:
-            raise ValueError("Decay method not defined for mode: %s" % repr(mode))
+        # if method is None:
+        #     raise ValueError("Decay method not defined for mode: %s" % repr(mode))
         return method
 
     def get_service_type(self, mode=None):

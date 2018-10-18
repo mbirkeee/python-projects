@@ -520,7 +520,7 @@ class DaData(object):
         return result
 
     def plot_percent_transit_users(self, file_name):
-        from plotter import Plotter
+        from plotter import Plotter, ATTR
 
         plotter = Plotter()
 
@@ -542,7 +542,20 @@ class DaData(object):
             percent = item[1]
             da_id = item[0]
 
-            print da_id, percent
+            da = self.get_da(da_id)
+            p = da.get_polygon()
+
+            opacity = float(percent) / float(max_percentage)
+
+            p.set_attribute(ATTR.FILL_COLOR, "#FF0000")
+            p.set_attribute(ATTR.FILL_OPACITY, opacity)
+            p.set_attribute(ATTR.STROKE_WEIGHT, 1)
+            p.set_attribute(ATTR.STROKE_COLOR, "#202020")
+            p.set_attribute(ATTR.STROKE_OPACITY, 1)
+            plotter.add_polygon(p)
+
+        plotter.plot(file_name)
+
 
 def test1():
 
