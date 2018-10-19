@@ -8,6 +8,9 @@ from modes import DECAY_METHOD
 
 from butterworth import wait_decay
 
+from scipy import stats
+
+
 class Score(object):
 
     def __init__(self, dataman, mode_man):
@@ -284,3 +287,180 @@ class Score(object):
                 score += a
 
         return score
+
+class ScoreManager(object):
+    """
+    This class accepts a list of items and their scores.  It computes the
+    min/max, zscores, and can return raw values or as a percentage of min/max.
+    It can clip outliers, etc.
+    """
+    def __init__(self, score_tuples):
+
+        self._score_tuples = score_tuples
+
+        self._raw_data = {}
+
+        self._max_score = None
+        self._min_score = None
+
+        self._max_z_score = None
+        self._min_z_score = None
+
+        self._max_log_score = None
+        self._min_log_score = None
+
+        self._color_hot         = "#ff0000"
+        self._color_clipped     = "#fff240"
+
+        self._clip_level = 1.0
+
+        for item in score_tuples:
+            thing = item[0]
+            score = float(item[1])
+
+            if self._max_score is None or score > self._max_score:
+                self._max_score = score
+
+            if self._min_score is None or score < self._min_score:
+                self._min_score = score
+
+            # Save the score in a dict keyed by the thing
+            self._raw_data[thing] = {'score' : score }
+
+        self._make_z_scores()
+        self._make_log_scores()
+
+        for v in self._raw_data.itervalues():
+            print repr(v)
+
+        # raise ValueError('temp stop')
+
+    def _make_log_scores(self):
+
+        for i, item in enumerate(self._score_tuples):
+            thing = item[0]
+            score = item[1]
+            log_score  = math.log10(score+ 1.0
+
+
+            )
+
+            data = self._raw_data.get(thing)
+            data['log_score'] = log_score
+            self._raw_data[thing] = data
+
+            if self._max_log_score is None or log_score > self._max_log_score:
+                self._max_log_score = log_score
+
+            if self._min_log_score is None or log_score < self._min_log_score:
+                self._min_log_score = log_score
+
+    def _make_z_scores(self):
+
+        score_list = []
+        for i, item in enumerate(self._score_tuples):
+            score = item[1]
+            score_list.append(score)
+
+        z_scores = stats.zscore(score_list)
+
+        for i, item in enumerate(self._score_tuples):
+            thing = item[0]
+            z_score = z_scores[i]
+
+            if self._max_z_score is None or z_score > self._max_z_score:
+                self._max_z_score = z_score
+
+            if self._min_z_score is None or z_score < self._min_z_score:
+                self._min_z_score = z_score
+
+            data = self._raw_data.get(thing)
+            data['z_score'] = z_score
+            self._raw_data[thing] = data
+
+        # -- The section shifts scores up so all are +ve
+        self._max_z_score += abs(self._min_z_score)
+
+        for thing, data in self._raw_data.iteritems():
+            z_score = data.get('z_score')
+            z_score += abs(self._min_z_score)
+            data['z_score'] = z_score
+
+            score = data.get('score')
+            ratio = score / z_score
+
+            print "SCORE: %f ZSCORE: %f %f" % (score, z_score, ratio)
+
+        self._min_z_score = 0
+        # -- End section shift up --
+
+        # raise ValueError('temp stop')
+
+    def set_clip_level(self, clip_level, clip_color="#fff240"):
+        self._clip_level = clip_level
+        self._color_clipped = clip_color
+
+    def get_z_score(self, thing, opacity=False):
+
+        data = self._raw_data.get(thing)
+        score = data.get('z_score')
+
+        color = self._color_hot
+        level = score / self._max_z_score
+
+        if level > self._clip_level:
+            color = self._color_clipped
+            level = 1.0
+        else:
+            level = level / self._clip_level
+
+        if opacity:
+            score = level
+
+        return score, color
+
+    def get_log_score(self, thing, opacity=False):
+
+        data = self._raw_data.get(thing)
+        score = data.get('log_score')
+
+        color = self._color_hot
+        level = score / self._max_log_score
+
+        if level > self._clip_level:
+            color = self._color_clipped
+            level = 1.0
+        else:
+            level = level / self._clip_level
+
+        if opacity:
+            score = level
+
+        return score, color
+
+    def get_score(self, thing, opacity=False, z_score=False, log_score=False):
+
+        if log_score:
+            return self.get_log_score(thing, opacity=opacity)
+
+        if z_score:
+            return self.get_z_score(thing, opacity=opacity)
+
+        data = self._raw_data.get(thing)
+        score = data.get('score')
+
+        color = self._color_hot
+        level = score / self._max_score
+
+        if level > self._clip_level:
+            color = self._color_clipped
+            level = 1.0
+        else:
+            level = level / self._clip_level
+
+        if opacity:
+            score = level
+
+        return score, color
+
+

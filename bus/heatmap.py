@@ -22,6 +22,7 @@ from plotter import Plotter
 from plotter import ATTR
 
 from score import Score
+from score import ScoreManager
 
 from geometry import Point
 from geometry import Polygon
@@ -482,6 +483,7 @@ class Heatmap(object):
     def pearson_da(self, other=None):
 
         from scipy.stats import pearsonr
+        from scipy.stats import zscore
 
         my_scores = self.get_da_scores()
 
@@ -527,6 +529,13 @@ class Heatmap(object):
         result = pearsonr(my_sc, other_sc)
         print result
 
+        print "Get Z scores"
+
+        my_z = zscore(my_sc)
+        other_z = zscore(other_sc)
+
+        result = pearsonr(my_z, other_z)
+        print result
 
 
     def plot_das(self, file_name):
@@ -572,7 +581,7 @@ class Heatmap(object):
 
         plotter.plot(file_name)
 
-    def plot(self, file_name=None, plotter=None, include_das=True, max_score=None, min_score=None, log=False, sqrt=False):
+    def plot(self, file_name=None, plotter=None, include_das=True, max_score=None, min_score=None, log=False, sqrt=False, z_score=False):
 
         heat_color = HeatmapColor()
 
@@ -587,70 +596,20 @@ class Heatmap(object):
         else:
             write_file = False
 
-        if max_score is None:
-            max_score = -9999999
-            for raster in self._raster_list:
-                score = raster.get_score()
-                if score > max_score:
-                    max_score = score
-
-        if min_score is None:
-            min_score = 9999999
-            for raster in self._raster_list:
-                score = raster.get_score()
-                if score < min_score:
-                    min_score = score
-
-        max_score_abs = max(abs(min_score), abs(max_score))
-        max_score_log = math.log10(max_score_abs)
-        max_score_sqrt = math.sqrt(max_score_abs)
+        # Make a list of scores and pass into score manager
+        score_list = [(raster, raster.get_score()) for raster in self._raster_list]
+        score_man = ScoreManager(score_list)
+        # score_man.set_clip_level(0.9)
 
         for raster in self._raster_list:
-
-            # print "Raster ID", raster.get_id()
-            # print "Raster Parent", raster.get_parent_id()
-
             p = raster.get_polygon()
 
-            score = raster.get_score()
+            # score = raster.get_score()
+            # opacity, color = score_man.get_score(raster, opacity=True, log_score=True)
+            opacity, color = score_man.get_score(raster, opacity=True)
 
-            if score == 0:
+            if opacity == 0:
                 continue
-
-            if score > max_score:
-                score = max_score
-
-            if score < min_score:
-                score = min_score
-
-            # if sqrt:
-            #
-            #     color = heat_color.get_color(math.sqrt(score), math.sqrt(max_score))
-            #
-            # else:
-            #     color = heat_color.get_color(score, max_score)
-            #
-            # opacity = score / max_score
-
-
-            if score > 0:
-                if log:
-                    opacity = math.log10(score) / max_score_log
-                elif sqrt:
-                    opacity = math.sqrt(score) / max_score_sqrt
-                else:
-                    opacity = float(score) / float(max_score_abs)
-
-                # print "--->>", score, opacity, max_score, max_score_abs
-
-                if score >= max_score:
-                    color = "#fff240"
-                else:
-                    color = "#ff0000"
-                    # color = "#000000"
-            else:
-                opacity = -1.0 * score / max_score_abs
-                color = "#0000ff"
 
             p.set_attribute(ATTR.FILL_COLOR, color)
             p.set_attribute(ATTR.FILL_OPACITY, opacity)
@@ -666,11 +625,6 @@ class Heatmap(object):
 
         if write_file:
             plotter.plot(file_name)
-
-        print "max_score", max_score_abs
-        print "max_score_log", max_score_log
-        print "max_score_sqrt", max_score_sqrt
-
 
     def to_shapefile(self, file_name=None):
         """
@@ -1092,9 +1046,11 @@ def test10():
 
 
 def test11():
-    h = Heatmap("temp/shapefiles/heatmaps/heatmap_mode_4_time_8_00_mwf_june.shp")
-    h.plot("temp/maps/heatmap_mode_4_time_8_00_mwf_june.html")
-    h.to_da_csv("mode_4_june_da.csv")
+    h = Heatmap("temp/shapefiles/heatmaps/heatmap_mode_15_time_8_00_mwf_brt1.shp")
+
+    h.plot("temp/maps/junk.html")
+
+    # h.to_da_csv("mode_4_june_da.csv")
 
 
     # h = Heatmap()
@@ -1102,7 +1058,7 @@ def test11():
     # h.set_mode(27)
     # h.run()
     # h.to_shapefile()
-    # x, y = h.pearson_da()
+    x, y = h.pearson_da()
 
 if __name__ == "__main__":
 
