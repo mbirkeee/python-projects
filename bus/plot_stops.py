@@ -12,9 +12,8 @@ from dataset import DATASET
 from dataset import SERVICE
 from intersect import Intersect
 from constants import KEY
-
 from shapefile_writer import ShapeFileWriter
-
+from da_manager import DaData
 from make_stop_intersections import BufferManager
 
 class Runner(object):
@@ -32,6 +31,7 @@ class Runner(object):
         self._dataset = args.dataset
         self._buffer = args.buffer_method
         self._all_stops = args.all_stops
+
         self._output_shapefile = args.output_shapefile
 
         self._dataman = dataman_factory(self._dataset, link_stops=True, link_route_shapes=True)
@@ -46,6 +46,7 @@ class Runner(object):
 
 
         if self._stop_id is None:
+
             plotter = Plotter()
             polypoint = Polyline()
 
@@ -87,6 +88,7 @@ class Runner(object):
         else:
 
             buffer_man = BufferManager(buffer_method=self._buffer, dataset=self._dataset)
+            daman = DaData()
 
             plotter = Plotter()
             stop = self._dataman.get_stop(self._stop_id)
@@ -101,6 +103,12 @@ class Runner(object):
                 intersecting_das = intersect.get_intersections_for_group1_id(stop.get_id())
 
                 for item in intersecting_das:
+                    print "Stop intersects DA:", repr(item)
+                    da_id = item[1]
+                    da = daman.get_da(da_id)
+                    print " - Population", da.get_population()
+                    print " - Area", da.get_area()
+
                     p = item[0]
                     plotter.add_polygon(p)
 
@@ -159,7 +167,6 @@ if __name__ == "__main__":
    parser.add_argument("-m", "--markers", help="Include stop markers (slow and messy)", required=False, action='store_true')
    parser.add_argument("-a", "--all_stops", help="Default is just active stops", required=False, action='store_true')
    parser.add_argument("-o", "--output_shapefile", help="Write a stop shapefile", required=False, action='store_true')
-
 
    args = parser.parse_args()
 

@@ -135,7 +135,8 @@ class DA(object):
         return self._rasters
 
     def get_area(self):
-        return self._polygon.get_area()
+        polygon = self.get_polygon()
+        return polygon.get_area()
 
     def get_id(self):
         return self._da_id

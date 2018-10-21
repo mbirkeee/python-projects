@@ -118,6 +118,11 @@ class Point(object):
         else:
             raise ValueError("distance method not supported: %s" % repr(method))
 
+    def within(self, polygon):
+
+        ogr_polygon = polygon.get_ogr_poly()
+        ogr_point = self.get_ogr_point()
+        return ogr_point.Within(ogr_polygon)
 
 class Polyline(object):
 

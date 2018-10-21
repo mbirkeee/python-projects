@@ -57,7 +57,7 @@ class Runner(object):
             self._exists_count += 1
             return
 
-        api_key = WALKSCORE_API_SPADINA_MEDICAL
+        api_key = WALKSCORE_API_DR_BREE
 
         base = "http://api.walkscore.com/score?format=json&"
 

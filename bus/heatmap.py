@@ -29,6 +29,7 @@ from geometry import Polygon
 from modes import BUFFER_METHOD
 
 from make_stop_intersections import BufferManager
+from my_utils import get_butterworth_decay
 
 class HeatmapColor(object):
     def __init__(self):
@@ -332,6 +333,15 @@ class Heatmap(object):
                 return False
 
         judge = Score(self._dataman, self._mode_man)
+
+        stop_demand = self._mode_man.get_stop_demand()
+        # This loop computes the stop demand if required --------------------------------
+        if stop_demand is not None:
+            for stop in stops:
+                stop.compute_demand(intersect, self._da_man, stop_demand)
+                # print "Stop: %d DEMAND: %f" % (stop.get_id(), stop.get_demand())
+
+        # End of loop computing stop demand ----------------------------------------------
 
         for da in das:
             rasters = da.get_rasters(100)
@@ -1092,17 +1102,15 @@ def test10():
 
 
 def test11():
-    h = Heatmap("temp/shapefiles/heatmaps/heatmap_mode_4_time_8_00_mwf_june.shp")
-    h.plot("temp/maps/heatmap_mode_4_time_8_00_mwf_june.html")
-    h.to_da_csv("mode_4_june_da.csv")
 
+    h = Heatmap()
+    h.set_dataset(DATASET.JUNE)
+    h.set_mode(33)
+    h.run()
+    h.to_shapefile()
+    h.plot()
 
-    # h = Heatmap()
-    # h.set_dataset(DATASET.JUNE)
-    # h.set_mode(27)
-    # h.run()
-    # h.to_shapefile()
-    # x, y = h.pearson_da()
+    x, y = h.pearson_da()
 
 if __name__ == "__main__":
 

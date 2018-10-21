@@ -236,6 +236,19 @@ class DaHeatmap(object):
     def get_score(self, da_id):
         return self._data.get(da_id)
 
+
+def get_butterworth_decay(decay_method, point1, point2):
+
+    parts = decay_method.split("_")
+    distance_mode = parts[0].strip().lower()
+    dpass = int(parts[1].strip())
+    filter = Filter(dpass=dpass)
+    distance = point1.get_distance(point2, method=distance_mode)
+    decay = filter.run(distance)
+    # print "-->>", distance_mode, dpass, distance, decay
+
+    return decay
+
 class Filter(object):
 
     def __init__(self, dpass=250, e=1, n=6):

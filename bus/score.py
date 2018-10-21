@@ -105,6 +105,8 @@ class Score(object):
 
     def get_score_closest_stop(self, raster, distance_method):
 
+
+
         active_stops = self._dataman.get_active_stops()
         min_dist, min_stop = raster.get_closest_stop(active_stops, method=distance_method)
         return min_dist
@@ -142,6 +144,7 @@ class Score(object):
         service_type = self._mode_man.get_service_type()
         normalize_value = self._mode_man.get_normalize_value()
         service_time = self._mode_man.get_service_time()
+        stop_demand = self._mode_man.get_stop_demand()
 
         for item in stop_tuples:
             stop_p = item[0]
@@ -186,6 +189,13 @@ class Score(object):
                     if departs > 6.0:
                         print "*"*80
 
+                    # Apply stop demand if required
+                    if stop_demand is not None:
+                        demand = stop.get_demand()
+                        if demand < 1.0:
+                            demand = 1.0
+                        departs = departs / demand
+
                     print "Route ID: %d Stop ID: %d Departures: %f" % (route_id, stop_id, departs)
 
                     # Make a list of unique departures so that closest stop can be determined
@@ -214,7 +224,6 @@ class Score(object):
 
         print "COMPUTED SCORE", total_score
         return total_score
-
 
     def get_score_decayed_wait(self, route_id, direction, stop_id):
 

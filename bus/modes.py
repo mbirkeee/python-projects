@@ -271,6 +271,14 @@ MODE_DICT = {
         KEY.NORMALIZE_VALUE     : 6.0,
         KEY.WAIT_BANDPASS       : 10.0,
     },
+    33: {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DECAYED_WAIT,
+        KEY.DECAY_METHOD        : DECAY_METHOD.GRID_250,
+        KEY.STOP_DEMAND         : DECAY_METHOD.GRID_250,
+        KEY.NORMALIZE_VALUE     : 6.0,
+        KEY.WAIT_BANDPASS       : 10.0,
+    },
 }
 
 class ModeMan(object):
