@@ -30,6 +30,7 @@ from geometry import Polygon
 from modes import BUFFER_METHOD
 
 from make_stop_intersections import BufferManager
+from my_utils import get_butterworth_decay
 
 class HeatmapColor(object):
     def __init__(self):
@@ -334,6 +335,15 @@ class Heatmap(object):
 
         judge = Score(self._dataman, self._mode_man)
 
+        stop_demand = self._mode_man.get_stop_demand()
+        # This loop computes the stop demand if required --------------------------------
+        if stop_demand is not None:
+            for stop in stops:
+                stop.compute_demand(intersect, self._da_man, stop_demand)
+                # print "Stop: %d DEMAND: %f" % (stop.get_id(), stop.get_demand())
+
+        # End of loop computing stop demand ----------------------------------------------
+
         for da in das:
             rasters = da.get_rasters(100)
             stop_tuples = intersect.get_intersections(group=2, id=da.get_id())
@@ -544,35 +554,19 @@ class Heatmap(object):
             self._da_man = DaData()
 
         # Compute the average score for the DAs
-        da_score_list = self.get_da_scores()
-
-        max_score = None
-        min_score = None
-
-        # Get the max and min score
-        for item in da_score_list:
-            # print da_id, da_data
-            score = item[1]
-
-            if max_score is None or score > max_score:
-                max_score = score
-
-            if min_score is None or score < min_score:
-                min_score = score
+        score_list = self.get_da_scores()
+        score_man = ScoreManager(score_list)
 
         # Make a plotter object
         plotter = Plotter()
-        for item in da_score_list:
-
+        for item in score_list:
             da_id = item[0]
-            score = item[1]
-            # Get the DA polygon
             da = self._da_man.get_da(da_id)
             p = da.get_polygon()
 
-            opacity = float(score) / float(max_score)
+            opacity, color = score_man.get_score(da_id, opacity=True)
 
-            p.set_attribute(ATTR.FILL_COLOR, "#FF0000")
+            p.set_attribute(ATTR.FILL_COLOR, color)
             p.set_attribute(ATTR.FILL_OPACITY, opacity)
             p.set_attribute(ATTR.STROKE_WEIGHT, 1)
             p.set_attribute(ATTR.STROKE_COLOR, "#202020")
@@ -599,14 +593,14 @@ class Heatmap(object):
         # Make a list of scores and pass into score manager
         score_list = [(raster, raster.get_score()) for raster in self._raster_list]
         score_man = ScoreManager(score_list)
-        # score_man.set_clip_level(0.9)
+        score_man.set_clip_level(0.2, "#ff0000")
 
         for raster in self._raster_list:
             p = raster.get_polygon()
 
             # score = raster.get_score()
             # opacity, color = score_man.get_score(raster, opacity=True, log_score=True)
-            opacity, color = score_man.get_score(raster, opacity=True)
+            opacity, color = score_man.get_score(raster, opacity=True, log_score=log)
 
             if opacity == 0:
                 continue
@@ -1046,18 +1040,16 @@ def test10():
 
 
 def test11():
-    h = Heatmap("temp/shapefiles/heatmaps/heatmap_mode_15_time_8_00_mwf_brt1.shp")
-
-    h.plot("temp/maps/junk.html")
-
-    # h.to_da_csv("mode_4_june_da.csv")
 
 
-    # h = Heatmap()
-    # h.set_dataset(DATASET.JUNE)
-    # h.set_mode(27)
-    # h.run()
-    # h.to_shapefile()
+    h = Heatmap()
+    h.set_dataset(DATASET.JUNE)
+    h.set_mode(43)
+    h.run()
+    h.to_shapefile()
+    h.plot(log=True)
+    # h.plot_das("temp/maps/2sfca.html")
+
     x, y = h.pearson_da()
 
 if __name__ == "__main__":

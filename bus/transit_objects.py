@@ -1,5 +1,6 @@
 from modes import BUFFER_METHOD
 from modes import BUFFER_LIST
+from my_utils import get_butterworth_decay
 
 class TransitRoute(object):
     """
@@ -169,23 +170,25 @@ class TransitStop(object):
         my_id = self.get_id()
         self._buffer_p = buffer_man.get_buffer(my_id)
 
-    def compute_demand(self, intersect, filter):
+    def compute_demand(self, intersect, daman, method):
 
         demand = 0
         stop_point = self.get_point()
 
         intersecting_das = intersect.get_intersections(group=1, id=self.get_id())
-        print "this stop intersects %d das" % len(intersecting_das)
+        # print "this stop intersects %d das" % len(intersecting_das)
         for item in intersecting_das:
             p = item[0]
-            da = item[2]
+            da_id = item[1]
+            da = daman.get_da(da_id)
             area_factor = p.get_area() / da.get_area()
             population = da.get_population()
-            intersect_centroid = p.get_centroid()
-            intersect_distance = stop_point.get_distance(intersect_centroid)
+            # intersect_centroid =
+            # intersect_distance = stop_point.get_distance(intersect_centroid)
             intersect_population = population * area_factor
-            weight = filter.run(intersect_distance)
-            demand += weight * intersect_population
+            decay = get_butterworth_decay(method, self.get_point(), p.get_centroid())
+            # weight = filter.run(intersect_distance)
+            demand += decay * intersect_population
 
         self._demand = demand
         print "Demand for stop %d: %f" % (self.get_id(), demand)

@@ -1,6 +1,8 @@
 import math
 
 from my_utils import Filter
+from my_utils import get_butterworth_decay
+
 from stop_times import KEY
 
 from modes import SCORE_METHOD
@@ -75,6 +77,9 @@ class Score(object):
         elif method == SCORE_METHOD.STOP_COUNT:
             score = self.get_score_stop_count(raster, stop_tuples)
 
+        elif method == SCORE_METHOD.COVERAGE:
+            score = self.get_score_coverage(raster, stop_tuples)
+
         elif method == SCORE_METHOD.DIST_TO_CLOSEST_STOP:
             dist_method = self._mode_man.get_distance_method()
             score = self.get_score_closest_stop(raster, dist_method)
@@ -107,6 +112,8 @@ class Score(object):
         return result
 
     def get_score_closest_stop(self, raster, distance_method):
+
+
 
         active_stops = self._dataman.get_active_stops()
         min_dist, min_stop = raster.get_closest_stop(active_stops, method=distance_method)
@@ -141,10 +148,11 @@ class Score(object):
             print "^^^^^^^^^^^^^^^^^^^^^^^^^"
 
         score_method = self._mode_man.get_score_method()
-        decay_method = self._mode_man.get_decay_method()
+        decay_method = self._mode_man.get_distance_decay()
         service_type = self._mode_man.get_service_type()
         normalize_value = self._mode_man.get_normalize_value()
         service_time = self._mode_man.get_service_time()
+        stop_demand = self._mode_man.get_stop_demand()
 
         for item in stop_tuples:
             stop_p = item[0]
@@ -158,8 +166,9 @@ class Score(object):
                 # The intersections are for the DAs and stops, not the rasters.
                 continue
 
-
             distance, decay_factor = self.get_decay_factor(stop.get_point(), raster_point, decay_method)
+
+            print "DISTANCE", distance, "DECAY_FACTOR", decay_factor
 
             route_ids = stop.get_route_ids()
             for route_id in route_ids:
@@ -188,6 +197,13 @@ class Score(object):
 
                     if departs > 6.0:
                         print "*"*80
+
+                    # Apply stop demand if required
+                    if stop_demand is not None:
+                        demand = stop.get_demand()
+                        if demand < 1.0:
+                            demand = 1.0
+                        departs = departs / demand
 
                     print "Route ID: %d Stop ID: %d Departures: %f" % (route_id, stop_id, departs)
 
@@ -218,7 +234,6 @@ class Score(object):
         print "COMPUTED SCORE", total_score
         return total_score
 
-
     def get_score_decayed_wait(self, route_id, direction, stop_id):
 
         service_type = self._mode_man.get_service_type()
@@ -240,9 +255,17 @@ class Score(object):
 
         return normalized_decay
 
-    def get_score_stop_count_with_decay(self, raster, stop_tuples):
 
-        score = 0
+    def get_score_coverage(self, raster, stop_tuples):
+
+        # if self._decay_method is not None:
+        #     raise ValueError("decay method not supported")
+
+        # score = get_score_departures(raster, stop_tuples)
+
+        depart_dict = {}
+
+        total_score = 0.0
         raster_p = raster.get_polygon()
         raster_point = raster_p.get_centroid()
 
@@ -254,14 +277,87 @@ class Score(object):
             if stop_id != stop.get_id():
                 raise ValueError("fixme")
 
-            if raster_p.intersects(stop_p):
-                a = 1.0
+            if not raster_p.intersects(stop_p):
+                # The intersections are for the DAs and stops, not the rasters.
+                continue
 
-                distance = raster_point.get_distance(stop.get_point())
-                # # print "the distance is", distance
-                a = a * DECAY.butterworth(distance)
+            decay_method = self._mode_man.get_distance_decay()
+            distance, decay_factor = self.get_decay_factor(stop.get_point(), raster_point, decay_method)
 
-                score += a
+            print "DISTANCE", distance, "DECAY_FACTOR", decay_factor
+
+            route_ids = stop.get_route_ids()
+            for route_id in route_ids:
+                print "Stop %d serves route: %d" % (stop_id, route_id)
+
+                for direction in [0, 1]:
+                    departs = self._dataman.get_departs_per_week(route_id, direction, stop_id)
+
+                    if departs is None or departs == 0:
+                        continue
+
+                    # Because we are just counting coverage, any number of deparutes counts as 1
+                    departs = 1
+
+                    # Make a list of unique departures so that closest stop can be determined
+                    key = "%d-%d" % (route_id, direction)
+                    stop_list = depart_dict.get(key, [])
+                    stop_list.append({
+                        KEY.STOP_ID         : stop_id,
+                        KEY.DEPARTURES      : departs,
+                        KEY.DISTANCE        : distance,
+                        KEY.DECAY_FACTOR    : decay_factor
+                    })
+                    depart_dict[key] = stop_list
+
+        # Second pass.. Loop through all the results to filter out more distant ones
+        nearest_only = self._mode_man.get_nearest_only()
+
+        for key, items in depart_dict.iteritems():
+            if nearest_only:
+                items = [self.get_closest(items, key)]
+
+            for item in items:
+                departs = item.get(KEY.DEPARTURES)
+                decay_factor = item.get(KEY.DECAY_FACTOR)
+
+                total_score += departs * decay_factor
+
+        print "COMPUTED SCORE", total_score
+        return total_score
+
+
+        # for item in stop_tuples:
+        #     stop_id = item[1]
+        #     stop_p = item[0]
+        #     stop = self._dataman.get_stop(stop_id)
+        #
+        #     if stop_id != stop.get_id():
+        #         raise ValueError("fixme")
+        #
+        #     if not raster_p.intersects(stop_p): continue
+        #
+        #     if self._mode_man.get_nearest_only():
+        #         raise ValueError("Must implement nearest only")
+        #
+        #     distance_decay_method = self._mode_man.get_distance_decay()
+        #
+        #     if distance_decay_method != None:
+        #         distance_decay = get_butterworth_decay(distance_decay_method, stop.get_point(), raster_point)
+        #         print "DISTANCE DECAY: %f" % distance_decay
+        #     else:
+        #         distance_decay = 1.0
+        #
+        #     route_ids = stop.get_route_ids()
+        #     route_count = len(route_ids)
+        #
+        #     for route in route_ids:
+
+            #
+            # print "THIS STOP SERVES %d routes", route_count
+            #
+            # a = distance_decay * route_count
+            # score += a
 
         return score
 
@@ -282,9 +378,17 @@ class Score(object):
             if stop_id != stop.get_id():
                 raise ValueError("fixme")
 
-            if raster_p.intersects(stop_p):
-                a = 1.0
-                score += a
+            if not raster_p.intersects(stop_p): continue
+
+            distance_decay_method = self._mode_man.get_distance_decay()
+            if distance_decay_method != None:
+                distance_decay = get_butterworth_decay(distance_decay_method, stop.get_point(), raster_point)
+                print "DISTANCE DECAY: %f" % distance_decay
+            else:
+                distance_decay = 1.0
+
+            a = distance_decay
+            score += a
 
         return score
 
@@ -340,10 +444,10 @@ class ScoreManager(object):
         for i, item in enumerate(self._score_tuples):
             thing = item[0]
             score = item[1]
-            log_score  = math.log10(score+ 1.0
+            log_score = math.log10(score+ 1.0)
 
 
-            )
+
 
             data = self._raw_data.get(thing)
             data['log_score'] = log_score

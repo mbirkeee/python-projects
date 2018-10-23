@@ -38,6 +38,8 @@ class SCORE_METHOD(object):
     DEPARTURES_PER_WEEK     = "departures_per_week"
     DIST_TO_CLOSEST_STOP    = "dist_to_closest_stop"
     DECAYED_WAIT            = "decayed_wait"
+    COVERAGE                = "coverage"
+
 
 #-----------------------------------------------------------------------
 MODE_DICT = {
@@ -61,42 +63,39 @@ MODE_DICT = {
         KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_HOUR,
         KEY.SCORE_NEAREST_ONLY  : False,
         KEY.STOP_DEMAND         : None,
-        KEY.DECAY_METHOD        : None
+        KEY.DISTANCE_DECAY      : None
     },
     5 : {
         KEY.BUFFER_METHOD       : BUFFER_METHOD.CIRCLE_400,
         KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_HOUR,
         KEY.SCORE_NEAREST_ONLY  : False,
-        KEY.DECAY_METHOD        : DECAY_METHOD.CROW_250,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.CROW_250,
         KEY.STOP_DEMAND         : None
     },
     6 : {
         KEY.BUFFER_METHOD       : BUFFER_METHOD.CIRCLE_400,
         KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_DAY,
         KEY.SCORE_NEAREST_ONLY  : False,
-        KEY.DECAY_METHOD        : DECAY_METHOD.CROW_250,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.CROW_250,
         KEY.STOP_DEMAND         : None
     },
     7 : {
         KEY.BUFFER_METHOD       : BUFFER_METHOD.CIRCLE_400,
         KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_DAY,
-        KEY.SCORE_NEAREST_ONLY  : True,
-        KEY.DECAY_METHOD        : DECAY_METHOD.CROW_250,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.CROW_250,
         KEY.STOP_DEMAND         : None
     },
     8 : {
         KEY.BUFFER_METHOD       : BUFFER_METHOD.CIRCLE_400,
         KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_DAY,
-        KEY.SCORE_NEAREST_ONLY  : True,
-        KEY.DECAY_METHOD        : DECAY_METHOD.CROW_100,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.CROW_100,
         KEY.STOP_DEMAND         : None,
         KEY.SERVICE_TYPE        : SERVICE.MWF
     },
     9 : {
         KEY.BUFFER_METHOD       : BUFFER_METHOD.CIRCLE_400,
         KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_DAY,
-        KEY.SCORE_NEAREST_ONLY  : True,
-        KEY.DECAY_METHOD        : DECAY_METHOD.GRID_250,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.GRID_250,
         KEY.STOP_DEMAND         : None,
         KEY.SERVICE_TYPE        : SERVICE.MWF
     },
@@ -113,20 +112,20 @@ MODE_DICT = {
     12 : {
         KEY.BUFFER_METHOD       : BUFFER_METHOD.CIRCLE_400,
         KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_HOUR,
-        KEY.DECAY_METHOD        : DECAY_METHOD.CROW_250,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.CROW_250,
         KEY.STOP_DEMAND         : None,
     },
     13 : {
         KEY.BUFFER_METHOD       : BUFFER_METHOD.CIRCLE_400,
         KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_HOUR,
-        KEY.DECAY_METHOD        : DECAY_METHOD.CROW_250,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.CROW_250,
         KEY.STOP_DEMAND         : None,
         KEY.NORMALIZE_VALUE     : 6.0,
     },
     14: {
         KEY.BUFFER_METHOD       : BUFFER_METHOD.CIRCLE_400,
         KEY.SCORE_METHOD        : SCORE_METHOD.DECAYED_WAIT,
-        KEY.DECAY_METHOD        : DECAY_METHOD.CROW_250,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.CROW_250,
         KEY.STOP_DEMAND         : None,
         KEY.NORMALIZE_VALUE     : 6.0,
         KEY.WAIT_BANDPASS       : 10.0,
@@ -134,7 +133,7 @@ MODE_DICT = {
     15: {
         KEY.BUFFER_METHOD       : BUFFER_METHOD.CIRCLE_400,
         KEY.SCORE_METHOD        : SCORE_METHOD.DECAYED_WAIT,
-        KEY.DECAY_METHOD        : DECAY_METHOD.CROW_250,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.CROW_250,
         KEY.STOP_DEMAND         : None,
         KEY.NORMALIZE_VALUE     : 6.0,
         KEY.WAIT_BANDPASS       : 3.0,
@@ -142,7 +141,7 @@ MODE_DICT = {
     16: {
         KEY.BUFFER_METHOD       : BUFFER_METHOD.CIRCLE_400,
         KEY.SCORE_METHOD        : SCORE_METHOD.DECAYED_WAIT,
-        KEY.DECAY_METHOD        : DECAY_METHOD.CROW_200,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.CROW_200,
         KEY.STOP_DEMAND         : None,
         KEY.NORMALIZE_VALUE     : 6.0,
         KEY.WAIT_BANDPASS       : 3.0,
@@ -150,7 +149,7 @@ MODE_DICT = {
     17: {
         KEY.BUFFER_METHOD       : BUFFER_METHOD.CIRCLE_400,
         KEY.SCORE_METHOD        : SCORE_METHOD.DECAYED_WAIT,
-        KEY.DECAY_METHOD        : DECAY_METHOD.CROW_100,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.CROW_100,
         KEY.STOP_DEMAND         : None,
         KEY.NORMALIZE_VALUE     : 6.0,
         KEY.WAIT_BANDPASS       : 3.0,
@@ -158,7 +157,7 @@ MODE_DICT = {
     18: {
         KEY.BUFFER_METHOD       : BUFFER_METHOD.CIRCLE_400,
         KEY.SCORE_METHOD        : SCORE_METHOD.DECAYED_WAIT,
-        KEY.DECAY_METHOD        : DECAY_METHOD.CROW_400,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.CROW_400,
         KEY.STOP_DEMAND         : None,
         KEY.NORMALIZE_VALUE     : 6.0,
         KEY.WAIT_BANDPASS       : 3.0,
@@ -166,7 +165,7 @@ MODE_DICT = {
     19: {
         KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_400,
         KEY.SCORE_METHOD        : SCORE_METHOD.DECAYED_WAIT,
-        KEY.DECAY_METHOD        : DECAY_METHOD.GRID_250,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.GRID_250,
         KEY.STOP_DEMAND         : None,
         KEY.NORMALIZE_VALUE     : 6.0,
         KEY.WAIT_BANDPASS       : 3.0,
@@ -174,7 +173,7 @@ MODE_DICT = {
     20: {
         KEY.BUFFER_METHOD       : BUFFER_METHOD.DIAMOND_400,
         KEY.SCORE_METHOD        : SCORE_METHOD.DECAYED_WAIT,
-        KEY.DECAY_METHOD        : DECAY_METHOD.GRID_250,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.GRID_250,
         KEY.STOP_DEMAND         : None,
         KEY.NORMALIZE_VALUE     : 6.0,
         KEY.WAIT_BANDPASS       : 3.0,
@@ -182,7 +181,7 @@ MODE_DICT = {
     21: {
         KEY.BUFFER_METHOD       : BUFFER_METHOD.CIRCLE_400,
         KEY.SCORE_METHOD        : SCORE_METHOD.DECAYED_WAIT,
-        KEY.DECAY_METHOD        : DECAY_METHOD.GRID_250,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.GRID_250,
         KEY.STOP_DEMAND         : None,
         KEY.NORMALIZE_VALUE     : 6.0,
         KEY.WAIT_BANDPASS       : 3.0,
@@ -190,7 +189,7 @@ MODE_DICT = {
     22: {
         KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_400,
         KEY.SCORE_METHOD        : SCORE_METHOD.DECAYED_WAIT,
-        KEY.DECAY_METHOD        : DECAY_METHOD.CROW_250,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.CROW_250,
         KEY.STOP_DEMAND         : None,
         KEY.NORMALIZE_VALUE     : 6.0,
         KEY.WAIT_BANDPASS       : 3.0,
@@ -198,7 +197,7 @@ MODE_DICT = {
     23: {
         KEY.BUFFER_METHOD       : BUFFER_METHOD.DIAMOND_400,
         KEY.SCORE_METHOD        : SCORE_METHOD.DECAYED_WAIT,
-        KEY.DECAY_METHOD        : DECAY_METHOD.CROW_250,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.CROW_250,
         KEY.STOP_DEMAND         : None,
         KEY.NORMALIZE_VALUE     : 6.0,
         KEY.WAIT_BANDPASS       : 3.0,
@@ -206,7 +205,7 @@ MODE_DICT = {
     24: {
         KEY.BUFFER_METHOD       : BUFFER_METHOD.DIAMOND_400,
         KEY.SCORE_METHOD        : SCORE_METHOD.DECAYED_WAIT,
-        KEY.DECAY_METHOD        : DECAY_METHOD.GRID_250,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.GRID_250,
         KEY.STOP_DEMAND         : None,
         KEY.NORMALIZE_VALUE     : 6.0,
         KEY.WAIT_BANDPASS       : 1.0,
@@ -214,7 +213,7 @@ MODE_DICT = {
     25: {
         KEY.BUFFER_METHOD       : BUFFER_METHOD.DIAMOND_400,
         KEY.SCORE_METHOD        : SCORE_METHOD.DECAYED_WAIT,
-        KEY.DECAY_METHOD        : DECAY_METHOD.GRID_250,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.GRID_250,
         KEY.STOP_DEMAND         : None,
         KEY.NORMALIZE_VALUE     : 6.0,
         KEY.WAIT_BANDPASS       : 5.0,
@@ -222,7 +221,7 @@ MODE_DICT = {
     26: {
         KEY.BUFFER_METHOD       : BUFFER_METHOD.DIAMOND_400,
         KEY.SCORE_METHOD        : SCORE_METHOD.DECAYED_WAIT,
-        KEY.DECAY_METHOD        : DECAY_METHOD.GRID_250,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.GRID_250,
         KEY.STOP_DEMAND         : None,
         KEY.NORMALIZE_VALUE     : 6.0,
         KEY.WAIT_BANDPASS       : 10.0,
@@ -230,27 +229,27 @@ MODE_DICT = {
     27: {
         KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_400,
         KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_HOUR,
-        KEY.DECAY_METHOD        : DECAY_METHOD.GRID_250,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.GRID_250,
         KEY.STOP_DEMAND         : None,
     },
     28: {
         KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_400,
         KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_HOUR,
-        KEY.DECAY_METHOD        : DECAY_METHOD.GRID_250,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.GRID_250,
         KEY.STOP_DEMAND         : None,
         KEY.SCORE_NEAREST_ONLY  : False
     },
     29: {
         KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_400,
         KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_WEEK,
-        KEY.DECAY_METHOD        : DECAY_METHOD.GRID_250,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.GRID_250,
         KEY.STOP_DEMAND         : None,
         KEY.SCORE_NEAREST_ONLY  : False
     },
     30: {
         KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_400,
         KEY.SCORE_METHOD        : SCORE_METHOD.DECAYED_WAIT,
-        KEY.DECAY_METHOD        : DECAY_METHOD.GRID_250,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.GRID_250,
         KEY.STOP_DEMAND         : None,
         KEY.NORMALIZE_VALUE     : 6.0,
         KEY.WAIT_BANDPASS       : 5.0,
@@ -258,7 +257,7 @@ MODE_DICT = {
     31: {
         KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_400,
         KEY.SCORE_METHOD        : SCORE_METHOD.DECAYED_WAIT,
-        KEY.DECAY_METHOD        : DECAY_METHOD.GRID_100,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.GRID_100,
         KEY.STOP_DEMAND         : None,
         KEY.NORMALIZE_VALUE     : 6.0,
         KEY.WAIT_BANDPASS       : 5.0,
@@ -266,10 +265,87 @@ MODE_DICT = {
     32: {
         KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_400,
         KEY.SCORE_METHOD        : SCORE_METHOD.DECAYED_WAIT,
-        KEY.DECAY_METHOD        : DECAY_METHOD.GRID_250,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.GRID_250,
         KEY.STOP_DEMAND         : None,
         KEY.NORMALIZE_VALUE     : 6.0,
         KEY.WAIT_BANDPASS       : 10.0,
+    },
+    33: {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DECAYED_WAIT,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.GRID_250,
+        KEY.STOP_DEMAND         : DECAY_METHOD.GRID_250,
+        KEY.NORMALIZE_VALUE     : 6.0,
+        KEY.WAIT_BANDPASS       : 10.0,
+    },
+    34: {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.STOP_COUNT,
+    },
+    35: {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.STOP_COUNT,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.GRID_250,
+    },
+
+    # COVERAGE MODEL
+    36: {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.COVERAGE,
+        KEY.SCORE_NEAREST_ONLY  : False
+
+    },
+
+    # COVERAGE WITH DECAY
+    37: {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.COVERAGE,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.GRID_250,
+        KEY.SCORE_NEAREST_ONLY  : False
+    },
+
+    # This is the "FREQUENCY" model
+    38 : {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_DAY,
+        KEY.SCORE_NEAREST_ONLY  : False,
+    },
+
+    # This is the "FREQUENCY" model with distance decay
+    39 : {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_DAY,
+        KEY.SCORE_NEAREST_ONLY  : False,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.GRID_250
+    },
+
+    # This is the "FREQUENCY" model with distance decay & filtering
+    40 : {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_DAY,
+        KEY.SCORE_NEAREST_ONLY  : True,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.GRID_250
+    },
+    # This is the "FREQUENCY" model & filtering
+    41 : {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_DAY,
+        KEY.SCORE_NEAREST_ONLY  : True,
+    },
+
+    # FILTERED COVERAGE
+    42: {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.COVERAGE,
+        KEY.SCORE_NEAREST_ONLY  : True
+    },
+
+     # FILTERED COVERAGE
+    43: {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.COVERAGE,
+        KEY.SCORE_NEAREST_ONLY  : True,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.GRID_250
     },
 }
 
@@ -292,7 +368,7 @@ class ModeMan(object):
             ("BUFFER",      self.get_buffer_method),
             ("SCORE",       self.get_score_method),
             ("DISTANCE",    self.get_distance_method),
-            ("DECAY",       self.get_decay_method),
+            ("DECAY",       self.get_distance_decay),
             ("NEAREST",     self.get_nearest_only),
             ("DAY",         self.get_service_type),
             ("TIME",        self.get_service_time),
@@ -375,7 +451,7 @@ class ModeMan(object):
         if mode1.get(KEY.SCORE_NEAREST_ONLY, True) != mode2.get(KEY.SCORE_NEAREST_ONLY, True):
             return False
 
-        if mode1.get(KEY.DECAY_METHOD, None) != mode2.get(KEY.DECAY_METHOD, None):
+        if mode1.get(KEY.DISTANCE_DECAY, None) != mode2.get(KEY.DISTANCE_DECAY, None):
             return False
 
         if mode1.get(KEY.STOP_DEMAND, None) != mode2.get(KEY.STOP_DEMAND, None):
@@ -444,11 +520,11 @@ class ModeMan(object):
             raise ValueError("Score method not defined for mode: %s" % repr(mode))
         return method
 
-    def get_decay_method(self, mode=None):
+    def get_distance_decay(self, mode=None):
         # Distance method must be defined (if requested)
         if not mode: mode = self._mode
         mode_data = self._mode_dict.get(mode)
-        method = mode_data.get(KEY.DECAY_METHOD)
+        method = mode_data.get(KEY.DISTANCE_DECAY)
         # if method is None:
         #     raise ValueError("Decay method not defined for mode: %s" % repr(mode))
         return method

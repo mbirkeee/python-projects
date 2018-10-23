@@ -25,7 +25,7 @@ class KEY(object):
     SCORE_METHOD        = 'score_method'
     STOP_DEMAND         = 'stop_demand'
     SCORE_NEAREST_ONLY  = 'score_nearest_only'
-    DECAY_METHOD        = 'decay_method'
+    DISTANCE_DECAY      = 'distance_decay'
     DECAY_FACTOR        = 'decay_factor'
     DISTANCE_METHOD     = 'distance_method'
     NORMALIZE_VALUE     = 'normalize_value'
