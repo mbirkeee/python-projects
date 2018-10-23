@@ -519,6 +519,10 @@ class DaData(object):
         das = self.get_das()
         for da in das:
             percent = da.get_percent_transit_users()
+
+            # print "WARN-"*10
+            # percent *= da.get_population()
+
             da_id = da.get_id()
             result.append((da_id, percent))
 
@@ -568,6 +572,9 @@ def test1():
     daman = DaData()
     daman.plot_percent_transit_users("temp/maps/transit_users_da.html")
 
+
+
+
 def test2():
     daman = DaData()
 
@@ -598,6 +605,51 @@ def test2():
 
     print "raster count", total_raster_count
 
+def test3():
+
+    from scipy.stats import pearsonr
+
+    daman = DaData()
+
+    population = []
+    transit_percantage = []
+
+    das = daman.get_das()
+
+    for da in das:
+        # print da.get_population(), da.get_percent_transit_users()
+        population.append(da.get_population())
+        transit_percantage.append(da.get_percent_transit_users())
+
+
+    print "pearson", pearsonr(population, transit_percantage)
+
+def test4():
+    daman = DaData()
+
+    percentage = []
+    das = daman.get_das()
+
+
+    total_users = 0
+    total_pop = 0
+    for da in das:
+        users = da.get_percent_transit_users()
+        pop = da.get_population()
+
+        total_users += users * pop
+        total_pop += pop
+
+        percentage.append((users, pop))
+
+    percentage = sorted(percentage)
+
+    for item in percentage:
+        print item
+
+    print total_users/ 100.0 , total_pop, total_users/total_pop
+
+
 if __name__ == "__main__":
 
-    test2()
+    test4()

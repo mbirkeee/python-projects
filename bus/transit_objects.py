@@ -1,5 +1,6 @@
-from modes import BUFFER_METHOD
-from modes import BUFFER_LIST
+# from modes import BUFFER_METHOD
+# from modes import BUFFER_LIST
+
 from my_utils import get_butterworth_decay
 
 class TransitRoute(object):
@@ -137,21 +138,37 @@ class TransitStop(object):
 
     def make_buffer(self, buffer_method, buffer_manager=None):
 
-        if buffer_method == BUFFER_METHOD.CIRCLE_400:
-            self.make_round_buffer(400)
-        elif buffer_method == BUFFER_METHOD.SQUARE_709:
-            self.make_square_buffer(709)
-        elif buffer_method == BUFFER_METHOD.DIAMOND_500:
-            self.make_diamond_buffer(500)
-        elif buffer_method == BUFFER_METHOD.DIAMOND_400:
-            self.make_diamond_buffer(400)
-        elif buffer_method == BUFFER_METHOD.NETWORK_400:
-            self.make_network_buffer(400, buffer_manager)
-        else:
+        parts = buffer_method.split("_")
+        method = parts[0].strip().lower()
+        size = int(parts[1].strip())
 
-            for method in BUFFER_LIST:
-                print "Supported buffer method:", method
+        if method == 'circle':
+            self.make_round_buffer(size)
+        elif method == 'square':
+            self.make_square_buffer(size)
+        elif method == 'diamond':
+            self.make_diamond_buffer(size)
+        elif method == 'network':
+            self.make_network_buffer(size, buffer_manager)
+        else:
             raise ValueError("buffer method %s not supported" % buffer_method)
+
+
+        #if buffer_method == BUFFER_METHOD.CIRCLE_400:
+        #    self.make_round_buffer(400)
+        #elif buffer_method == BUFFER_METHOD.SQUARE_709:
+        #    self.make_square_buffer(709)
+        #elif buffer_method == BUFFER_METHOD.DIAMOND_500:
+        #    self.make_diamond_buffer(500)
+        #elif buffer_method == BUFFER_METHOD.DIAMOND_400:
+        #    self.make_diamond_buffer(400)
+        #elif buffer_method == BUFFER_METHOD.NETWORK_400:
+        #    self.make_network_buffer(400, buffer_manager)
+        #else:
+        #
+        #    for method in BUFFER_LIST:
+        #        print "Supported buffer method:", method
+        #    raise ValueError("buffer method %s not supported" % buffer_method)
 
 
     def make_round_buffer(self, size):

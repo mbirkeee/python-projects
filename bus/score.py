@@ -4,14 +4,11 @@ from my_utils import Filter
 from my_utils import get_butterworth_decay
 
 from stop_times import KEY
-
 from modes import SCORE_METHOD
-from modes import DECAY_METHOD
 
 from butterworth import wait_decay
 
 from scipy import stats
-
 
 class Score(object):
 
@@ -24,41 +21,23 @@ class Score(object):
 
     def get_decay_factor(self, point1, point2, decay_method):
 
-        if decay_method in [None,
-            DECAY_METHOD.CROW_100,
-            DECAY_METHOD.CROW_200,
-            DECAY_METHOD.CROW_250,
-            DECAY_METHOD.CROW_400]:
-
+        if decay_method is None:
             distance = point1.get_distance(point2, method="crow")
+            return distance, 1.0
 
-        elif decay_method in [DECAY_METHOD.GRID_250, DECAY_METHOD.GRID_100]:
+        parts = decay_method.split('_')
+        method = parts[0].strip().lower()
+        dpass = int(parts[1].strip())
+
+        if method == 'grid':
             distance = point1.get_distance(point2, method="grid")
-
+        elif method == 'crow':
+            distance = point1.get_distance(point2, method="crow")
         else:
-            raise ValueError("decay method not supported: %s" % repr(decay_method))
+            raise ValueError("invalid method: %s" % method)
 
-        if decay_method == None:
-            decay = 1.0
-
-        elif decay_method in [DECAY_METHOD.CROW_250, DECAY_METHOD.GRID_250]:
-            self._filter.set_dpass(250)
-            decay = self._filter.butterworth(distance)
-
-        elif decay_method in [DECAY_METHOD.CROW_100, DECAY_METHOD.GRID_100]:
-            self._filter.set_dpass(100)
-            decay = self._filter.butterworth(distance)
-
-        elif decay_method == DECAY_METHOD.CROW_200:
-            self._filter.set_dpass(200)
-            decay = self._filter.butterworth(distance)
-
-        elif decay_method == DECAY_METHOD.CROW_400:
-            self._filter.set_dpass(400)
-            decay = self._filter.butterworth(distance)
-
-        else:
-            raise ValueError("decay method not supported: %s" % repr(decay_method))
+        self._filter.set_dpass(dpass)
+        decay = self._filter.butterworth(distance)
 
         return distance, decay
 
@@ -154,6 +133,8 @@ class Score(object):
         service_time = self._mode_man.get_service_time()
         stop_demand = self._mode_man.get_stop_demand()
 
+        print "*"*80
+
         for item in stop_tuples:
             stop_p = item[0]
             stop_id = item[1]
@@ -168,11 +149,11 @@ class Score(object):
 
             distance, decay_factor = self.get_decay_factor(stop.get_point(), raster_point, decay_method)
 
-            print "DISTANCE", distance, "DECAY_FACTOR", decay_factor
+            # print "--> DISTANCE", distance, "DECAY_FACTOR", decay_factor
 
             route_ids = stop.get_route_ids()
             for route_id in route_ids:
-                print "Stop %d serves route: %d" % (stop_id, route_id)
+                print "Stop %d serves route: %d ------ " % (stop_id, route_id)
 
                 for direction in [0, 1]:
                     if score_method == SCORE_METHOD.DEPARTURES_PER_HOUR:
@@ -195,17 +176,26 @@ class Score(object):
                     if departs is None or departs == 0:
                         continue
 
-                    if departs > 6.0:
-                        print "*"*80
+                    old_departs = departs
 
                     # Apply stop demand if required
                     if stop_demand is not None:
                         demand = stop.get_demand()
-                        if demand < 1.0:
-                            demand = 1.0
-                        departs = departs / demand
 
-                    print "Route ID: %d Stop ID: %d Departures: %f" % (route_id, stop_id, departs)
+                        # print "GOT DEMAND!!!"
+                        # raise ValueError("fixme")
+
+#                        if demand < 1.0:
+#                            demand = 1.0
+#                        departs = departs / demand
+
+
+# TEMP!!!! CHECK SUPPLY INSTEAD OF DEMAND!!!!
+                        departs = departs * demand
+                        print "DEPARTS with DEMAND", departs, demand
+
+                    print "Route ID: %d Stop ID: %d DIR: %d Departures: %f" % \
+                          (route_id, stop_id, direction, old_departs)
 
                     # Make a list of unique departures so that closest stop can be determined
                     key = "%d-%d" % (route_id, direction)
@@ -434,8 +424,8 @@ class ScoreManager(object):
         self._make_z_scores()
         self._make_log_scores()
 
-        for v in self._raw_data.itervalues():
-            print repr(v)
+        # for v in self._raw_data.itervalues():
+        #     print repr(v)
 
         # raise ValueError('temp stop')
 
@@ -445,9 +435,6 @@ class ScoreManager(object):
             thing = item[0]
             score = item[1]
             log_score = math.log10(score+ 1.0)
-
-
-
 
             data = self._raw_data.get(thing)
             data['log_score'] = log_score
@@ -493,7 +480,7 @@ class ScoreManager(object):
             score = data.get('score')
             ratio = score / z_score
 
-            print "SCORE: %f ZSCORE: %f %f" % (score, z_score, ratio)
+            # print "SCORE: %f ZSCORE: %f %f" % (score, z_score, ratio)
 
         self._min_z_score = 0
         # -- End section shift up --

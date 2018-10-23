@@ -7,29 +7,36 @@ from dataset import SERVICE
 class BUFFER_METHOD(object):
     NONE            = "none"
     CIRCLE_400      = "circle_400"
+    CIRCLE_800      = "circle_800"
     SQUARE_709      = "square_709"
     DIAMOND_500     = "diamond_500"
     DIAMOND_400     = "diamond_400"
     NETWORK_400     = "network_400"
 
-# List of supported buffer methods
-BUFFER_LIST = [
-    BUFFER_METHOD.NONE,
-    BUFFER_METHOD.CIRCLE_400,
-    BUFFER_METHOD.SQUARE_709,
-    BUFFER_METHOD.DIAMOND_500,
-    BUFFER_METHOD.DIAMOND_400,
-    BUFFER_METHOD.NETWORK_400
-]
+## List of supported buffer methods
+#BUFFER_LIST = [
+#    BUFFER_METHOD.NONE,
+#    BUFFER_METHOD.CIRCLE_400,
+#    BUFFER_METHOD.CIRCLE_800,
+#    BUFFER_METHOD.SQUARE_709,
+#    BUFFER_METHOD.DIAMOND_500,
+#    BUFFER_METHOD.DIAMOND_400,
+#    BUFFER_METHOD.NETWORK_400
+#]
 
 class DECAY_METHOD(object):
     NONE        = None
-    CROW_250    = "crow_250"    # Euclidian distance, butterworth dpass = 250
-    CROW_100    = "crow_100"    # Euclidian distance, butterworth dpass = 100
-    CROW_200    = "crow_200"    # Euclidian distance, butterworth dpass = 200
-    CROW_400    = "crow_400"    # Euclidian distance, butterworth dpass = 200
-    GRID_250    = "grid_250"    #
+
+    CROW_50    = "crow_50"
+    CROW_100    = "crow_100"
+    CROW_150    = "crow_150"
+    CROW_200    = "crow_200"
+    CROW_250    = "crow_250"
+    CROW_400    = "crow_400"
+    GRID_50     = "grid_50"
     GRID_100    = "grid_100"
+    GRID_250    = "grid_250"
+    GRID_1000   = "grid_1000"
 
 class SCORE_METHOD(object):
     STOP_COUNT              = "simple_stop_count"
@@ -346,6 +353,45 @@ MODE_DICT = {
         KEY.SCORE_METHOD        : SCORE_METHOD.COVERAGE,
         KEY.SCORE_NEAREST_ONLY  : True,
         KEY.DISTANCE_DECAY      : DECAY_METHOD.GRID_250
+    },
+
+    # This is the "FREQUENCY" model with distance decay & filtering
+    44 : {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.CIRCLE_800,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_DAY,
+        KEY.SCORE_NEAREST_ONLY  : True,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.CROW_250,
+    },
+    45 : {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.CIRCLE_800,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_DAY,
+        KEY.SCORE_NEAREST_ONLY  : True,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.CROW_100,
+    },
+    46 : {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.CIRCLE_800,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_DAY,
+        KEY.SCORE_NEAREST_ONLY  : True,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.CROW_50,
+    },
+    47 : {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.CIRCLE_800,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_DAY,
+        KEY.SCORE_NEAREST_ONLY  : True,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.CROW_150,
+    },
+    48 : {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.CIRCLE_800,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_DAY,
+        KEY.SCORE_NEAREST_ONLY  : True,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.CROW_200,
+    },
+    # This is the "FREQUENCY" model with distance decay & filtering
+    49 : {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_DAY,
+        KEY.SCORE_NEAREST_ONLY  : True,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.CROW_150
     },
 }
 

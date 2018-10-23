@@ -134,21 +134,30 @@ class StopTimes(object):
 
         result = []
 
+        # print "STOP DICT:", repr(stops)
+
         for key, value in stops.iteritems():
             if value.get(KEY.SERVICE_TYPE) != service_type:
+                # print "skip service type"
                 continue
 
             if direction is not None:
                 if value.get(KEY.DIRECTION) != direction:
+                    # print "skip direction"
                     continue
 
             if route_id is not None:
                 if value.get(KEY.ROUTE_ID) != route_id:
+                    # print "skip route ID"
                     continue
 
             depart_time = value.get(KEY.DEPART_TIME)
             if depart_time >= start_time and depart_time <= stop_time:
+                # print "ADD", value
                 result.append((depart_time, value))
+            else:
+                pass
+                # print "time mismatch"
 
         result = sorted(result)
         result = [item[1] for item in result]

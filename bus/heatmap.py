@@ -1041,11 +1041,10 @@ def test10():
 
 def test11():
 
-
     h = Heatmap()
     h.set_dataset(DATASET.JUNE)
-    h.set_mode(43)
-    h.run()
+    h.set_mode(49)
+    h.run(force=True)
     h.to_shapefile()
     h.plot(log=True)
     # h.plot_das("temp/maps/2sfca.html")
