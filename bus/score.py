@@ -1,12 +1,17 @@
 import math
 
 from my_utils import Filter
+from my_utils import get_butterworth_decay
+
 from stop_times import KEY
 
 from modes import SCORE_METHOD
 from modes import DECAY_METHOD
 
 from butterworth import wait_decay
+
+from scipy import stats
+
 
 class Score(object):
 
@@ -71,6 +76,9 @@ class Score(object):
 
         elif method == SCORE_METHOD.STOP_COUNT:
             score = self.get_score_stop_count(raster, stop_tuples)
+
+        elif method == SCORE_METHOD.COVERAGE:
+            score = self.get_score_coverage(raster, stop_tuples)
 
         elif method == SCORE_METHOD.DIST_TO_CLOSEST_STOP:
             dist_method = self._mode_man.get_distance_method()
@@ -140,7 +148,7 @@ class Score(object):
             print "^^^^^^^^^^^^^^^^^^^^^^^^^"
 
         score_method = self._mode_man.get_score_method()
-        decay_method = self._mode_man.get_decay_method()
+        decay_method = self._mode_man.get_distance_decay()
         service_type = self._mode_man.get_service_type()
         normalize_value = self._mode_man.get_normalize_value()
         service_time = self._mode_man.get_service_time()
@@ -158,8 +166,9 @@ class Score(object):
                 # The intersections are for the DAs and stops, not the rasters.
                 continue
 
-
             distance, decay_factor = self.get_decay_factor(stop.get_point(), raster_point, decay_method)
+
+            print "DISTANCE", distance, "DECAY_FACTOR", decay_factor
 
             route_ids = stop.get_route_ids()
             for route_id in route_ids:
@@ -246,9 +255,17 @@ class Score(object):
 
         return normalized_decay
 
-    def get_score_stop_count_with_decay(self, raster, stop_tuples):
 
-        score = 0
+    def get_score_coverage(self, raster, stop_tuples):
+
+        # if self._decay_method is not None:
+        #     raise ValueError("decay method not supported")
+
+        # score = get_score_departures(raster, stop_tuples)
+
+        depart_dict = {}
+
+        total_score = 0.0
         raster_p = raster.get_polygon()
         raster_point = raster_p.get_centroid()
 
@@ -260,14 +277,87 @@ class Score(object):
             if stop_id != stop.get_id():
                 raise ValueError("fixme")
 
-            if raster_p.intersects(stop_p):
-                a = 1.0
+            if not raster_p.intersects(stop_p):
+                # The intersections are for the DAs and stops, not the rasters.
+                continue
 
-                distance = raster_point.get_distance(stop.get_point())
-                # # print "the distance is", distance
-                a = a * DECAY.butterworth(distance)
+            decay_method = self._mode_man.get_distance_decay()
+            distance, decay_factor = self.get_decay_factor(stop.get_point(), raster_point, decay_method)
 
-                score += a
+            print "DISTANCE", distance, "DECAY_FACTOR", decay_factor
+
+            route_ids = stop.get_route_ids()
+            for route_id in route_ids:
+                print "Stop %d serves route: %d" % (stop_id, route_id)
+
+                for direction in [0, 1]:
+                    departs = self._dataman.get_departs_per_week(route_id, direction, stop_id)
+
+                    if departs is None or departs == 0:
+                        continue
+
+                    # Because we are just counting coverage, any number of deparutes counts as 1
+                    departs = 1
+
+                    # Make a list of unique departures so that closest stop can be determined
+                    key = "%d-%d" % (route_id, direction)
+                    stop_list = depart_dict.get(key, [])
+                    stop_list.append({
+                        KEY.STOP_ID         : stop_id,
+                        KEY.DEPARTURES      : departs,
+                        KEY.DISTANCE        : distance,
+                        KEY.DECAY_FACTOR    : decay_factor
+                    })
+                    depart_dict[key] = stop_list
+
+        # Second pass.. Loop through all the results to filter out more distant ones
+        nearest_only = self._mode_man.get_nearest_only()
+
+        for key, items in depart_dict.iteritems():
+            if nearest_only:
+                items = [self.get_closest(items, key)]
+
+            for item in items:
+                departs = item.get(KEY.DEPARTURES)
+                decay_factor = item.get(KEY.DECAY_FACTOR)
+
+                total_score += departs * decay_factor
+
+        print "COMPUTED SCORE", total_score
+        return total_score
+
+
+        # for item in stop_tuples:
+        #     stop_id = item[1]
+        #     stop_p = item[0]
+        #     stop = self._dataman.get_stop(stop_id)
+        #
+        #     if stop_id != stop.get_id():
+        #         raise ValueError("fixme")
+        #
+        #     if not raster_p.intersects(stop_p): continue
+        #
+        #     if self._mode_man.get_nearest_only():
+        #         raise ValueError("Must implement nearest only")
+        #
+        #     distance_decay_method = self._mode_man.get_distance_decay()
+        #
+        #     if distance_decay_method != None:
+        #         distance_decay = get_butterworth_decay(distance_decay_method, stop.get_point(), raster_point)
+        #         print "DISTANCE DECAY: %f" % distance_decay
+        #     else:
+        #         distance_decay = 1.0
+        #
+        #     route_ids = stop.get_route_ids()
+        #     route_count = len(route_ids)
+        #
+        #     for route in route_ids:
+
+            #
+            # print "THIS STOP SERVES %d routes", route_count
+            #
+            # a = distance_decay * route_count
+            # score += a
 
         return score
 
@@ -288,8 +378,193 @@ class Score(object):
             if stop_id != stop.get_id():
                 raise ValueError("fixme")
 
-            if raster_p.intersects(stop_p):
-                a = 1.0
-                score += a
+            if not raster_p.intersects(stop_p): continue
+
+            distance_decay_method = self._mode_man.get_distance_decay()
+            if distance_decay_method != None:
+                distance_decay = get_butterworth_decay(distance_decay_method, stop.get_point(), raster_point)
+                print "DISTANCE DECAY: %f" % distance_decay
+            else:
+                distance_decay = 1.0
+
+            a = distance_decay
+            score += a
 
         return score
+
+class ScoreManager(object):
+    """
+    This class accepts a list of items and their scores.  It computes the
+    min/max, zscores, and can return raw values or as a percentage of min/max.
+    It can clip outliers, etc.
+    """
+    def __init__(self, score_tuples):
+
+        self._score_tuples = score_tuples
+
+        self._raw_data = {}
+
+        self._max_score = None
+        self._min_score = None
+
+        self._max_z_score = None
+        self._min_z_score = None
+
+        self._max_log_score = None
+        self._min_log_score = None
+
+        self._color_hot         = "#ff0000"
+        self._color_clipped     = "#fff240"
+
+        self._clip_level = 1.0
+
+        for item in score_tuples:
+            thing = item[0]
+            score = float(item[1])
+
+            if self._max_score is None or score > self._max_score:
+                self._max_score = score
+
+            if self._min_score is None or score < self._min_score:
+                self._min_score = score
+
+            # Save the score in a dict keyed by the thing
+            self._raw_data[thing] = {'score' : score }
+
+        self._make_z_scores()
+        self._make_log_scores()
+
+        for v in self._raw_data.itervalues():
+            print repr(v)
+
+        # raise ValueError('temp stop')
+
+    def _make_log_scores(self):
+
+        for i, item in enumerate(self._score_tuples):
+            thing = item[0]
+            score = item[1]
+            log_score = math.log10(score+ 1.0)
+
+
+
+
+            data = self._raw_data.get(thing)
+            data['log_score'] = log_score
+            self._raw_data[thing] = data
+
+            if self._max_log_score is None or log_score > self._max_log_score:
+                self._max_log_score = log_score
+
+            if self._min_log_score is None or log_score < self._min_log_score:
+                self._min_log_score = log_score
+
+    def _make_z_scores(self):
+
+        score_list = []
+        for i, item in enumerate(self._score_tuples):
+            score = item[1]
+            score_list.append(score)
+
+        z_scores = stats.zscore(score_list)
+
+        for i, item in enumerate(self._score_tuples):
+            thing = item[0]
+            z_score = z_scores[i]
+
+            if self._max_z_score is None or z_score > self._max_z_score:
+                self._max_z_score = z_score
+
+            if self._min_z_score is None or z_score < self._min_z_score:
+                self._min_z_score = z_score
+
+            data = self._raw_data.get(thing)
+            data['z_score'] = z_score
+            self._raw_data[thing] = data
+
+        # -- The section shifts scores up so all are +ve
+        self._max_z_score += abs(self._min_z_score)
+
+        for thing, data in self._raw_data.iteritems():
+            z_score = data.get('z_score')
+            z_score += abs(self._min_z_score)
+            data['z_score'] = z_score
+
+            score = data.get('score')
+            ratio = score / z_score
+
+            print "SCORE: %f ZSCORE: %f %f" % (score, z_score, ratio)
+
+        self._min_z_score = 0
+        # -- End section shift up --
+
+        # raise ValueError('temp stop')
+
+    def set_clip_level(self, clip_level, clip_color="#fff240"):
+        self._clip_level = clip_level
+        self._color_clipped = clip_color
+
+    def get_z_score(self, thing, opacity=False):
+
+        data = self._raw_data.get(thing)
+        score = data.get('z_score')
+
+        color = self._color_hot
+        level = score / self._max_z_score
+
+        if level > self._clip_level:
+            color = self._color_clipped
+            level = 1.0
+        else:
+            level = level / self._clip_level
+
+        if opacity:
+            score = level
+
+        return score, color
+
+    def get_log_score(self, thing, opacity=False):
+
+        data = self._raw_data.get(thing)
+        score = data.get('log_score')
+
+        color = self._color_hot
+        level = score / self._max_log_score
+
+        if level > self._clip_level:
+            color = self._color_clipped
+            level = 1.0
+        else:
+            level = level / self._clip_level
+
+        if opacity:
+            score = level
+
+        return score, color
+
+    def get_score(self, thing, opacity=False, z_score=False, log_score=False):
+
+        if log_score:
+            return self.get_log_score(thing, opacity=opacity)
+
+        if z_score:
+            return self.get_z_score(thing, opacity=opacity)
+
+        data = self._raw_data.get(thing)
+        score = data.get('score')
+
+        color = self._color_hot
+        level = score / self._max_score
+
+        if level > self._clip_level:
+            color = self._color_clipped
+            level = 1.0
+        else:
+            level = level / self._clip_level
+
+        if opacity:
+            score = level
+
+        return score, color
+
+
