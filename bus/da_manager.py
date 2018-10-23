@@ -1,5 +1,7 @@
 import os
 import shapefile
+import numpy as np
+
 
 from geometry import Point
 from geometry import Polygon
@@ -134,8 +136,12 @@ class DA(object):
         print "DA: %d rasters: %d" % (self.get_id(), len(self._rasters))
         return self._rasters
 
+    # def get_unclipped_area(self):
+    #     return self._polygon.get_area()
+
     def get_area(self):
-        return self._polygon.get_area()
+        polygon = self.get_polygon()
+        return polygon.get_area()
 
     def get_id(self):
         return self._da_id
@@ -158,7 +164,7 @@ class DA(object):
     def get_percent_transit_users(self):
         return 100.0 * (float(self.get_transit_users())/float(self.get_population()))
 
-    def get_centriod(self):
+    def get_centroid(self):
         raise ValueError("fixman")
 
     def get_polygon(self):
@@ -263,7 +269,7 @@ class DaData(object):
         self._make_clipping_polygons()
         self._clip()
 
-        self._use_clipped_area()
+   #     self._use_clipped_area()
 
         self._lat_saskatoon_min =   52.065626
         self._lat_saskatoon_max =   52.212493
@@ -562,7 +568,36 @@ def test1():
     daman = DaData()
     daman.plot_percent_transit_users("temp/maps/transit_users_da.html")
 
+def test2():
+    daman = DaData()
+
+    population = []
+    areas = []
+    das = daman.get_das()
+
+    total_raster_count = 0
+
+    for da in das:
+        print da.get_population()
+        population.append(da.get_population())
+        areas.append(da.get_area()/1000000.0)
+
+        rasters = da.get_rasters(100)
+        total_raster_count += len(rasters)
+
+    population = sorted(population)
+    print population
+    print len(population)
+    print np.mean(population)
+
+    areas = sorted(areas)
+
+    print areas
+    print len(areas)
+    print np.mean(areas)
+
+    print "raster count", total_raster_count
 
 if __name__ == "__main__":
 
-    test1()
+    test2()
