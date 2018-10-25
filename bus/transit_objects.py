@@ -199,9 +199,14 @@ class TransitStop(object):
             da_id = item[1]
             da = daman.get_da(da_id)
             area_factor = p.get_area() / da.get_area()
+
+
+            # area_factor = 1.0
+
             population = da.get_population()
             # intersect_centroid =
             # intersect_distance = stop_point.get_distance(intersect_centroid)
+
             intersect_population = population * area_factor
             decay = get_butterworth_decay(method, self.get_point(), p.get_centroid())
             # weight = filter.run(intersect_distance)

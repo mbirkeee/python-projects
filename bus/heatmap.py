@@ -548,7 +548,7 @@ class Heatmap(object):
         print result
 
 
-    def plot_das(self, file_name):
+    def plot_das(self, file_name, log=False):
 
         if self._da_man is None:
             self._da_man = DaData()
@@ -556,6 +556,7 @@ class Heatmap(object):
         # Compute the average score for the DAs
         score_list = self.get_da_scores()
         score_man = ScoreManager(score_list)
+        score_man.set_clip_level(0.6, clip_color="#ff0000")
 
         # Make a plotter object
         plotter = Plotter()
@@ -564,7 +565,7 @@ class Heatmap(object):
             da = self._da_man.get_da(da_id)
             p = da.get_polygon()
 
-            opacity, color = score_man.get_score(da_id, opacity=True)
+            opacity, color = score_man.get_score(da_id, opacity=True, log_score=log)
 
             p.set_attribute(ATTR.FILL_COLOR, color)
             p.set_attribute(ATTR.FILL_OPACITY, opacity)
@@ -593,7 +594,7 @@ class Heatmap(object):
         # Make a list of scores and pass into score manager
         score_list = [(raster, raster.get_score()) for raster in self._raster_list]
         score_man = ScoreManager(score_list)
-        score_man.set_clip_level(0.2, "#ff0000")
+        score_man.set_clip_level(0.5, clip_color="#ff0000")
 
         for raster in self._raster_list:
             p = raster.get_polygon()
@@ -1043,11 +1044,12 @@ def test11():
 
     h = Heatmap()
     h.set_dataset(DATASET.JUNE)
-    h.set_mode(49)
-    h.run(force=True)
+    h.set_mode(50)
+    h.run(force=False)
+    # h.run()
     h.to_shapefile()
-    h.plot(log=True)
-    # h.plot_das("temp/maps/2sfca.html")
+    h.plot(log=False)
+    h.plot_das("temp/maps/das.html", log=True)
 
     x, y = h.pearson_da()
 
