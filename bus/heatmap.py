@@ -1043,7 +1043,7 @@ def test11():
 
     h = Heatmap()
     h.set_dataset(DATASET.JUNE)
-    h.set_mode(49)
+    h.set_mode(50)
     h.run(force=True)
     h.to_shapefile()
     h.plot(log=True)

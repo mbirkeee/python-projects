@@ -185,13 +185,15 @@ class Score(object):
                         # print "GOT DEMAND!!!"
                         # raise ValueError("fixme")
 
-#                        if demand < 1.0:
-#                            demand = 1.0
-#                        departs = departs / demand
+                        # if demand < 1.0:
+                        #     demand = 1.0
+                        # departs = departs / demand
 
 
 # TEMP!!!! CHECK SUPPLY INSTEAD OF DEMAND!!!!
-                        departs = departs * demand
+#                         departs = departs * math.log10(demand)
+                        departs = departs * math.pow(demand, 0.5)
+
                         print "DEPARTS with DEMAND", departs, demand
 
                     print "Route ID: %d Stop ID: %d DIR: %d Departures: %f" % \
