@@ -182,15 +182,11 @@ class Score(object):
                     if stop_demand is not None:
                         demand = stop.get_demand()
 
-                        # print "GOT DEMAND!!!"
-                        # raise ValueError("fixme")
-
                         # if demand < 1.0:
                         #     demand = 1.0
                         # departs = departs / demand
 
 
-# TEMP!!!! CHECK SUPPLY INSTEAD OF DEMAND!!!!
 #                         departs = departs * math.log10(demand)
                         departs = departs * math.pow(demand, 0.5)
 

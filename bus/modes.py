@@ -13,17 +13,6 @@ class BUFFER_METHOD(object):
     DIAMOND_400     = "diamond_400"
     NETWORK_400     = "network_400"
 
-## List of supported buffer methods
-#BUFFER_LIST = [
-#    BUFFER_METHOD.NONE,
-#    BUFFER_METHOD.CIRCLE_400,
-#    BUFFER_METHOD.CIRCLE_800,
-#    BUFFER_METHOD.SQUARE_709,
-#    BUFFER_METHOD.DIAMOND_500,
-#    BUFFER_METHOD.DIAMOND_400,
-#    BUFFER_METHOD.NETWORK_400
-#]
-
 class DECAY_METHOD(object):
     NONE        = None
 
@@ -364,15 +353,13 @@ MODE_DICT = {
         KEY.SCORE_NEAREST_ONLY  : True,
         KEY.DISTANCE_DECAY      : DECAY_METHOD.CROW_150
     },
-
-    # This is the E2SFCA method
+    # Langfords E2SFCA
     50 : {
         KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_400,
         KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_DAY,
         KEY.SCORE_NEAREST_ONLY  : True,
         KEY.DISTANCE_DECAY      : DECAY_METHOD.GRID_250,
         KEY.STOP_DEMAND         : DECAY_METHOD.GRID_250,
-        # KEY.STOP_DEMAND         : None,
     },
 }
 
