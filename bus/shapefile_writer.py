@@ -6,6 +6,10 @@ class ShapeFileWriter(object):
 
         self._raster_list = []
         self._stop_list = []
+        self._da_list = []
+
+    def add_da(self, da):
+        self._da_list.append(da)
 
     def add_raster(self, raster):
         self._raster_list.append(raster)
@@ -96,6 +100,41 @@ class ShapeFileWriter(object):
 
         print "Wrote %s" % file_name
 
+    def write_heatmap_da(self, file_name):
+
+        driver = ogr.GetDriverByName('Esri Shapefile')
+        ds = driver.CreateDataSource(file_name)
+        layer = ds.CreateLayer('', None, ogr.wkbPolygon)
+
+        layer.CreateField(ogr.FieldDefn('fid', ogr.OFTInteger))
+        layer.CreateField(ogr.FieldDefn('da_id', ogr.OFTInteger))
+        layer.CreateField(ogr.FieldDefn('score', ogr.OFTReal))
+
+        defn = layer.GetLayerDefn()
+
+        for i, da in enumerate(self._da_list):
+            fid = i + 1
+
+            score = da.get_score()
+            da_id = da.get_id()
+
+            # Create a new feature (attribute and geometry)
+            feature = ogr.Feature(defn)
+            feature.SetField('fid', fid)
+            feature.SetField('da_id', da_id)
+            feature.SetField('score', score)
+
+            p = da.get_polygon()
+            geom = p.get_ogr_poly()
+            feature.SetGeometry(geom)
+
+            layer.CreateFeature(feature)
+            feature = geom = None  # destroy these
+
+        # Save and close everything
+        ds = layer = feature = geom = None
+        print "Wrote %s" % file_name
+
     def write(self, file_name):
 
         driver = ogr.GetDriverByName('Esri Shapefile')
@@ -118,7 +157,7 @@ class ShapeFileWriter(object):
 
             score = raster.get_score()
             da_id = raster.get_parent_id()
-            raster_id= raster.get_id()
+            raster_id = raster.get_id()
 
             # Create a new feature (attribute and geometry)
             feature = ogr.Feature(defn)

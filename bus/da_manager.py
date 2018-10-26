@@ -66,7 +66,14 @@ class DA(object):
         self._clipped_polygon = None
         self._population = None
         self._transit_users = None
+        self._score = None
         self._rasters = []
+
+    def set_score(self, value):
+        self._score = value
+
+    def get_score(self):
+        return self._score
 
     def set_clipped_polygon(self, polygon):
         self._clipped_polygon = polygon
@@ -567,12 +574,27 @@ class DaData(object):
         plotter.plot(file_name)
 
 
+def make_transit_user_shapefile():
+    # Make a shapefile of the transit users by DA
+    daman = DaData()
+
+    das = daman.get_das()
+
+    writer = ShapeFileWriter()
+
+    for da in das:
+        print da.get_population()
+        user_percentage = da.get_percent_transit_users()
+        da.set_score(user_percentage)
+        print da.get_score()
+        writer.add_da(da)
+
+    writer.write_heatmap_da("temp/shapefiles/heatmaps/transit_user_percentage.shp")
+
 def test1():
 
     daman = DaData()
     daman.plot_percent_transit_users("temp/maps/transit_users_da.html")
-
-
 
 
 def test2():
@@ -652,4 +674,4 @@ def test4():
 
 if __name__ == "__main__":
 
-    test1()
+    make_transit_user_shapefile()
