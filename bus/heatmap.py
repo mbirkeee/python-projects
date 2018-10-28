@@ -102,6 +102,8 @@ class Heatmap(object):
         # Used for performing subtraction etc.
         self._raster_dict = {}
 
+        self._intersect = None
+        self._buffers_made = None
         self._dataset = None
         self._base_path = None
         self._dataman = None
@@ -116,6 +118,12 @@ class Heatmap(object):
 
         if shapefile:
             self.from_shapefile(shapefile)
+
+    def get_model(self):
+        return self._mode_man.get_model()
+
+    def print_model(self):
+        self._mode_man.print_model()
 
     def make_random_model(self):
         self._mode_man.make_random_model()
@@ -263,9 +271,13 @@ class Heatmap(object):
 
     def make_buffers(self, stops, buffer_method):
 
+
+        if self._buffers_made is not None and self._buffers_made == buffer_method:
+            print "Buffers already made"
+            return False
         if buffer_method == BUFFER_METHOD.NONE:
             print "No buffers required"
-            return
+            return False
 
         buffer_man = None
         if buffer_method in [BUFFER_METHOD.NETWORK_400]:
@@ -276,10 +288,13 @@ class Heatmap(object):
             stop.make_buffer(buffer_method, buffer_manager=buffer_man)
 
         print "Stop buffers complete"
+        return True
 
-    def run(self, force=False):
-
-        if self._run_flag:
+    def run(self, force=False, random_model=False):
+        """
+        NOTE: This was written to be run only once then hacked to run random models
+        """
+        if self._run_flag and not random_model:
             print "Heatmap already generated, cannot run again"
             return
 
@@ -295,8 +310,13 @@ class Heatmap(object):
             return False
 
         self._run_flag = True
-        self._dataman = dataman_factory(self._dataset)
-        self._da_man = DaData()
+
+        if self._dataman is None:
+            self._dataman = dataman_factory(self._dataset)
+
+        if self._da_man is None:
+            self._da_man = DaData()
+
         das = self._da_man.get_das()
 
         # Use all stops to check if intersections should be updated
@@ -314,40 +334,50 @@ class Heatmap(object):
 
         buffer_method = self._mode_man.get_buffer_method()
 
+        # print "TEST RETURN" * 5
+        # return
+
         if buffer_method is None:
             raise ValueError("Cannot determine buffer method for mode: %d" % self._mode)
 
-        self.make_buffers(stops, buffer_method)
-        intersect = Intersect()
+        buffers_made = self.make_buffers(stops, buffer_method)
+        if buffers_made:
+            # Only need to compute intersections if new buffers were made
+            self._intersect = Intersect()
 
-        try:
-            intersect.load(buffer_method, self._dataset, all_stops)
+            try:
+                self._intersect.load(buffer_method, self._dataset, all_stops)
 
-        except Exception as err:
-            print "Intersect().load() Exception: %s" % repr(err)
-            if not self._route_ids:
-                self.make_buffers(all_stops, buffer_method)
-                intersect.process(all_stops, das)
-                intersect.to_shapefile(buffer_method, self._dataset, all_stops)
-            else:
-                print "CANNOT compute intersections with subset of stops"
-                print "quitting"
-                return False
+            except Exception as err:
+                print "Intersect().load() Exception: %s" % repr(err)
+                if not self._route_ids:
+                    self.make_buffers(all_stops, buffer_method)
+                    self._intersect.process(all_stops, das)
+                    self._intersect.to_shapefile(buffer_method, self._dataset, all_stops)
+                else:
+                    print "CANNOT compute intersections with subset of stops"
+                    print "quitting"
+                    return False
+        else:
+            print "BUFFERS ALREADY MADE!!!!!"
 
         judge = Score(self._dataman, self._mode_man)
-
         stop_demand = self._mode_man.get_stop_demand()
+
         # This loop computes the stop demand if required --------------------------------
         if stop_demand is not None:
             for stop in stops:
-                stop.compute_demand(intersect, self._da_man, stop_demand)
+                stop.compute_demand(self._intersect, self._da_man, stop_demand)
                 # print "Stop: %d DEMAND: %f" % (stop.get_id(), stop.get_demand())
 
         # End of loop computing stop demand ----------------------------------------------
 
+        self._raster_list = []
+        self._raster_dict = {}
+
         for da in das:
             rasters = da.get_rasters(100)
-            stop_tuples = intersect.get_intersections(group=2, id=da.get_id())
+            stop_tuples = self._intersect.get_intersections(group=2, id=da.get_id())
             print "DA: %d stops: %d" % (da.get_id(), len(stop_tuples))
 
             if self._route_ids: # Only the scores for a subset of routes are being calculated
@@ -505,7 +535,10 @@ class Heatmap(object):
         from scipy.stats import pearsonr
         from scipy.stats import zscore
 
-        my_scores = self.get_da_scores()
+        raster_clip = self._mode_man.get_raster_clip()
+
+        print "USING RASTER CLIP", raster_clip
+        my_scores = self.get_da_scores(clip_level=raster_clip)
 
         outliers = [(item[1], item[0]) for item in my_scores]
         outliers = sorted(outliers)
@@ -556,7 +589,7 @@ class Heatmap(object):
 
         result = pearsonr(my_z, other_z)
         print result
-
+        return result
 
     def plot_das(self, file_name, log=False):
 
@@ -1090,18 +1123,27 @@ def test11():
 def test_random():
 
     h = Heatmap()
-    h.make_random_model()
     h.set_dataset(DATASET.JUNE)
     h.set_service_time("8:00")
     h.set_service_day(SERVICE.MWF)
-    h.run(force=True)
 
-    x, y = h.pearson_da()
 
+    while True:
+        h.make_random_model()
+        h.print_model()
+        h.run(force=True, random_model=True)
+        h.print_model()
+        model = h.get_model()
+        x, y = h.pearson_da()
+
+        f = open("rand.txt", "a")
+        f.write("%s,%s,%s\n" % (repr(x), repr(y), repr(model)))
+        f.close()
 
 if __name__ == "__main__":
 
     test_random()
+    # test11()
     raise ValueError("Done")
 
     mode = 13

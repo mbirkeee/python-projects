@@ -200,7 +200,6 @@ class TransitStop(object):
             da = daman.get_da(da_id)
             area_factor = p.get_area() / da.get_area()
 
-
             # area_factor = 1.0
 
             population = da.get_population()
