@@ -182,9 +182,9 @@ class Score(object):
                     if stop_demand is not None:
                         demand = stop.get_demand()
 
-                        # if demand < 1.0:
-                        #     demand = 1.0
-                        # departs = departs / demand
+#                        if demand < 1.0:
+#                            demand = 1.0
+#                        departs = departs / demand
 
 
 #                         departs = departs * math.log10(demand)

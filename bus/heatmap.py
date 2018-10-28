@@ -435,7 +435,7 @@ class Heatmap(object):
 
         clipped_count = 0
 
-        max_score = 0.6 * max_score
+        # max_score = 0.6 * max_score
 
         for raster in self._raster_list:
             # print dir(raster)
@@ -462,6 +462,9 @@ class Heatmap(object):
         for da_id, da_data in da_dict.iteritems():
             ave_score = da_data.get('total_score') / da_data.get('total_area')
             da_data['ave_score'] = ave_score
+
+            da = self._da_man.get_da(da_id)
+            da.set_score(ave_score)
 
         if self._da_man is None:
             self._da_man = DaData()
@@ -620,6 +623,19 @@ class Heatmap(object):
 
         if write_file:
             plotter.plot(file_name)
+
+    def to_shapefile_da(self):
+
+        writer = ShapeFileWriter()
+        das = self._da_man.get_das()
+        for da in das:
+            print da.get_score()
+            # user_percentage = da.get_percent_transit_users()
+            # da.set_score(user_percentage)
+            # print da.get_score()
+            writer.add_da(da)
+
+        writer.write_heatmap_da("temp/shapefiles/heatmaps/temp_da.shp")
 
     def to_shapefile(self, file_name=None):
         """
@@ -1047,6 +1063,13 @@ def test11():
     h.set_mode(50)
     h.run(force=True)
     h.to_shapefile()
+
+
+    h.get_da_scores()
+
+    h.to_shapefile_da()
+
+
     h.plot(log=False)
     h.plot_das("temp/maps/das.html", log=True)
 
