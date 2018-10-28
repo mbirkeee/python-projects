@@ -109,7 +109,7 @@ class DA(object):
             raster = Raster(da_id, raster_id, polygon)
             result.append(raster)
 
-        print "Read %d rasters from file: %s" % (len(records), file_name)
+        print "DA: Read %d rasters from file: %s" % (len(records), file_name)
         return result
 
     def get_rasters(self, size):
@@ -172,7 +172,7 @@ class DA(object):
         return 100.0 * (float(self.get_transit_users())/float(self.get_population()))
 
     def get_centroid(self):
-        raise ValueError("fixman")
+        raise ValueError("fixme")
 
     def get_polygon(self):
 
@@ -448,7 +448,7 @@ class DaData(object):
             self._da_dict[da_id] = da
 
         f.close()
-        print "DaData: loaded %d points from %s" % (count, file_name)
+        print "DaData: Loaded %d points from %s" % (count, file_name)
 
     def get_das(self):
         return [da for da in self._da_dict.itervalues()]
@@ -459,6 +459,9 @@ class DaData(object):
     def load_file_transit_data(self, file_name):
 
         f = open(file_name, "r")
+
+        total_pop = 0
+        total_transit_riders  = 0
 
         count = 0
         for line in f:
@@ -472,7 +475,10 @@ class DaData(object):
             transit_riders = int(parts[2].strip())
             pop = int(parts[3].strip())
 
-            print da_id, transit_riders, pop
+            # print "DA_ID:", da_id, "POP:", pop, "TRANSIT RIDERS:", transit_riders
+
+            total_pop += pop
+            total_transit_riders += transit_riders
 
             da = self.get_da(da_id)
             if da is None:
@@ -484,6 +490,9 @@ class DaData(object):
             da.set_transit_users(4 * transit_riders)
 
         f.close()
+
+        print "DaData: Loaded total pop: %d total transit riders: %d" % (total_pop, 4 * total_transit_riders)
+        print "DaData: Loaded %d points from %s" % (count, file_name)
 
         # das = self.get_das()
         # if (count - 1)  != len(das):
@@ -518,7 +527,7 @@ class DaData(object):
 
         f.close()
 
-        print "DaData loaded %d centroids from %s" % (count, file_name)
+        print "DaData: Loaded %d centroids from %s" % (count, file_name)
 
     def get_transit_percentages(self):
 

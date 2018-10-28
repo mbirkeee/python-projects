@@ -1,5 +1,6 @@
 import pprint
 import copy
+import random
 
 from constants import KEY
 from dataset import SERVICE
@@ -37,6 +38,10 @@ class SCORE_METHOD(object):
     DECAYED_WAIT            = "decayed_wait"
     COVERAGE                = "coverage"
 
+class DEMAND_METHOD(object):
+
+    DIVIDE                  = "divide"
+    MULTIPLY_SQRT           = "multiply_sqrt"
 
 #-----------------------------------------------------------------------
 MODE_DICT = {
@@ -360,6 +365,16 @@ MODE_DICT = {
         KEY.SCORE_NEAREST_ONLY  : True,
         KEY.DISTANCE_DECAY      : DECAY_METHOD.GRID_250,
         KEY.STOP_DEMAND         : DECAY_METHOD.GRID_250,
+        KEY.DEMAND_METHOD       : DEMAND_METHOD.DIVIDE
+    },
+    # Modified E2SFCA
+    51 : {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_DAY,
+        KEY.SCORE_NEAREST_ONLY  : True,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.GRID_250,
+        KEY.STOP_DEMAND         : DECAY_METHOD.GRID_250,
+        KEY.DEMAND_METHOD       : DEMAND_METHOD.MULTIPLY_SQRT
     },
 }
 
@@ -368,8 +383,8 @@ class ModeMan(object):
     def __init__(self, mode=None):
 
         self._mode_dict = copy.copy(MODE_DICT)
-        self.validate()
 
+        self.validate()
         self._mode = mode
         if mode is not None:
             self.set_mode(mode)
@@ -413,6 +428,33 @@ class ModeMan(object):
                 param = "%-15s %-20s %s" % (desc, k, modes)
                 print param
 
+
+    def make_random_model(self):
+
+        self._mode = "random"
+        mode_data = {}
+
+        dpass = random.randint(50, 400)
+        distance_decay = "grid_%d" % dpass
+        spass = random.randint(50, 400)
+        stop_decay = "grid_%d" % spass
+
+        demand_pow = float(random.randint(0, 1000)) / 1000.0
+        demand_method = "mult_%f" % demand_pow
+
+        wpass = float(random.randint(0, 10)) / 10.0
+
+        mode_data = {
+            KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_HOUR,
+            KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_400,
+            KEY.SCORE_NEAREST_ONLY  : True,
+            KEY.STOP_DEMAND         : stop_decay,
+            KEY.DISTANCE_DECAY      : distance_decay,
+            KEY.DEMAND_METHOD       : demand_method,
+            KEY.WAIT_BANDPASS       : wpass,
+        }
+
+        self._mode_dict[self._mode] = mode_data
 
     def set_mode(self, mode):
         mode = int(mode)
@@ -481,6 +523,9 @@ class ModeMan(object):
             return False
 
         if mode1.get(KEY.SERVICE_TIME, "8:00") != mode2.get(KEY.SERVICE_TIME, "8:00"):
+            return False
+
+        if mode1.get(KEY.DEMAND_METHOD) != mode2.get(KEY.DEMAND_METHOD):
             return False
 
         # If we made it to here a duplicate mode was detected
@@ -580,9 +625,20 @@ class ModeMan(object):
         method = mode_data.get(KEY.SERVICE_TIME, "8:00")
         return method
 
-    def get_stop_demand(self, mode=None):
-        # Service time defaults to "8:00"  (8 AM)
+    def get_stop_demand(self, mode=None, check=True):
         if not mode: mode = self._mode
         mode_data = self._mode_dict.get(mode)
         method = mode_data.get(KEY.STOP_DEMAND, None)
+        if check and method is not None:
+            if self.get_demand_method(mode=mode, check=False) is None:
+                raise ValueError("DEMAND_METHOD must be defined")
+        return method
+
+    def get_demand_method(self, mode=None, check=True):
+        if not mode: mode = self._mode
+        mode_data = self._mode_dict.get(mode)
+        method = mode_data.get(KEY.DEMAND_METHOD)
+        if check and method is not None:
+            if self.get_stop_demand(mode=mode, check=False) is None:
+                raise ValueError("STOP_DEMAND must be defined")
         return method

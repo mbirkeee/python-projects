@@ -5,6 +5,7 @@ from my_utils import get_butterworth_decay
 
 from stop_times import KEY
 from modes import SCORE_METHOD
+from modes import DEMAND_METHOD
 
 from butterworth import wait_decay
 
@@ -181,16 +182,27 @@ class Score(object):
                     # Apply stop demand if required
                     if stop_demand is not None:
                         demand = stop.get_demand()
+                        demand_method = self._mode_man.get_demand_method()
 
-#                        if demand < 1.0:
-#                            demand = 1.0
-#                        departs = departs / demand
+                        if demand_method == DEMAND_METHOD.DIVIDE:
+                            if demand < 1.0:
+                                demand = 1.0
+                            departs = departs / demand
+                        elif demand_method == DEMAND_METHOD.MULTIPLY_SQRT:
+                            departs = departs * math.pow(demand, 0.5)
+                            print "departs %f --------> %f" % (old_departs, departs)
+                        else:
+                            parts = demand_method.split("_")
+                            if parts[0].strip() == 'mult':
+                                power = float(parts[1])
+                                print "POWER "*10, power
+                                departs = departs * math.pow(demand, power)
 
+                            else:
+                                departs = None
 
-#                         departs = departs * math.log10(demand)
-                        departs = departs * math.pow(demand, 0.5)
-
-                        print "DEPARTS with DEMAND", departs, demand
+                        if departs is None:
+                            raise ValueError("invalid demand method")
 
                     print "Route ID: %d Stop ID: %d DIR: %d Departures: %f" % \
                           (route_id, stop_id, direction, old_departs)

@@ -16,6 +16,8 @@ from data_manager import dataman_factory
 from intersect import Intersect
 
 from dataset import DATASET
+from dataset import SERVICE
+
 from modes import ModeMan
 
 from plotter import Plotter
@@ -100,16 +102,12 @@ class Heatmap(object):
         # Used for performing subtraction etc.
         self._raster_dict = {}
 
-        # self._mode = None
-        # self._service_time = None
-        # self._service_date = None
         self._dataset = None
         self._base_path = None
         self._dataman = None
         self._da_man = None
         self._run_flag = False
 
-        # self._mode_dict = MODE_DICT
         self._mode_man = ModeMan()
         self._max_score = None
         self._min_score = None
@@ -118,6 +116,9 @@ class Heatmap(object):
 
         if shapefile:
             self.from_shapefile(shapefile)
+
+    def make_random_model(self):
+        self._mode_man.make_random_model()
 
     def set_service_time(self, service_time):
         self._mode_man.set_service_time(service_time)
@@ -382,11 +383,11 @@ class Heatmap(object):
         """
 
         if self._run_flag:
-            print "heatmap already loaded"
+            print "from_shapefile(): Heatmap already loaded"
             return
 
+        print "from_shapefile(): Loading from shapefile: %s" % file_name
         self._run_flag = True
-
         self._load_file_name = file_name
 
         sf = shapefile.Reader(file_name)
@@ -396,9 +397,9 @@ class Heatmap(object):
         if len(records) != len(shapes):
             raise ValueError("len records != len shapes")
 
-        print "len(records)", len(records)
-        print "len(shapes)", len(shapes)
+        print "from_shapefile(): Loaded %d records" % len(records)
 
+        # This loop converts the loaded shapefile data itn "rasters"
         for i, record in enumerate(records):
             # print repr(record)
             fid = record[0]
@@ -422,9 +423,14 @@ class Heatmap(object):
 
             self._raster_list.append(raster)
 
-    def get_da_scores(self):
-
+    def get_da_scores(self, clip_level=0.4):
+        """
+        NOTE: It looks like clipping some of the extreme rasters results is a better correlation
+        """
         da_dict = {}
+
+        if self._da_man is None:
+            self._da_man = DaData()
 
         max_score = None
 
@@ -435,7 +441,8 @@ class Heatmap(object):
 
         clipped_count = 0
 
-        # max_score = 0.6 * max_score
+        if clip_level is not None:
+            max_score = clip_level * max_score
 
         for raster in self._raster_list:
             # print dir(raster)
@@ -447,6 +454,7 @@ class Heatmap(object):
                 score = max_score
                 clipped_count += 1
 
+            # This is the area of the raster, not the DA! Don't get confused
             area = p.get_area()
             # print da_id, score, area
 
@@ -465,9 +473,6 @@ class Heatmap(object):
 
             da = self._da_man.get_da(da_id)
             da.set_score(ave_score)
-
-        if self._da_man is None:
-            self._da_man = DaData()
 
         # Get a list of all DAs
         das = self._da_man.get_das()
@@ -488,9 +493,11 @@ class Heatmap(object):
         da_list = sorted(da_list)
 
         for item in da_list:
-            print item
+            pass
+            # print "DA score item", item
 
-        print "CLIPPED COUNT", clipped_count
+        if clipped_count:
+            print "get DA score clipped: %d (cliped max score: %f)" %(clipped_count, max_score)
         return da_list
 
     def pearson_da(self, other=None):
@@ -624,27 +631,36 @@ class Heatmap(object):
         if write_file:
             plotter.plot(file_name)
 
-    def to_shapefile_da(self):
+    def to_shapefile_da(self, file_name=None):
+
+        if not self._run_flag:
+            raise ValueError("no heatmap data")
+
+        if self._da_man is None:
+            self._da_man = DaData()
+
+        self.get_da_scores()
 
         writer = ShapeFileWriter()
         das = self._da_man.get_das()
         for da in das:
-            print da.get_score()
-            # user_percentage = da.get_percent_transit_users()
-            # da.set_score(user_percentage)
-            # print da.get_score()
             writer.add_da(da)
 
-        writer.write_heatmap_da("temp/shapefiles/heatmaps/temp_da.shp")
+        if file_name is None:
+            file_name = self.make_file_name("shapefiles/heatmaps/heatmap_DA.shp")
+
+        writer.write_heatmap_da(file_name)
 
     def to_shapefile(self, file_name=None):
         """
         Dump this heatmap to a shapefile
         """
 
+        if not self._run_flag:
+            raise ValueError("no heatmap data")
+
         if file_name is None:
             file_name = self.make_file_name("shapefiles/heatmaps/heatmap.shp")
-            # file_name = "temp/shapefiles/heatmaps/heatmap_mode_%s_%s.shp" % (self._mode, self._dataset)
 
         writer = ShapeFileWriter()
         for raster in self._raster_list:
@@ -1060,24 +1076,32 @@ def test11():
 
     h = Heatmap()
     h.set_dataset(DATASET.JUNE)
-    h.set_mode(50)
+    h.set_mode(51)
     h.run(force=True)
-    h.to_shapefile()
 
+    # h.to_shapefile()
+    # h.to_shapefile_da()
 
-    h.get_da_scores()
-
-    h.to_shapefile_da()
-
-
-    h.plot(log=False)
-    h.plot_das("temp/maps/das.html", log=True)
+    # h.plot(log=False)
+    # h.plot_das("temp/maps/das.html", log=True)
 
     x, y = h.pearson_da()
 
+def test_random():
+
+    h = Heatmap()
+    h.make_random_model()
+    h.set_dataset(DATASET.JUNE)
+    h.set_service_time("8:00")
+    h.set_service_day(SERVICE.MWF)
+    h.run(force=True)
+
+    x, y = h.pearson_da()
+
+
 if __name__ == "__main__":
 
-    test11()
+    test_random()
     raise ValueError("Done")
 
     mode = 13

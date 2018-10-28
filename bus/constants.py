@@ -20,6 +20,7 @@ class KEY(object):
     NAME                = 'name'
     NOTES               = 'notes'
 
+    DEMAND_METHOD       = 'demand_method'
     STOP_SET            = 'stop_set'
     BUFFER_METHOD       = 'buffer_method'
     SCORE_METHOD        = 'score_method'
