@@ -31,6 +31,8 @@ class KEY(object):
     DISTANCE_METHOD     = 'distance_method'
     NORMALIZE_VALUE     = 'normalize_value'
     WAIT_BANDPASS       = 'wait_bandpass'
+    RASTER_CLIP         = 'raster_clip'
+
 
     STOPS_ADDED         = 'stops_added'
     STOPS_REMOVED       = 'stops_removed'

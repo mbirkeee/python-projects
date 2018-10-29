@@ -384,6 +384,9 @@ class ModeMan(object):
 
         self._mode_dict = copy.copy(MODE_DICT)
 
+        self._random_model_service_day = None
+        self._random_model_service_time = None
+
         self.validate()
         self._mode = mode
         if mode is not None:
@@ -394,16 +397,18 @@ class ModeMan(object):
         mode_list = sorted(mode_list)
 
         getters = [
-            ("BUFFER",      self.get_buffer_method),
-            ("SCORE",       self.get_score_method),
-            ("DISTANCE",    self.get_distance_method),
-            ("DECAY",       self.get_distance_decay),
-            ("NEAREST",     self.get_nearest_only),
-            ("DAY",         self.get_service_type),
-            ("TIME",        self.get_service_time),
-            ("WAIT_BPASS",  self.get_wait_bandpass),
-            ("WAIT_NORM",   self.get_normalize_value),
-            ("STOP DEMAND", self.get_stop_demand)
+            ("BUFFER",          self.get_buffer_method),
+            ("SCORE",           self.get_score_method),
+            ("DISTANCE",        self.get_distance_method),
+            ("DECAY",           self.get_distance_decay),
+            ("NEAREST",         self.get_nearest_only),
+            ("DAY",             self.get_service_type),
+            ("TIME",            self.get_service_time),
+            ("WAIT_BPASS",      self.get_wait_bandpass),
+            ("WAIT_NORM",       self.get_normalize_value),
+            ("STOP DEMAND",     self.get_stop_demand),
+            ("DEMAND METHOD",   self.get_demand_method),
+            ("RASTER CLIP",     self.get_raster_clip)
 
         ]
 
@@ -428,11 +433,24 @@ class ModeMan(object):
                 param = "%-15s %-20s %s" % (desc, k, modes)
                 print param
 
+    def get_model(self):
+        model_data = self._mode_dict.get(self._mode)
+        return model_data
+
+    def print_model(self):
+        model_data = self._mode_dict.get(self._mode)
+        for k, v in model_data.iteritems():
+            print "KEY: %s: VALUE: %s" % (repr(k), repr(v))
 
     def make_random_model(self):
-
         self._mode = "random"
         mode_data = {}
+
+        if self._random_model_service_time is None:
+            raise ValueError("Service time not set for random model")
+
+        if self._random_model_service_day is None:
+            raise ValueError("Servie time not set for random model")
 
         dpass = random.randint(50, 400)
         distance_decay = "grid_%d" % dpass
@@ -442,9 +460,15 @@ class ModeMan(object):
         demand_pow = float(random.randint(0, 1000)) / 1000.0
         demand_method = "mult_%f" % demand_pow
 
-        wpass = float(random.randint(0, 10)) / 10.0
+        # 0 to 10 mins
+        wpass = float(random.randint(0, 1000)) / 100.0
+
+        # 0.2 to 1.0
+        raster_clip = float(random.randint(200, 1000)) / 1000.0
 
         mode_data = {
+            KEY.SERVICE_TIME        : self._random_model_service_time,
+            KEY.SERVICE_TYPE        : self._random_model_service_day,
             KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_HOUR,
             KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_400,
             KEY.SCORE_NEAREST_ONLY  : True,
@@ -452,6 +476,7 @@ class ModeMan(object):
             KEY.DISTANCE_DECAY      : distance_decay,
             KEY.DEMAND_METHOD       : demand_method,
             KEY.WAIT_BANDPASS       : wpass,
+            KEY.RASTER_CLIP         : raster_clip
         }
 
         self._mode_dict[self._mode] = mode_data
@@ -469,13 +494,18 @@ class ModeMan(object):
 
     def set_service_time(self, service_time):
         mode_data = self._mode_dict.get(self._mode)
-        mode_data[KEY.SERVICE_TIME] = service_time
-        self._mode_dict[self._mode] = mode_data
+        if mode_data is not None:
+            mode_data[KEY.SERVICE_TIME] = service_time
+            self._mode_dict[self._mode] = mode_data
+
+        self._random_model_service_time = service_time
 
     def set_service_day(self, service_day):
         mode_data = self._mode_dict.get(self._mode)
-        mode_data[KEY.SERVICE_TYPE] = service_day
-        self._mode_dict[self._mode] = mode_data
+        if mode_data is not None:
+            mode_data[KEY.SERVICE_TYPE] = service_day
+            self._mode_dict[self._mode] = mode_data
+        self._random_model_service_day = service_day
 
     def get_service_day_str(self):
         day = self.get_service_type()
@@ -526,6 +556,9 @@ class ModeMan(object):
             return False
 
         if mode1.get(KEY.DEMAND_METHOD) != mode2.get(KEY.DEMAND_METHOD):
+            return False
+
+        if mode1.get(KEY.RASTER_CLIP) != mode2.get(KEY.RASTER_CLIP):
             return False
 
         # If we made it to here a duplicate mode was detected
@@ -642,3 +675,9 @@ class ModeMan(object):
             if self.get_stop_demand(mode=mode, check=False) is None:
                 raise ValueError("STOP_DEMAND must be defined")
         return method
+
+    def get_raster_clip(self, mode=None):
+        if not mode: mode = self._mode
+        mode_data = self._mode_dict.get(mode)
+        value = mode_data.get(KEY.RASTER_CLIP, 0.6)
+        return value
