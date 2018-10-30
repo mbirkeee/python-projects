@@ -6,7 +6,7 @@ import pprint
 import numpy as np
 import random
 
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 from shapefile_writer import ShapeFileWriter
 from da_manager import Raster
