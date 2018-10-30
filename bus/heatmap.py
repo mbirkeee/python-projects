@@ -453,7 +453,7 @@ class Heatmap(object):
 
             self._raster_list.append(raster)
 
-    def get_da_scores(self, clip_level=0.4):
+    def get_da_scores(self, clip_level=0.6):
         """
         NOTE: It looks like clipping some of the extreme rasters results is a better correlation
         """
@@ -527,7 +527,9 @@ class Heatmap(object):
             # print "DA score item", item
 
         if clipped_count:
-            print "get DA score clipped: %d (cliped max score: %f)" %(clipped_count, max_score)
+            print "get_da_score(): clipped: %d (max score: %f total raster: %d)" %\
+                  (clipped_count, max_score, len(self._raster_list))
+
         return da_list
 
     def pearson_da(self, other=None):
@@ -664,7 +666,7 @@ class Heatmap(object):
         if write_file:
             plotter.plot(file_name)
 
-    def to_shapefile_da(self, file_name=None):
+    def to_shapefile_da(self, file_name=None, use_z_scores=False):
 
         if not self._run_flag:
             raise ValueError("no heatmap data")
@@ -672,7 +674,27 @@ class Heatmap(object):
         if self._da_man is None:
             self._da_man = DaData()
 
-        self.get_da_scores()
+
+        score_tuples = self.get_da_scores()
+
+        for item in score_tuples:
+            print item
+
+
+        if use_z_scores:
+            from scipy.stats import zscore
+
+            raw_scores = [item[1] for item in score_tuples]
+            z_scores = zscore(raw_scores)
+
+            for item in z_scores:
+                print item
+            print len(z_scores)
+
+            for i, item in enumerate(score_tuples):
+                da_id = item[0]
+                da = self._da_man.get_da(da_id)
+                da.set_score(z_scores[i])
 
         writer = ShapeFileWriter()
         das = self._da_man.get_das()
@@ -1109,16 +1131,23 @@ def test11():
 
     h = Heatmap()
     h.set_dataset(DATASET.JUNE)
+    # 43 id the filtered coverage I think
+    # 35 is the stop count with distance decay
+    # 37 is coverage with distance decay
+    # 39 is frequency with decay
+    # 40 is filtered frequency with decay
+    # 51 is E2SFCS-2
     h.set_mode(51)
-    h.run(force=True)
+    h.run()
 
     # h.to_shapefile()
-    # h.to_shapefile_da()
 
-    # h.plot(log=False)
-    # h.plot_das("temp/maps/das.html", log=True)
+    h.plot(log=False)
+    h.plot_das("temp/maps/das.html", log=True)
 
     x, y = h.pearson_da()
+
+    h.to_shapefile_da(use_z_scores=True, file_name="map_6_E2SFCA2_dpass_250.shp")
 
 def test_random():
 
@@ -1142,8 +1171,8 @@ def test_random():
 
 if __name__ == "__main__":
 
-    test_random()
-    # test11()
+    # test_random()
+    test11()
     raise ValueError("Done")
 
     mode = 13
