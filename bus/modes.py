@@ -464,8 +464,8 @@ class ModeMan(object):
         wpass = float(random.randint(0, 1000)) / 100.0
 
         # 0.2 to 1.0
-        raster_clip = float(random.randint(200, 1000)) / 1000.0
-
+        raster_clip = float(random.randint(50, 1000)) / 1000.0
+        raster_clip = 0.075
         mode_data = {
             KEY.SERVICE_TIME        : self._random_model_service_time,
             KEY.SERVICE_TYPE        : self._random_model_service_day,
