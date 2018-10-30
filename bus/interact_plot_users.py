@@ -11,7 +11,7 @@ class Runner(object):
 
     def __init__(self):
 
-        self._postal_codes = self.load_user_postal_codes("data/csv/interact_users_2018_10_22.csv")
+        self._postal_codes = self.load_user_postal_codes("data/csv/interact_users_2018_10_29.csv")
         self._pc_dict = self._postal_code_txt_to_csv("data/csv/pcc_saskatoon_062017.txt", "data/csv/postal_codes_centroids_2017.csv")
 
 
@@ -107,12 +107,12 @@ class Runner(object):
     def run_new(self):
         """
         Use the latest postal code data.  Note that some postal codes
-        hace multiple GPS positions... use centroid
+        have multiple GPS positions... use centroid
         """
         plotter = Plotter()
         locations = Polypoint()
 
-        fout = open("interact_user_locations_2018_10_22.csv", "w")
+        fout = open("interact_user_locations_2018_10_29.csv", "w")
         fout.write("fid,lat,lng\n")
         fid = 0
 
