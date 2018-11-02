@@ -8,6 +8,7 @@ from modes import SCORE_METHOD
 from modes import DEMAND_METHOD
 
 from butterworth import wait_decay
+from walkscore import WalkscoreDecay
 
 from scipy import stats
 
@@ -19,6 +20,7 @@ class Score(object):
 
         self._filter = Filter(dpass=250)
         self._wait_decay_normalize_value = None # Computed on demand
+        self._walkscore_decay = WalkscoreDecay()
 
     def get_decay_factor(self, point1, point2, decay_method):
 
@@ -28,6 +30,7 @@ class Score(object):
 
         parts = decay_method.split('_')
         method = parts[0].strip().lower()
+
         dpass = int(parts[1].strip())
 
         if method == 'grid':
@@ -37,8 +40,11 @@ class Score(object):
         else:
             raise ValueError("invalid method: %s" % method)
 
-        self._filter.set_dpass(dpass)
-        decay = self._filter.butterworth(distance)
+        if dpass == 99999:
+            decay = self._walkscore_decay.get_decay(distance)
+        else:
+            self._filter.set_dpass(dpass)
+            decay = self._filter.butterworth(distance)
 
         return distance, decay
 

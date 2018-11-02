@@ -13,6 +13,70 @@ from plotter import ATTR
 
 from scipy.stats import pearsonr
 
+class WalkscoreDecay(object):
+
+    def __init__(self):
+
+        self.points = [
+            (  0,   100.0),
+            (100,    99.5),
+            (200,    99.0),
+            (300,    98.0),
+            (400,    97.0),
+            (500,    95.0),
+            (600,    91.0),
+            (700,    83.0),
+            (800,    73.0),
+            (900,    60.0),
+            (1000,   50.0),
+            (1100,   43.0),
+            (1200,   38.0),
+            (1300,   34.0),
+            (1400,   31.0),
+            (1500,   27.0),
+            (1600,   23.0),
+            (1700,   19.0),
+            (1800,   14.0),
+            (1900,    9.0),
+            (2000,    0.0)
+        ]
+
+
+    def get_decay(self, dist):
+
+        index = int(dist / 100.0)
+
+        result = 0
+
+        try:
+            range = self.points[index]
+            # print "dist", dist, "range", range
+
+            try:
+                next_point = self.points[index + 1]
+                next_point = next_point[1]
+            except:
+                next_point = 0
+
+            # print "NEXT POINT", next_point
+
+
+            rise = next_point - range[1]
+            run = 100.0 * (dist / 100.0 - int(dist/ 100.0 ))
+
+
+            # print "rise:", rise
+            # print "run", run
+
+            result = range[1] + rise * run / 100.0
+            result = result / 100.0
+        except:
+            print "exception"
+            result = 0
+
+        print "Walkscore Decay: Distance: %f Decay: %f" % (dist, result)
+        return result
+
 class Walkscore(object):
 
     def __init__(self):
@@ -211,6 +275,16 @@ class Runner(object):
 
 
 if __name__ == "__main__":
+
+    filter = WalkscoreDecay()
+    filter.get_decay(0)
+    filter.get_decay(12.3)
+    filter.get_decay(120.3)
+    filter.get_decay(500)
+    filter.get_decay(656.78)
+    filter.get_decay(1999)
+
+    raise ValueError("temp stop")
 
     runner = Runner()
     # runner.walkscore_to_csv()

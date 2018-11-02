@@ -472,13 +472,20 @@ class Heatmap(object):
         clipped_count = 0
 
         if clip_level is not None:
-            max_score = clip_level * max_score
+            if isinstance(clip_level, float):
+                max_score = clip_level * max_score
 
         for raster in self._raster_list:
             # print dir(raster)
             p = raster.get_polygon()
             da_id = raster.get_parent_id()
             score = raster.get_score()
+
+            if isinstance(clip_level, str):
+                if clip_level == 'log':
+                    old_score = score
+                    score = math.log10(score)
+                    print "LOG SCORE: %f --> %f" % (old_score, score)
 
             if score > max_score:
                 score = max_score
@@ -545,8 +552,8 @@ class Heatmap(object):
         outliers = [(item[1], item[0]) for item in my_scores]
         outliers = sorted(outliers)
 
-        for item in outliers:
-            print item
+        # for item in outliers:
+        #     print item
 
         outlier_das = outliers[-6:]
         outlier_das = [item[1] for item in outlier_das]
@@ -1137,17 +1144,17 @@ def test11():
     # 39 is frequency with decay
     # 40 is filtered frequency with decay
     # 51 is E2SFCS-2
-    h.set_mode(51)
-    h.run()
+    h.set_mode(54)
+    h.run(force=True)
 
-    # h.to_shapefile()
+    h.to_shapefile()
 
     h.plot(log=False)
     h.plot_das("temp/maps/das.html", log=True)
 
     x, y = h.pearson_da()
 
-    h.to_shapefile_da(use_z_scores=True, file_name="map_6_E2SFCA2_dpass_250.shp")
+    # h.to_shapefile_da(use_z_scores=True, file_name="map_6_E2SFCA2_dpass_250.shp")
 
 def test_random():
 

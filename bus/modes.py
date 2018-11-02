@@ -17,17 +17,18 @@ class BUFFER_METHOD(object):
 class DECAY_METHOD(object):
     NONE        = None
 
-    CROW_50    = "crow_50"
-    CROW_100    = "crow_100"
-    CROW_150    = "crow_150"
-    CROW_200    = "crow_200"
-    CROW_250    = "crow_250"
-    CROW_400    = "crow_400"
-    GRID_50     = "grid_50"
-    GRID_100    = "grid_100"
-    GRID_150    = "grid_150"
-    GRID_250    = "grid_250"
-    GRID_1000   = "grid_1000"
+    CROW_50         = "crow_50"
+    CROW_100        = "crow_100"
+    CROW_150        = "crow_150"
+    CROW_200        = "crow_200"
+    CROW_250        = "crow_250"
+    CROW_400        = "crow_400"
+    GRID_50         = "grid_50"
+    GRID_100        = "grid_100"
+    GRID_150        = "grid_150"
+    GRID_250        = "grid_250"
+    GRID_1000       = "grid_1000"
+    GRID_WALKSCORE  = "grid_99999"
 
 class SCORE_METHOD(object):
     STOP_COUNT              = "simple_stop_count"
@@ -385,6 +386,26 @@ MODE_DICT = {
         KEY.STOP_DEMAND         : DECAY_METHOD.GRID_250,
         KEY.DEMAND_METHOD       : DEMAND_METHOD.MULTIPLY_SQRT,
         KEY.RASTER_CLIP         : 0.1
+    },
+    # Modified E2SFCA
+    53 : {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_DAY,
+        KEY.SCORE_NEAREST_ONLY  : True,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.GRID_250,
+        KEY.STOP_DEMAND         : DECAY_METHOD.GRID_250,
+        KEY.DEMAND_METHOD       : DEMAND_METHOD.MULTIPLY_SQRT,
+        KEY.RASTER_CLIP         : "log"
+    },
+    # Modified E2SFCA
+    54 : {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_WEEK,
+        KEY.SCORE_NEAREST_ONLY  : True,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.GRID_WALKSCORE,
+        KEY.STOP_DEMAND         : DECAY_METHOD.GRID_250,
+        KEY.DEMAND_METHOD       : DEMAND_METHOD.MULTIPLY_SQRT,
+        KEY.RASTER_CLIP         : "log"
     },
 }
 
