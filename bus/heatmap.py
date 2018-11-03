@@ -6,7 +6,10 @@ import pprint
 import numpy as np
 import random
 
-#import matplotlib.pyplot as plt
+try:
+    import matplotlib.pyplot as plt
+except:
+    print "FAiled to import matplotlib"
 
 from shapefile_writer import ShapeFileWriter
 from da_manager import Raster
@@ -25,6 +28,7 @@ from plotter import ATTR
 
 from score import Score
 from score import ScoreManager
+from score import ScoreManager2
 
 from geometry import Point
 from geometry import Polygon
@@ -280,7 +284,7 @@ class Heatmap(object):
             return False
 
         buffer_man = None
-        if buffer_method in [BUFFER_METHOD.NETWORK_400]:
+        if buffer_method in [BUFFER_METHOD.NETWORK_400, BUFFER_METHOD.NETWORK_2000]:
             buffer_man = BufferManager(buffer_method, self._dataset)
 
         print "Making stop buffers for %d stops..." % len(stops)
@@ -462,18 +466,19 @@ class Heatmap(object):
         if self._da_man is None:
             self._da_man = DaData()
 
-        max_score = None
-
+        scoreman = ScoreManager2()
         for raster in self._raster_list:
-            score = raster.get_score()
-            if max_score is None or score > max_score:
-                max_score = score
+            scoreman.add_score(raster, raster.get_score())
 
+        # max_score = None
+        #
+        # for raster in self._raster_list:
+        #     score = raster.get_score()
+        #     if max_score is None or score > max_score:
+        #         max_score = score
+        #
         clipped_count = 0
-
-        if clip_level is not None:
-            if isinstance(clip_level, float):
-                max_score = clip_level * max_score
+        clip_score, clip_count = scoreman.get_clipping_score(clip_level)
 
         for raster in self._raster_list:
             # print dir(raster)
@@ -481,14 +486,14 @@ class Heatmap(object):
             da_id = raster.get_parent_id()
             score = raster.get_score()
 
-            if isinstance(clip_level, str):
-                if clip_level == 'log':
+            if isinstance(clip_score, str):
+                if clip_score == 'log':
                     old_score = score
                     score = math.log10(score)
                     print "LOG SCORE: %f --> %f" % (old_score, score)
 
-            if score > max_score:
-                score = max_score
+            elif score > clip_score:
+                score = clip_score
                 clipped_count += 1
 
             # This is the area of the raster, not the DA! Don't get confused
@@ -525,6 +530,7 @@ class Heatmap(object):
                 ave_score = da_data.get('ave_score')
 
             # ave_score = random.randint(0, 10)
+            # ave_score = math.log10(ave_score)
             da_list.append((da_id, ave_score))
 
         da_list = sorted(da_list)
@@ -534,8 +540,8 @@ class Heatmap(object):
             # print "DA score item", item
 
         if clipped_count:
-            print "get_da_score(): clipped: %d (max score: %f total raster: %d)" %\
-                  (clipped_count, max_score, len(self._raster_list))
+            print "get_da_score(): clipped: %d (clip_score: %f total raster: %d)" %\
+                  (clipped_count, clip_score, len(self._raster_list))
 
         return da_list
 
@@ -599,6 +605,7 @@ class Heatmap(object):
         result = pearsonr(my_z, other_z)
         print result
         return result
+
 
     def plot_das(self, file_name, log=False):
 
@@ -1045,28 +1052,43 @@ class RasterPlot(object):
 
         plt.show()
 
-    def plot(self):
+    def plot(self, clip_level=None):
 
         fig, ax = plt.subplots(figsize=(10, 6))
+
+        scoreman = ScoreManager2()
 
         for item in self._heatmaps:
             h = item[0]
             label = item[1]
-
             raster_dict = h.get_raster_dict()
-            score_list = []
+
+            scoreman.reset()
+
             for key, r in raster_dict.iteritems():
-                print "%d: %f" % (r.get_id(), r.get_score())
-                score_list.append(r.get_score())
+                scoreman.add_score(r, r.get_score())
+                # score = r.get_score()
+                # print "%d: %f" % (r.get_id(), r.get_score())
+                # score_list.append(score)
+                # if max_score is None or score > ma
 
-            y = sorted(score_list)
-            y.reverse()
+            y = scoreman.get_sorted_scores(reverse=True)
             x = range(len(y))
-
             # line, = ax.semilogy(x, y, label=label)
             # line, = ax.loglog(x, y, label=label)
-            # line, = ax.plot(x, y, label=label)
-            line, = ax.semilogx(x, y, label=label)
+            line, = ax.plot(x, y, label=label)
+            # line, = ax.semilogx(x, y, label=label)
+
+            clip_score, clip_count = scoreman.get_clipping_score_from_percent(10.0)
+            y = np.ones(len(x)) * clip_score
+            line, = ax.plot(x, y, label="clip 10 %")
+
+            clip_score, clip_count = scoreman.get_clipping_score_from_max(0.075)
+            y = np.ones(len(x)) * clip_score
+            line, = ax.plot(x, y, label="clip 0.075(max)")
+
+            clipped_percent = 100.0 * clip_count / float(len(y))
+            print "CLipped percent: %f" % clipped_percent
 
         # ax.legend(loc='lower left')
         ax.legend(loc='upper right')
@@ -1126,7 +1148,6 @@ def test9():
 
 def test10():
 
-
     h = Heatmap("temp/shapefiles/heatmaps/heatmap_mode_15_time_11_15_mwf_brt1.shp")
     h1 = Heatmap("temp/shapefiles/heatmaps/heatmap_mode_15_time_8_00_mwf_brt1.shp")
     h1.plot_das("temp/maps/plot_da.html")
@@ -1144,17 +1165,20 @@ def test11():
     # 39 is frequency with decay
     # 40 is filtered frequency with decay
     # 51 is E2SFCS-2
-    h.set_mode(54)
-    h.run(force=True)
+    h.set_mode(57)
+    h.run()
+    # h.to_shapefile()
 
-    h.to_shapefile()
+    # plotter = RasterPlot()
+    # plotter.add_heatmap(h, "Raster Score")
+    # plotter.plot()
 
     h.plot(log=False)
     h.plot_das("temp/maps/das.html", log=True)
 
-    x, y = h.pearson_da()
+    h.to_shapefile_da(use_z_scores=True, file_name="map_transit_score.shp")
 
-    # h.to_shapefile_da(use_z_scores=True, file_name="map_6_E2SFCA2_dpass_250.shp")
+    x, y = h.pearson_da()
 
 def test_random():
 
@@ -1178,8 +1202,8 @@ def test_random():
 
 if __name__ == "__main__":
 
-    # test_random()
-    test11()
+    test_random()
+    # test11()
     raise ValueError("Done")
 
     mode = 13

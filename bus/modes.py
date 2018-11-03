@@ -13,6 +13,7 @@ class BUFFER_METHOD(object):
     DIAMOND_500     = "diamond_500"
     DIAMOND_400     = "diamond_400"
     NETWORK_400     = "network_400"
+    NETWORK_2000    = "network_2000"
 
 class DECAY_METHOD(object):
     NONE        = None
@@ -27,6 +28,7 @@ class DECAY_METHOD(object):
     GRID_100        = "grid_100"
     GRID_150        = "grid_150"
     GRID_250        = "grid_250"
+    GRID_400        = "grid_400"
     GRID_1000       = "grid_1000"
     GRID_WALKSCORE  = "grid_99999"
 
@@ -42,7 +44,6 @@ class SCORE_METHOD(object):
 class DEMAND_METHOD(object):
 
     DIVIDE                  = "divide"
-    MULTIPLY_SQRT           = "multiply_sqrt"
 
 #-----------------------------------------------------------------------
 MODE_DICT = {
@@ -375,7 +376,7 @@ MODE_DICT = {
         KEY.SCORE_NEAREST_ONLY  : True,
         KEY.DISTANCE_DECAY      : DECAY_METHOD.GRID_250,
         KEY.STOP_DEMAND         : DECAY_METHOD.GRID_250,
-        KEY.DEMAND_METHOD       : DEMAND_METHOD.MULTIPLY_SQRT
+        KEY.DEMAND_METHOD       : "pow_0.5"
     },
     # Modified E2SFCA
     52 : {
@@ -384,7 +385,7 @@ MODE_DICT = {
         KEY.SCORE_NEAREST_ONLY  : True,
         KEY.DISTANCE_DECAY      : DECAY_METHOD.GRID_250,
         KEY.STOP_DEMAND         : DECAY_METHOD.GRID_250,
-        KEY.DEMAND_METHOD       : DEMAND_METHOD.MULTIPLY_SQRT,
+        KEY.DEMAND_METHOD       : "pow_0.5",
         KEY.RASTER_CLIP         : 0.1
     },
     # Modified E2SFCA
@@ -394,18 +395,47 @@ MODE_DICT = {
         KEY.SCORE_NEAREST_ONLY  : True,
         KEY.DISTANCE_DECAY      : DECAY_METHOD.GRID_250,
         KEY.STOP_DEMAND         : DECAY_METHOD.GRID_250,
-        KEY.DEMAND_METHOD       : DEMAND_METHOD.MULTIPLY_SQRT,
+        KEY.DEMAND_METHOD       : "pow_0.5",
         KEY.RASTER_CLIP         : "log"
     },
-    # Modified E2SFCA
+    # Walkscore - 400
     54 : {
         KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_400,
         KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_WEEK,
         KEY.SCORE_NEAREST_ONLY  : True,
         KEY.DISTANCE_DECAY      : DECAY_METHOD.GRID_WALKSCORE,
         KEY.STOP_DEMAND         : DECAY_METHOD.GRID_250,
-        KEY.DEMAND_METHOD       : DEMAND_METHOD.MULTIPLY_SQRT,
+        KEY.DEMAND_METHOD       : "pow_0.5",
         KEY.RASTER_CLIP         : "log"
+    },
+    # Transit Score
+    55 : {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_2000,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_WEEK,
+        KEY.SCORE_NEAREST_ONLY  : True,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.GRID_WALKSCORE,
+        KEY.STOP_DEMAND         : None,
+        KEY.DEMAND_METHOD       : None,
+        KEY.RASTER_CLIP         : "log"
+    },
+    #
+    56 : {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_WEEK,
+        KEY.SCORE_NEAREST_ONLY  : True,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.GRID_150,
+        KEY.STOP_DEMAND         : DECAY_METHOD.GRID_400,
+        KEY.DEMAND_METHOD       : "pow_0.8",
+        KEY.RASTER_CLIP         : "fraction_0.1",
+    },
+    57 : {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_HOUR,
+        KEY.SCORE_NEAREST_ONLY  : True,
+        KEY.DISTANCE_DECAY      : "grid_131",
+        KEY.STOP_DEMAND         : "grid_370",
+        KEY.DEMAND_METHOD       : "pow_0.96",
+        KEY.RASTER_CLIP         : "percent_6.5",
     },
 }
 
@@ -489,14 +519,15 @@ class ModeMan(object):
         stop_decay = "grid_%d" % spass
 
         demand_pow = float(random.randint(0, 1000)) / 1000.0
-        demand_method = "mult_%f" % demand_pow
+        demand_method = "pow_%f" % demand_pow
 
         # 0 to 10 mins
         wpass = float(random.randint(0, 1000)) / 100.0
 
-        # 0.2 to 1.0
-        raster_clip = float(random.randint(50, 1000)) / 1000.0
-        raster_clip = 0.075
+        raster_clip = float(random.randint(20, 200)) / 1000.0
+        raster_clip = "percent_%f" % raster_clip
+
+
         mode_data = {
             KEY.SERVICE_TIME        : self._random_model_service_time,
             KEY.SERVICE_TYPE        : self._random_model_service_day,
@@ -710,5 +741,5 @@ class ModeMan(object):
     def get_raster_clip(self, mode=None):
         if not mode: mode = self._mode
         mode_data = self._mode_dict.get(mode)
-        value = mode_data.get(KEY.RASTER_CLIP, 0.6)
+        value = mode_data.get(KEY.RASTER_CLIP, "percent_5.0")
         return value

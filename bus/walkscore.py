@@ -37,10 +37,16 @@ class WalkscoreDecay(object):
             (1600,   23.0),
             (1700,   19.0),
             (1800,   14.0),
-            (1900,    9.0),
+            (1900,    8.0),
             (2000,    0.0)
         ]
 
+
+    def get_plot_data(self):
+        x = [item[0] for item in self.points]
+        y = [float(item[1])/100.0 for item in self.points]
+
+        return x, y
 
     def get_decay(self, dist):
 
@@ -273,8 +279,52 @@ class Runner(object):
 
         print self._da_not_found
 
+def plot_walkscore_decay():
+    import matplotlib.pyplot as plt
+    from butterworth import Filter
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    # A couple butterworh decay function
+    d = np.array(range(0, 2000), dtype=np.float)
+    items = [
+        (250,  "Butterworth dpass = 250"),
+        (500,  "Butterworth dpass = 500"),
+        (800,  "Butterworth dpass = 800"),
+    ]
+
+    for item in items:
+        dpass  = item[0]
+        label = item[1]
+        filter = Filter(dpass=dpass)
+
+        result = []
+        for dist in d:
+            decay = filter.butterworth(dist)
+            result.append(decay)
+
+        line2, = ax.plot(d, result, label=label)
+
+    # The walkscore decay function
+    decay = WalkscoreDecay()
+    x, y = decay.get_plot_data()
+
+    label = "Walkscore Decay"
+    line, = ax.plot(x, y, label=label)
+
+
+    ax.legend(loc='upper right')
+
+    plt.title("Distance Decay Functions")
+    plt.ylabel("Decay")
+    plt.xlabel("Distance (m)")
+
+    plt.show()
 
 if __name__ == "__main__":
+
+    plot_walkscore_decay()
+    raise ValueError("temp stop")
 
     filter = WalkscoreDecay()
     filter.get_decay(0)

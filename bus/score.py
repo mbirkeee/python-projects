@@ -194,14 +194,10 @@ class Score(object):
                             if demand < 1.0:
                                 demand = 1.0
                             departs = departs / demand
-                        elif demand_method == DEMAND_METHOD.MULTIPLY_SQRT:
-                            departs = departs * math.pow(demand, 0.5)
-                            print "departs %f --------> %f" % (old_departs, departs)
                         else:
                             parts = demand_method.split("_")
-                            if parts[0].strip() == 'mult':
+                            if parts[0].strip() == 'pow':
                                 power = float(parts[1])
-                                print "POWER "*10, power
                                 departs = departs * math.pow(demand, power)
 
                             else:
@@ -397,6 +393,106 @@ class Score(object):
             score += a
 
         return score
+
+
+class ScoreManager2(object):
+
+    def __init__(self):
+
+        self._data = None
+        self._score_tuples = []
+        self._max_score = None
+        self._min_score = None
+
+    def reset(self):
+        self._data = None
+        self._score_tuples = []
+        self._max_score = None
+        self._min_score = None
+
+    def add_score(self, thing, score):
+        self._score_tuples.append((thing, score))
+
+    def get_sorted_scores(self, reverse=False):
+
+        scores = [item[1] for item in self._score_tuples]
+
+        scores = sorted(scores)
+        if reverse:
+            scores.reverse()
+
+        return scores
+
+    def get_clipping_score_from_percent(self, clip_percent):
+
+        score_count = float(len(self._score_tuples))
+
+        scores = self.get_sorted_scores(reverse=True)
+
+        clip_count = 0
+
+        clipping_score = None
+        for i, score in enumerate(scores):
+            percentage = 100.0 * (float(i)/score_count)
+            if percentage > clip_percent:
+                break
+            clipping_score = score
+            clip_count += 1
+            # print i, percentage, score, clipping_score
+
+        return clipping_score, clip_count
+
+    def compute_max_score(self):
+        max_score = None
+        for item in self._score_tuples:
+            score = item[1]
+
+            if max_score is None or score > max_score:
+                max_score = score
+
+        self._max_score = max_score
+        return self._max_score
+
+    def get_clipping_score_from_max(self, clip_level):
+
+        score_count = float(len(self._score_tuples))
+
+        if self._max_score is None:
+            self.compute_max_score()
+
+        clip_score = clip_level * self._max_score
+        clip_count = 0
+        for item in self._score_tuples:
+            score = item[1]
+            if score > clip_score:
+                clip_count += 1
+
+        return clip_score, clip_count
+
+    def get_clipping_score(self, clip):
+
+        if clip == "log":
+            return "log", 0
+
+        if clip is None:
+            if self._max_score is None:
+                self.compute_max_score()
+            return self._max_score, 0
+
+        if isinstance(clip, float):
+            return self.get_clipping_score_from_max(clip)
+        elif isinstance(clip, str):
+            parts = clip.split("_")
+            value = float(parts[1].strip())
+            kind = parts[0].strip()
+            if kind == "percent":
+                return self.get_clipping_score_from_percent(value)
+            elif kind == "fraction":
+                return self.get_clipping_score_from_max(value)
+
+        raise ValueError("error getting clip score")
+
+
 
 class ScoreManager(object):
     """
