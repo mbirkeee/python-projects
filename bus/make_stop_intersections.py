@@ -40,6 +40,8 @@ class BufferManager(object):
 
         if self._buffer_method == BUFFER_METHOD.NETWORK_400:
             file_name = "data/shapefiles/stop_buffers/%s_network_400.shp" % (self._dataset)
+        elif self._buffer_method == BUFFER_METHOD.NETWORK_2000:
+            file_name = "data/shapefiles/stop_buffers/%s_network_2000.shp" % (self._dataset)
         else:
             raise ValueError("buffer method not supported: %s" % self._buffer_method)
 

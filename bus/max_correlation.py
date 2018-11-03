@@ -95,8 +95,14 @@ def get_raster_clip(parts):
     for part in parts:
         if part.find("raster_clip") > 0:
             things = part.split(":")
-            return float(things[1])
 
+            value = things[1].strip().strip("'")
+
+            try:
+                return float(value)
+            except:
+                stuff = value.split("_")
+                return float(stuff[1].strip(''))
     return 0
 
 
