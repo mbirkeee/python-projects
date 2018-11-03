@@ -526,7 +526,7 @@ class ModeMan(object):
 
         # 1% to 15%
         raster_clip = float(random.randint(100, 1500)) / 10000.0
-        raster_clip = "percent_%f" % raster_clip * 100.0
+        raster_clip = "percent_%f" % (raster_clip * 100.0)
 
         mode_data = {
             KEY.SERVICE_TIME        : self._random_model_service_time,
