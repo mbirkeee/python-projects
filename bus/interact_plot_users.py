@@ -12,9 +12,8 @@ class Runner(object):
     def __init__(self):
 
         self._rider = {}
-        self._postal_codes = self.load_user_postal_codes("data/csv/interact_users_2018_11_20.csv")
+        self._postal_codes = self.load_user_postal_codes("data/csv/interact_users_2018_11_26.csv")
         self._pc_dict = self._postal_code_txt_to_csv("data/csv/pcc_saskatoon_062017.txt", "data/csv/postal_codes_centroids_2017.csv")
-
 
 
     def _to_numeric(self, input):
@@ -89,16 +88,23 @@ class Runner(object):
         for line in f:
             line_count +=1
             if line_count == 1: continue
+
+            line=line.strip(",")
+
             line = line.strip()
             parts = line.split(",")
-            rider = parts[0].strip()
+            if len(parts) != 2:
+                print "SKIPPING LINE", line
+                continue
 
+            rider = parts[0].strip()
             code = parts[1].strip()
             code = code.strip(',')
 
             if len(code) == 6:
                 code = "%s %s" % (code[0:3], code[3:6])
                 print "CODE!!!!!!", code
+
             if len(code) == 0: continue
 
             if rider == "Yes":
@@ -117,6 +123,7 @@ class Runner(object):
             print k, v
         print "---", user_count
 
+        # raise ValueError("temp stop")
 
         return result
 
@@ -128,7 +135,7 @@ class Runner(object):
         plotter = Plotter()
         locations = Polypoint()
 
-        fout = open("interact_user_locations_2018_11_20.csv", "w")
+        fout = open("interact_user_locations_2018_11_26.csv", "w")
         fout.write("fid,rider,lat,lng\n")
         fid = 0
 
