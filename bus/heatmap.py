@@ -457,7 +457,7 @@ class Heatmap(object):
 
             self._raster_list.append(raster)
 
-    def get_da_scores(self, clip_level=0.6):
+    def get_da_scores(self):
         """
         NOTE: It looks like clipping some of the extreme rasters results is a better correlation
         """
@@ -466,19 +466,14 @@ class Heatmap(object):
         if self._da_man is None:
             self._da_man = DaData()
 
+
+        raster_clip = self._mode_man.get_raster_clip()
         scoreman = ScoreManager2()
         for raster in self._raster_list:
             scoreman.add_score(raster, raster.get_score())
 
-        # max_score = None
-        #
-        # for raster in self._raster_list:
-        #     score = raster.get_score()
-        #     if max_score is None or score > max_score:
-        #         max_score = score
-        #
         clipped_count = 0
-        clip_score, clip_count = scoreman.get_clipping_score(clip_level)
+        clip_score, clip_count = scoreman.get_clipping_score(raster_clip)
 
         for raster in self._raster_list:
             # print dir(raster)
@@ -490,7 +485,7 @@ class Heatmap(object):
                 if clip_score == 'log':
                     old_score = score
                     score = math.log10(score)
-                    print "LOG SCORE: %f --> %f" % (old_score, score)
+                    # print "log(%f) --> %f" % (old_score, score)
 
             elif score > clip_score:
                 score = clip_score
@@ -550,10 +545,7 @@ class Heatmap(object):
         from scipy.stats import pearsonr
         from scipy.stats import zscore
 
-        raster_clip = self._mode_man.get_raster_clip()
-
-        print "USING RASTER CLIP", raster_clip
-        my_scores = self.get_da_scores(clip_level=raster_clip)
+        my_scores = self.get_da_scores()
 
         outliers = [(item[1], item[0]) for item in my_scores]
         outliers = sorted(outliers)
@@ -607,15 +599,17 @@ class Heatmap(object):
         return result
 
 
-    def plot_das(self, file_name, log=False):
+    def plot_das(self, file_name, log_score=False, z_score=False):
 
         if self._da_man is None:
             self._da_man = DaData()
 
         # Compute the average score for the DAs
         score_list = self.get_da_scores()
+
+        # Plot the DAs
         score_man = ScoreManager(score_list)
-        score_man.set_clip_level(0.6, clip_color="#ff0000")
+        score_man.set_clip_level(clip_level=1.0, clip_color="#ff0000")
 
         # Make a plotter object
         plotter = Plotter()
@@ -624,7 +618,7 @@ class Heatmap(object):
             da = self._da_man.get_da(da_id)
             p = da.get_polygon()
 
-            opacity, color = score_man.get_score(da_id, opacity=True, log_score=log)
+            opacity, color = score_man.get_plot_color(da_id, opacity=True, log_score=log_score, z_score=z_score)
 
             p.set_attribute(ATTR.FILL_COLOR, color)
             p.set_attribute(ATTR.FILL_OPACITY, opacity)
@@ -652,6 +646,7 @@ class Heatmap(object):
 
         # Make a list of scores and pass into score manager
         score_list = [(raster, raster.get_score()) for raster in self._raster_list]
+
         score_man = ScoreManager(score_list)
         score_man.set_clip_level(0.5, clip_color="#ff0000")
 
@@ -660,7 +655,7 @@ class Heatmap(object):
 
             # score = raster.get_score()
             # opacity, color = score_man.get_score(raster, opacity=True, log_score=True)
-            opacity, color = score_man.get_score(raster, opacity=True, log_score=log)
+            opacity, color = score_man.get_plot_color(raster, opacity=True, log_score=log, z_score=z_score)
 
             if opacity == 0:
                 continue
@@ -688,12 +683,10 @@ class Heatmap(object):
         if self._da_man is None:
             self._da_man = DaData()
 
-
         score_tuples = self.get_da_scores()
 
-        for item in score_tuples:
-            print item
-
+        # for item in score_tuples:
+        #     print item
 
         if use_z_scores:
             from scipy.stats import zscore
@@ -701,9 +694,13 @@ class Heatmap(object):
             raw_scores = [item[1] for item in score_tuples]
             z_scores = zscore(raw_scores)
 
-            for item in z_scores:
-                print item
-            print len(z_scores)
+            # for item in z_scores:
+            #     print item
+            # print len(z_scores)
+
+            # FIXME: IF run repeatedly this method will keep changing the score
+            # FIXME: I thin it can only be run once!!!
+            # FIXME: Should probably write the scores to an reusable attribute
 
             for i, item in enumerate(score_tuples):
                 da_id = item[0]
@@ -1148,11 +1145,15 @@ def test9():
 
 def test10():
 
-    h = Heatmap("temp/shapefiles/heatmaps/heatmap_mode_15_time_11_15_mwf_brt1.shp")
-    h1 = Heatmap("temp/shapefiles/heatmaps/heatmap_mode_15_time_8_00_mwf_brt1.shp")
-    h1.plot_das("temp/maps/plot_da.html")
+    # h = Heatmap("temp/shapefiles/heatmaps/heatmap_mode_15_time_11_15_mwf_brt1.shp")
+    h = Heatmap("temp/shapefiles/heatmaps/heatmap_mode_51_time_8_00_mwf_june.shp")
 
-    x, y = h.pearson_da(other = h1)
+    scores = h.get_da_scores()
+    print repr(scores)
+
+    # h1 = Heatmap("temp/shapefiles/heatmaps/heatmap_mode_15_time_8_00_mwf_brt1.shp")
+    # h1.plot_das("temp/maps/plot_da.html")
+    # x, y = h.pearson_da(other = h1)
 
 
 def test11():
@@ -1165,18 +1166,28 @@ def test11():
     # 39 is frequency with decay
     # 40 is filtered frequency with decay
     # 51 is E2SFCS-2
-    h.set_mode(57)
+    h.set_mode(51)
     h.run()
-    # h.to_shapefile()
+    h.to_shapefile()
+
+    scores = h.get_da_scores()
+    # print repr(scores)
+
+    for item in scores:
+        print item[0], ",", item[1]
+
+    raise ValueError("mike done")
+
 
     # plotter = RasterPlot()
     # plotter.add_heatmap(h, "Raster Score")
     # plotter.plot()
 
-    h.plot(log=False)
-    h.plot_das("temp/maps/das.html", log=True)
+    h.plot(z_score=True)
 
-    h.to_shapefile_da(use_z_scores=True, file_name="map_transit_score.shp")
+    h.plot_das("temp/maps/das.html", z_score=True)
+
+    h.to_shapefile_da(use_z_scores=True, file_name="transit_zscore_2.shp")
 
     x, y = h.pearson_da()
 
@@ -1202,8 +1213,8 @@ def test_random():
 
 if __name__ == "__main__":
 
-    test_random()
-    # test11()
+    # test_random()
+    test11()
     raise ValueError("Done")
 
     mode = 13

@@ -515,6 +515,7 @@ class ScoreManager(object):
         self._max_log_score = None
         self._min_log_score = None
 
+        self._color_cold        = "#0000ff"
         self._color_hot         = "#ff0000"
         self._color_clipped     = "#fff240"
 
@@ -581,20 +582,20 @@ class ScoreManager(object):
             data['z_score'] = z_score
             self._raw_data[thing] = data
 
-        # -- The section shifts scores up so all are +ve
-        self._max_z_score += abs(self._min_z_score)
-
-        for thing, data in self._raw_data.iteritems():
-            z_score = data.get('z_score')
-            z_score += abs(self._min_z_score)
-            data['z_score'] = z_score
-
-            score = data.get('score')
-            ratio = score / z_score
-
-            # print "SCORE: %f ZSCORE: %f %f" % (score, z_score, ratio)
-
-        self._min_z_score = 0
+        # # -- The section shifts scores up so all are +ve
+        # self._max_z_score += abs(self._min_z_score)
+        #
+        # for thing, data in self._raw_data.iteritems():
+        #     z_score = data.get('z_score')
+        #     z_score += abs(self._min_z_score)
+        #     data['z_score'] = z_score
+        #
+        #     score = data.get('score')
+        #     ratio = score / z_score
+        #
+        #     # print "SCORE: %f ZSCORE: %f %f" % (score, z_score, ratio)
+        #
+        # self._min_z_score = 0
         # -- End section shift up --
 
         # raise ValueError('temp stop')
@@ -607,6 +608,15 @@ class ScoreManager(object):
 
         data = self._raw_data.get(thing)
         score = data.get('z_score')
+
+        print "GET ZSCORE COLOR CALLED", score
+        if score > 0:
+            level = score / self._max_z_score
+            color = self._color_hot
+            return level, self._color_hot
+        else:
+            level = score / self._min_z_score
+            return level, self._color_cold
 
         color = self._color_hot
         level = score / self._max_z_score
@@ -641,7 +651,7 @@ class ScoreManager(object):
 
         return score, color
 
-    def get_score(self, thing, opacity=False, z_score=False, log_score=False):
+    def get_plot_color(self, thing, opacity=False, z_score=False, log_score=False):
 
         if log_score:
             return self.get_log_score(thing, opacity=opacity)
@@ -653,13 +663,21 @@ class ScoreManager(object):
         score = data.get('score')
 
         color = self._color_hot
-        level = score / self._max_score
 
-        if level > self._clip_level:
-            color = self._color_clipped
-            level = 1.0
+        if self._min_score >= 0:
+            range = self._max_score - self._min_score
+            level = ( score - self._min_score ) / range
         else:
-            level = level / self._clip_level
+            raise ValueError("Cant yet handle score < 0")
+
+
+
+
+        # if level > self._clip_level:
+        #     color = self._color_clipped
+        #     level = 1.0
+        # else:
+        #     level = level / self._clip_level
 
         if opacity:
             score = level

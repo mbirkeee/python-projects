@@ -60,6 +60,10 @@ def wait_decay(per_hour, dpass):
     """
     Compute the area under butterworth filter with x=1 and n=6
     """
+
+    if per_hour < 0.1:
+        return 0
+
     d = 60.0 / per_hour
 
     d2 = math.pow(d, 2)

@@ -11,7 +11,7 @@ class Runner(object):
 
     def __init__(self):
 
-        self._postal_codes = self.load_user_postal_codes("data/csv/interact_users_2018_10_29.csv")
+        self._postal_codes = self.load_user_postal_codes("data/csv/interact_users_2018_11_05.csv")
         self._pc_dict = self._postal_code_txt_to_csv("data/csv/pcc_saskatoon_062017.txt", "data/csv/postal_codes_centroids_2017.csv")
 
 
@@ -112,7 +112,7 @@ class Runner(object):
         plotter = Plotter()
         locations = Polypoint()
 
-        fout = open("interact_user_locations_2018_10_29.csv", "w")
+        fout = open("interact_user_locations_2018_11_05.csv", "w")
         fout.write("fid,lat,lng\n")
         fid = 0
 
@@ -173,7 +173,7 @@ class Runner(object):
 
         user_points = Polypoint()
 
-        fout = open("interact_user_locations_2018_10_01.csv", "w")
+        fout = open("interact_user_locations_2018_11_05.csv", "w")
         fout.write("fid,lat,lng\n")
         fid = 0
 

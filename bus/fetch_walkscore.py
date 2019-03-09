@@ -50,7 +50,7 @@ class Runner(object):
     def fetch_one(self, postal_code, lat, lng, index):
         print "FETCH ONE", postal_code, lat, lng, index
 
-        target_file = "walkscore/%d.txt" % index
+        target_file = "walkscore_transit/%d.txt" % index
 
         if os.path.isfile(target_file):
             print "File exists for %d, skipping..." % index
@@ -59,12 +59,31 @@ class Runner(object):
 
         api_key = WALKSCORE_API_DR_BREE
 
-        base = "http://api.walkscore.com/score?format=json&"
+
+        # base = "http://api.walkscore.com/score?format=json&"
+        #
+        # q = {
+        #     'address' : "Saskatoon SK %s" % postal_code,
+        #     'transit': 1,
+        #     'bike': 1,
+        #     'lat' : lat,
+        #     'lon' : lng,
+        #     'wsapikey' : api_key
+        # }
+
+        # http://transit.walkscore.com/transit/score/?lat=47.6101359&lon=-122.3420567&city=Seattle&state=WA&wsapikey=your_key
+        # http://transit.walkscore.com/transit/score/?lat=52.123011&city=Saskatoon&state=SK&lon=-106.652805&wsapikey=cbfda2f973cc7409fdb64499639e45760
+        # base = "http://transit.walkscore.com/transit/score/?lat=47.6101359&lon=-122.3420567&city=Seattle&state=WA&"
+        # base = "http://transit.walkscore.com/transit/supported/cities/?"
+
+        base = "http://transit.walkscore.com/transit/score/?"
 
         q = {
-            'address' : "Saskatoon SK %s" % postal_code,
-            'transit': 1,
-            'bike': 1,
+        #    'address' : "Saskatoon SK %s" % postal_code,
+        #    'transit': 1,
+            'city' : "Saskatoon",
+            'country' : "CA",
+          #  'bike': 1,
             'lat' : lat,
             'lon' : lng,
             'wsapikey' : api_key
