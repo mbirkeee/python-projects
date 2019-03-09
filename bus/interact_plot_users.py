@@ -11,9 +11,9 @@ class Runner(object):
 
     def __init__(self):
 
-        self._postal_codes = self.load_user_postal_codes("data/csv/interact_users_2018_11_05.csv")
+        self._rider = {}
+        self._postal_codes = self.load_user_postal_codes("data/csv/interact_users_2018_12_10.csv")
         self._pc_dict = self._postal_code_txt_to_csv("data/csv/pcc_saskatoon_062017.txt", "data/csv/postal_codes_centroids_2017.csv")
-
 
     def _to_numeric(self, input):
 
@@ -87,9 +87,29 @@ class Runner(object):
         for line in f:
             line_count +=1
             if line_count == 1: continue
-            code = line.strip()
+
+            line=line.strip(",")
+
+            line = line.strip()
+            parts = line.split(",")
+            if len(parts) != 2:
+                print "SKIPPING LINE", line
+                continue
+
+            rider = parts[0].strip()
+            code = parts[1].strip()
             code = code.strip(',')
+
+            if len(code) == 6:
+                code = "%s %s" % (code[0:3], code[3:6])
+                print "CODE!!!!!!", code
+
             if len(code) == 0: continue
+
+            if rider == "Yes":
+                rider_count= self._rider.get(code, 0)
+                rider_count += 1
+                self._rider[code] = rider_count
 
             count = result.get(code, 0)
             count += 1
@@ -102,6 +122,8 @@ class Runner(object):
             print k, v
         print "---", user_count
 
+        # raise ValueError("temp stop")
+
         return result
 
     def run_new(self):
@@ -112,8 +134,10 @@ class Runner(object):
         plotter = Plotter()
         locations = Polypoint()
 
-        fout = open("interact_user_locations_2018_11_05.csv", "w")
-        fout.write("fid,lat,lng\n")
+
+        fout = open("interact_user_locations_2018_12_10.csv", "w")
+        fout.write("fid,rider,lat,lng\n")
+
         fid = 0
 
         for user_postal_code, count in self._postal_codes.iteritems():
@@ -131,14 +155,24 @@ class Runner(object):
 
             centroid = ppoint.get_centroid()
 
-            for x in xrange(count ):
+            rider_count = self._rider.get(user_postal_code, 0)
+            print "rider_count", rider_count
+
+            for x in xrange(count):
                 y_move = int(x/2)
                 x_move =  x - y_move * 2
                 # print x_move, y_move
 
                 point = Point(centroid.get_x() + 100 * x_move, centroid.get_y() + 100 * y_move)
                 locations.add_point(point)
-                fout.write("%d,%f,%f\n" %(fid, point.get_lat(), point.get_lng()))
+
+                if rider_count > 0:
+                    rider = "Yes"
+                else:
+                    rider = "No"
+
+                rider_count  -= 1
+                fout.write("%d,%s,%f,%f\n" %(fid, rider, point.get_lat(), point.get_lng()))
                 fid += 1
 
             locations.add_point(centroid)
@@ -151,7 +185,7 @@ class Runner(object):
         plotter.plot("temp/maps/postal.html")
 
 
-    def run(self):
+    def run_OLD(self):
 
 
         plotter = Plotter()

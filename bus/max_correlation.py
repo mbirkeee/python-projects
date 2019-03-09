@@ -62,7 +62,7 @@ def get_demand_method(parts):
         if part.find("demand_method") > 0:
             things = part.split(":")
             values = things[1].split("_")
-            # print "VALUES1: >>%s<<" % values[1]
+#            print "VALUES1: >>%s<<" % values[1]
             return float(values[1].strip("'"))
 
     return 0
@@ -81,8 +81,12 @@ def get_score_method(parts):
 
     for part in parts:
         if part.find("score_method") > 0:
+#            print "demad part >>%s<<" % part
             things = part.split(":")
-            return things[1]
+            method = things[1].strip()
+            method = method.strip("}")
+
+            return method
 
     return "Unknown"
 
