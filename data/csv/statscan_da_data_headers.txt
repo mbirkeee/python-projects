@@ -1,0 +1,130 @@
+2016 Census Profiles Files / Profile of Census Disseminations Areas
+COL0 - GEO UID
+COL1 - DA name
+COL2 - Population and dwelling counts / Population, 2016
+COL3 - Population and dwelling counts / Total private dwellings
+COL4 - Age & Sex - Both sexes / Total - Age groups and average age of the population - 100% data ; Both sexes / 0 to 14 years ; Both sexes
+COL5 - Age & Sex - Both sexes / Total - Age groups and average age of the population - 100% data ; Both sexes / 0 to 14 years ; Both sexes / 0 to 4 years ; Both sexes
+COL6 - Age & Sex - Both sexes / Total - Age groups and average age of the population - 100% data ; Both sexes / 0 to 14 years ; Both sexes / 5 to 9 years ; Both sexes
+COL7 - Age & Sex - Both sexes / Total - Age groups and average age of the population - 100% data ; Both sexes / 0 to 14 years ; Both sexes / 10 to 14 years ; Both sexes
+COL8 - Age & Sex - Both sexes / Total - Age groups and average age of the population - 100% data ; Both sexes / 15 to 64 years ; Both sexes
+COL9 - Age & Sex - Both sexes / Total - Age groups and average age of the population - 100% data ; Both sexes / 65 years and over ; Both sexes
+COL10 - Dwelling characteristics / Total - Private households by household size - 100% data
+COL11 - Dwelling characteristics / Total - Private households by household size - 100% data / 1 person
+COL12 - Dwelling characteristics / Total - Private households by household size - 100% data / 2 persons
+COL13 - Dwelling characteristics / Total - Private households by household size - 100% data / 3 persons
+COL14 - Dwelling characteristics / Total - Private households by household size - 100% data / 4 persons
+COL15 - Dwelling characteristics / Total - Private households by household size - 100% data / 5 or more persons
+COL16 - Dwelling characteristics / Number of persons in private households
+COL17 - Dwelling characteristics / Average household size
+COL18 - Dwelling characteristics / Total - Occupied private dwellings by structural type of dwelling - 100% data
+COL19 - Dwelling characteristics / Total - Occupied private dwellings by structural type of dwelling - 100% data / Single-detached house
+COL20 - Dwelling characteristics / Total - Occupied private dwellings by structural type of dwelling - 100% data / Apartment in a building that has five or more storeys
+COL21 - Dwelling characteristics / Total - Occupied private dwellings by structural type of dwelling - 100% data / Other attached dwelling
+COL22 - Dwelling characteristics / Total - Occupied private dwellings by structural type of dwelling - 100% data / Other attached dwelling / Apartment in a building that has fewer than five storeys
+COL23 - Dwelling characteristics / Total - Occupied private dwellings by structural type of dwelling - 100% data / Other attached dwelling / Apartment or flat in a duplex
+COL24 - Dwelling characteristics / Total - Occupied private dwellings by structural type of dwelling - 100% data / Other attached dwelling / Row house
+COL25 - Dwelling characteristics / Total - Occupied private dwellings by structural type of dwelling - 100% data / Other attached dwelling / Semi-detached house
+COL26 - Dwelling characteristics / Total - Occupied private dwellings by structural type of dwelling - 100% data / Other attached dwelling / Other single-attached house
+COL27 - Marital Status - Both Sexes / Total - Marital status for the population aged 15 years and over - 100% data ; Both sexes
+COL28 - Marital Status - Both Sexes / Total - Marital status for the population aged 15 years and over - 100% data ; Both sexes / Married or living common law ; Both sexes
+COL29 - Marital Status - Both Sexes / Total - Marital status for the population aged 15 years and over - 100% data ; Both sexes / Not married and not living common law ; Both sexes
+COL30 - Education - Total Sex / Total - Highest certificate, diploma or degree for the population aged 15 years and over in private households - 25% sample data
+COL31 - Education - Total Sex / Total - Highest certificate, diploma or degree for the population aged 15 years and over in private households - 25% sample data / No certificate, diploma or degree
+COL32 - Education - Total Sex / Total - Highest certificate, diploma or degree for the population aged 15 years and over in private households - 25% sample data / Secondary (high) school diploma or equivalency certificate
+COL33 - Education - Total Sex / Total - Highest certificate, diploma or degree for the population aged 15 years and over in private households - 25% sample data / Postsecondary certificate, diploma or degree
+COL34 - Education - Total Sex / Total - Highest certificate, diploma or degree for the population aged 15 years and over in private households - 25% sample data / Postsecondary certificate, diploma or degree / University certificate, diploma or degree at bachelor level or above
+COL35 - Education - Total Sex / Total - Highest certificate, diploma or degree for the population aged 15 years and over in private households - 25% sample data / Postsecondary certificate, diploma or degree / University certificate, diploma or degree at bachelor level or above / Bachelor's degree
+COL36 - Education - Total Sex / Total - Highest certificate, diploma or degree for the population aged 15 years and over in private households - 25% sample data / Postsecondary certificate, diploma or degree / University certificate, diploma or degree at bachelor level or above / Master's degree
+COL37 - Education - Total Sex / Total - Highest certificate, diploma or degree for the population aged 15 years and over in private households - 25% sample data / Postsecondary certificate, diploma or degree / University certificate, diploma or degree at bachelor level or above / Degree in medicine, dentistry, veterinary medicine or optometry
+COL38 - Labour - Total Sex / Total - Population aged 15 years and over by Labour force status - 25% sample data
+COL39 - Labour - Total Sex / Total - Population aged 15 years and over by Labour force status - 25% sample data / In the labour force
+COL40 - Labour - Total Sex / Total - Population aged 15 years and over by Labour force status - 25% sample data / In the labour force / Employed
+COL41 - Labour - Total Sex / Total - Population aged 15 years and over by Labour force status - 25% sample data / In the labour force / Unemployed
+COL42 - Labour - Total Sex / Total - Population aged 15 years and over by Labour force status - 25% sample data / Not in the labour force
+COL43 - Labour - Total Sex / Employment rate
+COL44 - Labour - Total Sex / Unemployment rate
+COL45 - Labour - Total Sex / Total population aged 15 years and over by work activity during the reference year - 25% sample data
+COL46 - Journey to Work - Total Sex / Total - Commuting destination for the employed labour force aged 15 years and over in private households with a usual place of work - 25% sample data
+COL47 - Journey to Work - Total Sex / Total - Commuting destination for the employed labour force aged 15 years and over in private households with a usual place of work - 25% sample data / Commute within census subdivision (CSD) of residence
+COL48 - Journey to Work - Total Sex / Total - Commuting destination for the employed labour force aged 15 years and over in private households with a usual place of work - 25% sample data / Commute to a different census subdivision (CSD) within census division (CD) of residence
+COL49 - Journey to Work - Total Sex / Total - Main mode of commuting for the employed labour force aged 15 years and over in private households with a usual place of work or no fixed workplace address - 25% sample data
+COL50 - Journey to Work - Total Sex / Total - Main mode of commuting for the employed labour force aged 15 years and over in private households with a usual place of work or no fixed workplace address - 25% sample data / Car, truck, van - as a driver
+COL51 - Journey to Work - Total Sex / Total - Main mode of commuting for the employed labour force aged 15 years and over in private households with a usual place of work or no fixed workplace address - 25% sample data / Car, truck, van - as a passenger
+COL52 - Journey to Work - Total Sex / Total - Main mode of commuting for the employed labour force aged 15 years and over in private households with a usual place of work or no fixed workplace address - 25% sample data / Public transit
+COL53 - Journey to Work - Total Sex / Total - Main mode of commuting for the employed labour force aged 15 years and over in private households with a usual place of work or no fixed workplace address - 25% sample data / Walked
+COL54 - Journey to Work - Total Sex / Total - Main mode of commuting for the employed labour force aged 15 years and over in private households with a usual place of work or no fixed workplace address - 25% sample data / Bicycle
+COL55 - Journey to Work - Total Sex / Total - Commuting destination for the employed labour force aged 15 years and over in private households with a usual place of work - 25% sample data / Commute to a different census subdivision (CSD) and census division (CD) within province or territory of residence
+COL56 - Journey to Work - Total Sex / Total - Commuting duration for the employed labour force aged 15 years and over in private households with a usual place of work or no fixed workplace address - 25% sample data
+COL57 - Journey to Work - Total Sex / Total - Commuting duration for the employed labour force aged 15 years and over in private households with a usual place of work or no fixed workplace address - 25% sample data / Less than 15 minutes
+COL58 - Journey to Work - Total Sex / Total - Commuting duration for the employed labour force aged 15 years and over in private households with a usual place of work or no fixed workplace address - 25% sample data / 15 to 29 minutes
+COL59 - Journey to Work - Total Sex / Total - Commuting duration for the employed labour force aged 15 years and over in private households with a usual place of work or no fixed workplace address - 25% sample data / 30 to 44 minutes
+COL60 - Journey to Work - Total Sex / Total - Commuting duration for the employed labour force aged 15 years and over in private households with a usual place of work or no fixed workplace address - 25% sample data / 45 to 59 minutes
+COL61 - Journey to Work - Total Sex / Total - Commuting duration for the employed labour force aged 15 years and over in private households with a usual place of work or no fixed workplace address - 25% sample data / 60 minutes and over
+COL62 - Journey to Work - Total Sex / Total - Time leaving for work for the employed labour force aged 15 years and over in private households with a usual place of work or no fixed workplace address - 25% sample data
+COL63 - Journey to Work - Total Sex / Total - Time leaving for work for the employed labour force aged 15 years and over in private households with a usual place of work or no fixed workplace address - 25% sample data / Between 5 a.m. and 5:59 a.m.
+COL64 - Journey to Work - Total Sex / Total - Time leaving for work for the employed labour force aged 15 years and over in private households with a usual place of work or no fixed workplace address - 25% sample data / Between 6 a.m. and 6:59 a.m.
+COL65 - Journey to Work - Total Sex / Total - Time leaving for work for the employed labour force aged 15 years and over in private households with a usual place of work or no fixed workplace address - 25% sample data / Between 7 a.m. and 7:59 a.m.
+COL66 - Journey to Work - Total Sex / Total - Time leaving for work for the employed labour force aged 15 years and over in private households with a usual place of work or no fixed workplace address - 25% sample data / Between 8 a.m. and 8:59 a.m.
+COL67 - Journey to Work - Total Sex / Total - Time leaving for work for the employed labour force aged 15 years and over in private households with a usual place of work or no fixed workplace address - 25% sample data / Between 9 a.m. and 11:59 a.m.
+COL68 - Journey to Work - Total Sex / Total - Time leaving for work for the employed labour force aged 15 years and over in private households with a usual place of work or no fixed workplace address - 25% sample data / Between 12 p.m. and 4:59 a.m.
+COL69 - Mobility  - Total Sex / Total - Mobility status 1 year ago - 25% sample data
+COL70 - Mobility  - Total Sex / Total - Mobility status 1 year ago - 25% sample data / Non-movers
+COL71 - Mobility  - Total Sex / Total - Mobility status 1 year ago - 25% sample data / Movers
+COL72 - Income - Total Sex / Total - Income statistics in 2015 for the population aged 15 years and over in private households - 100% data
+COL73 - Income - Total Sex / Total - Income statistics in 2015 for the population aged 15 years and over in private households - 100% data / Number of total income recipients aged 15 years and over in private households - 100% data
+COL74 - Income - Total Sex / Total - Income statistics in 2015 for the population aged 15 years and over in private households - 100% data / Number of total income recipients aged 15 years and over in private households - 100% data / Median total income in 2015 among recipients ($)
+COL75 - Income - Total Sex / Total - Income statistics in 2015 for the population aged 15 years and over in private households - 100% data / Number of government transfers recipients aged 15 years and over in private households - 100% data
+COL76 - Income - Total Sex / Total - Income statistics in 2015 for the population aged 15 years and over in private households - 100% data / Number of government transfers recipients aged 15 years and over in private households - 100% data / Median government transfers in 2015 among recipients ($)
+COL77 - Income - Total Sex / Total - Income statistics in 2015 for the population aged 15 years and over in private households - 100% data / Number of employment income recipients aged 15 years and over in private households - 100% data
+COL78 - Income - Total Sex / Total - Income statistics in 2015 for the population aged 15 years and over in private households - 100% data / Number of employment income recipients aged 15 years and over in private households - 100% data / Median employment income in 2015 among recipients ($)
+COL79 - Income - Total Sex / Total - Total income groups in 2015 for the population aged 15 years and over in private households - 100% data
+COL80 - Income - Total Sex / Total - Total income groups in 2015 for the population aged 15 years and over in private households - 100% data / Without total income
+COL81 - Income - Total Sex / Total - Total income groups in 2015 for the population aged 15 years and over in private households - 100% data / With total income
+COL82 - Income - Total Sex / Total - Total income groups in 2015 for the population aged 15 years and over in private households - 100% data / Percentage with total income
+COL83 - Income - Total Sex / Total - Total income groups in 2015 for the population aged 15 years and over in private households - 100% data / Percentage with total income / Under $10,000 (including loss)
+COL84 - Income - Total Sex / Total - Total income groups in 2015 for the population aged 15 years and over in private households - 100% data / Percentage with total income / $10,000 to $19,999
+COL85 - Income - Total Sex / Total - Total income groups in 2015 for the population aged 15 years and over in private households - 100% data / Percentage with total income / $20,000 to $29,999
+COL86 - Income - Total Sex / Total - Total income groups in 2015 for the population aged 15 years and over in private households - 100% data / Percentage with total income / $30,000 to $39,999
+COL87 - Income - Total Sex / Total - Total income groups in 2015 for the population aged 15 years and over in private households - 100% data / Percentage with total income / $40,000 to $49,999
+COL88 - Income - Total Sex / Total - Total income groups in 2015 for the population aged 15 years and over in private households - 100% data / Percentage with total income / $50,000 to $59,999
+COL89 - Income - Total Sex / Total - Total income groups in 2015 for the population aged 15 years and over in private households - 100% data / Percentage with total income / $60,000 to $69,999
+COL90 - Income - Total Sex / Total - Total income groups in 2015 for the population aged 15 years and over in private households - 100% data / Percentage with total income / $70,000 to $79,999
+COL91 - Income - Total Sex / Total - Total income groups in 2015 for the population aged 15 years and over in private households - 100% data / Percentage with total income / $80,000 to $89,999
+COL92 - Income - Total Sex / Total - Total income groups in 2015 for the population aged 15 years and over in private households - 100% data / Percentage with total income / $90,000 to $99,999
+COL93 - Income - Total Sex / Total - Total income groups in 2015 for the population aged 15 years and over in private households - 100% data / Percentage with total income / $100,000 and over
+COL94 - Income - Total Sex / Total - Total income groups in 2015 for the population aged 15 years and over in private households - 100% data / Percentage with total income / $100,000 and over / $100,000 to $149,999
+COL95 - Income - Total Sex / Total - Total income groups in 2015 for the population aged 15 years and over in private households - 100% data / Percentage with total income / $100,000 and over / $150,000 and over
+COL96 - Income - Total Sex / Total - Income statistics in 2015 for private households by household size - 100% data
+COL97 - Income - Total Sex / Total - Income statistics in 2015 for private households by household size - 100% data / Median total income of households in 2015 ($)
+COL98 - Income - Total Sex / Total - Income statistics in 2015 for private households by household size - 100% data / Median after-tax income of households in 2015 ($) / Total - Income statistics in 2015 for two-or-more-person private households - 100% data
+COL99 - Income - Total Sex / Total - Income statistics in 2015 for private households by household size - 100% data / Median after-tax income of households in 2015 ($) / Total - Income statistics in 2015 for one-person private households - 100% data
+COL100 - Income - Total Sex / Total - Income statistics in 2015 for private households by household size - 100% data / Median after-tax income of households in 2015 ($) / Total - Income statistics in 2015 for one-person private households - 100% data / Median total income of one-person households in 2015 ($)
+COL101 - Income - Total Sex / Total - Income statistics in 2015 for private households by household size - 100% data / Median after-tax income of households in 2015 ($) / Total - Income statistics in 2015 for two-or-more-person private households - 100% data / Median total income of two-or-more-person households in 2015 ($)
+COL102 - Income - Total Sex / Total - Income statistics in 2015 for lone-parent economic families in private households - 100% data,
+COL103 - Income - Total Sex / Total - Income statistics in 2015 for lone-parent economic families in private households - 100% data, / Median total income of lone-parent economic families in 2015 ($)
+COL104 - Income - Total Sex / Total - Income statistics in 2015 for lone-parent economic families in private households - 100% data, / Average family size of lone-parent economic families
+COL105 - Income - Total Sex / Total - Income statistics in 2015 for couple economic families with children in private households - 100% data
+COL106 - Income - Total Sex / Total - Income statistics in 2015 for couple economic families with children in private households - 100% data / Median total income of couple economic families with children in 2015 ($)
+COL107 - Income - Total Sex / Total - Income statistics in 2015 for couple economic families with children in private households - 100% data / Average family size of couple economic families with children
+COL108 - Income - Total Sex / Total - Income statistics in 2015 for couple economic families without children or other relatives in private households - 100% data
+COL109 - Income - Total Sex / Total - Income statistics in 2015 for couple economic families without children or other relatives in private households - 100% data / Median total income of couple economic families without children or other relatives in 2015 ($)
+COL110 - Income - Total Sex / Total - Income statistics in 2015 for couple economic families without children or other relatives in private households - 100% data / Average family size of couple economic families without children or other relatives
+COL111 - Income - Total Sex / Total - Income statistics in 2015 for economic families in private households - 100% data
+COL112 - Income - Total Sex / Total - Income statistics in 2015 for economic families in private households - 100% data / Median total income of economic families in 2015 ($)
+COL113 - Income - Total Sex / Total - Income statistics in 2015 for economic families in private households - 100% data / Average family size of economic families
+COL114 - Income - Total Sex / Total - Low-income status in 2015 for the population in private households to whom low-income concepts are applicable - 100% data
+COL115 - Income - Total Sex / Total - Low-income status in 2015 for the population in private households to whom low-income concepts are applicable - 100% data / 18 to 64 years
+COL116 - Income - Total Sex / Total - Low-income status in 2015 for the population in private households to whom low-income concepts are applicable - 100% data / 0 to 17 years
+COL117 - Aboriginals and Visible Minorities - Total Sex / Total - Aboriginal identity for the population in private households - 25% sample data
+COL118 - Aboriginals and Visible Minorities - Total Sex / Total - Aboriginal identity for the population in private households - 25% sample data / Aboriginal identity
+COL119 - Aboriginals and Visible Minorities - Total Sex / Total - Visible minority for the population in private households - 25% sample data
+COL120 - Aboriginals and Visible Minorities - Total Sex / Total - Visible minority for the population in private households - 25% sample data / Not a visible minority
+COL121 - Housing - Total Sex / Total - Private households by tenure - 25% sample data
+COL122 - Housing - Total Sex / Total - Private households by tenure - 25% sample data / Owner
+COL123 - Housing - Total Sex / Total - Private households by tenure - 25% sample data / Renter
+COL124 - Housing - Total Sex / Total - Occupied private dwellings by condominium status - 25% sample data
+COL125 - Housing - Total Sex / Total - Occupied private dwellings by condominium status - 25% sample data / Condominium
+COL126 - Housing - Total Sex / Total - Occupied private dwellings by number of bedrooms - 25% sample data
+COL127 - Housing - Total Sex / Average number of rooms per dwelling
+
