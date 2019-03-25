@@ -195,8 +195,16 @@ class Runner(object):
         print len(other_scores)
         print len(score_list)
 
+
         # print other_scores
         my_scores = sorted(score_list)
+
+        # # Make simple DA CSV file for SPSS
+        # f = open("walkscore_da.csv", "w")
+        # for item in my_scores:
+        #     print "WALKSCORE ITEM", item
+        #     f.write("%d,%.3f\n" % (item[0], item[1]))
+        # f.close()
 
         my_sc = [item[1] for item in my_scores]
         other_sc = [item[1] for item in other_scores]
@@ -323,20 +331,20 @@ def plot_walkscore_decay():
 
 if __name__ == "__main__":
 
-    plot_walkscore_decay()
-    raise ValueError("temp stop")
-
-    filter = WalkscoreDecay()
-    filter.get_decay(0)
-    filter.get_decay(12.3)
-    filter.get_decay(120.3)
-    filter.get_decay(500)
-    filter.get_decay(656.78)
-    filter.get_decay(1999)
-
-    raise ValueError("temp stop")
+    # plot_walkscore_decay()
+    # raise ValueError("temp stop")
+    #
+    # filter = WalkscoreDecay()
+    # filter.get_decay(0)
+    # filter.get_decay(12.3)
+    # filter.get_decay(120.3)
+    # filter.get_decay(500)
+    # filter.get_decay(656.78)
+    # filter.get_decay(1999)
+    #
+    # raise ValueError("temp stop")
 
     runner = Runner()
     # runner.walkscore_to_csv()
-    # runner.plot_scores()
+    runner.plot_scores()
     runner.plot_da_scores()

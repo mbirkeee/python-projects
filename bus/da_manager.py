@@ -276,7 +276,7 @@ class DaData(object):
         self._make_clipping_polygons()
         self._clip()
 
-   #     self._use_clipped_area()
+        self._use_clipped_area()
 
         self._lat_saskatoon_min =   52.065626
         self._lat_saskatoon_max =   52.212493
@@ -456,6 +456,45 @@ class DaData(object):
     def get_da(self, da_id):
         return self._da_dict.get(da_id)
 
+    def load_file_transit_scores(self, size):
+
+        file_name = 'data/csv/transit_score_%d.csv' % size
+        f = open(file_name, 'r')
+        count = 0
+
+        data = {}
+
+        for line in f:
+            count += 1
+            if count == 1: continue
+            line=line.strip()
+            parts = line.split(',')
+            # print parts
+            da_id = int(parts[1].strip())
+            raster_id = int(parts[2].strip())
+            transit_score = int(parts[3].strip())
+
+            # print da_id, raster_id, transit_score
+
+            da_data = data.get(da_id, {})
+            da_data[raster_id] = transit_score
+            data[da_id] = da_data
+
+        f.close()
+
+        # print data
+
+        das = self.get_das()
+        for da in das:
+            da_id = da.get_id()
+            da_scores = data.get(da_id, {})
+            rasters = da.get_rasters(size)
+            for raster in rasters:
+                raster_id = raster.get_id()
+                score = da_scores.get(raster_id, 0)
+                raster.set_score(score)
+                print "Set transit score da_id: %d raster_id: %s score --> %d" % (da_id, raster_id, score)
+
     def load_file_transit_data(self, file_name):
 
         f = open(file_name, "r")
@@ -471,7 +510,7 @@ class DaData(object):
             parts=line.split(",")
             # print parts
 
-            da_id =int(parts[1].strip())
+            da_id = int(parts[1].strip())
             transit_riders = int(parts[2].strip())
             pop = int(parts[3].strip())
 

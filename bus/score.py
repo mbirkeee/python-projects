@@ -609,7 +609,8 @@ class ScoreManager(object):
         data = self._raw_data.get(thing)
         score = data.get('z_score')
 
-        print "GET ZSCORE COLOR CALLED", score
+        # print "GET ZSCORE COLOR CALLED", score
+
         if score > 0:
             level = score / self._max_z_score
             color = self._color_hot

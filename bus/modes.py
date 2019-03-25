@@ -15,6 +15,16 @@ class BUFFER_METHOD(object):
     NETWORK_400     = "network_400"
     NETWORK_2000    = "network_2000"
 
+BUFFER_LIST = [
+    BUFFER_METHOD.CIRCLE_400,
+    BUFFER_METHOD.CIRCLE_800,
+    BUFFER_METHOD.SQUARE_709,
+    BUFFER_METHOD.DIAMOND_400,
+    BUFFER_METHOD.DIAMOND_500,
+    BUFFER_METHOD.NETWORK_400,
+    BUFFER_METHOD.NETWORK_2000,
+]
+
 class DECAY_METHOD(object):
     NONE        = None
 
@@ -40,11 +50,17 @@ class SCORE_METHOD(object):
     DIST_TO_CLOSEST_STOP    = "dist_to_closest_stop"
     DECAYED_WAIT            = "decayed_wait"
     COVERAGE                = "coverage"
+    TRANSIT_SCORE           = "transit_score"
 
 class DEMAND_METHOD(object):
 
     DIVIDE                  = "divide"
 
+class SPECIAL_MODE(object):
+    """
+    Special modes
+    """
+    TRANSIT_SCORE = 10000
 #-----------------------------------------------------------------------
 MODE_DICT = {
     1 : {
@@ -398,7 +414,7 @@ MODE_DICT = {
         KEY.DEMAND_METHOD       : "pow_0.5",
         KEY.RASTER_CLIP         : "log"
     },
-    # Walkscore - 400
+    # Walkscore - 400 - self computed
     54 : {
         KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_400,
         KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_WEEK,
@@ -408,7 +424,7 @@ MODE_DICT = {
         KEY.DEMAND_METHOD       : "pow_0.5",
         KEY.RASTER_CLIP         : "log"
     },
-    # Transit Score
+    # Transit Score - self computed
     55 : {
         KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_2000,
         KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_WEEK,
@@ -436,6 +452,9 @@ MODE_DICT = {
         KEY.STOP_DEMAND         : "grid_370",
         KEY.DEMAND_METHOD       : "pow_0.96",
         KEY.RASTER_CLIP         : "percent_6.5",
+    },
+    SPECIAL_MODE.TRANSIT_SCORE : {
+        KEY.SCORE_METHOD        : SCORE_METHOD.TRANSIT_SCORE
     },
 }
 
@@ -511,10 +530,11 @@ class ModeMan(object):
             raise ValueError("Service time not set for random model")
 
         if self._random_model_service_day is None:
-            raise ValueError("Servie time not set for random model")
+            raise ValueError("Service day not set for random model")
 
         dpass = random.randint(50, 400)
         distance_decay = "grid_%d" % dpass
+
         spass = random.randint(50, 400)
         stop_decay = "grid_%d" % spass
 

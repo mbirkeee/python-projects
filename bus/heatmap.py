@@ -9,7 +9,7 @@ import random
 try:
     import matplotlib.pyplot as plt
 except:
-    print "FAiled to import matplotlib"
+    print "Failed to import matplotlib"
 
 from shapefile_writer import ShapeFileWriter
 from da_manager import Raster
@@ -22,6 +22,8 @@ from dataset import DATASET
 from dataset import SERVICE
 
 from modes import ModeMan
+from modes import BUFFER_METHOD
+from modes import SPECIAL_MODE
 
 from plotter import Plotter
 from plotter import ATTR
@@ -33,7 +35,7 @@ from score import ScoreManager2
 from geometry import Point
 from geometry import Polygon
 
-from modes import BUFFER_METHOD
+
 
 from make_stop_intersections import BufferManager
 from my_utils import get_butterworth_decay
@@ -294,12 +296,36 @@ class Heatmap(object):
         print "Stop buffers complete"
         return True
 
+    def run_transit_score(self):
+
+        self._run_flag = True
+
+        if self._da_man is None:
+            self._da_man = DaData()
+
+        self._da_man.load_file_transit_scores(100)
+
+        das = self._da_man.get_das()
+
+        for da in das:
+            print "want to get transit score for DA", da.get_id()
+            rasters = da.get_rasters(100)
+            for raster in rasters:
+                # score = random.randint(0, 100)
+                # raster.set_score(score)
+                # print "setting raster score to", score
+                self.add_raster(raster)
+
     def run(self, force=False, random_model=False):
         """
         NOTE: This was written to be run only once then hacked to run random models
         """
         if self._run_flag and not random_model:
             print "Heatmap already generated, cannot run again"
+            return
+
+        if self._mode_man.get_mode() == SPECIAL_MODE.TRANSIT_SCORE:
+            self.run_transit_score()
             return
 
         # See if the shapefile already exists
@@ -466,7 +492,6 @@ class Heatmap(object):
         if self._da_man is None:
             self._da_man = DaData()
 
-
         raster_clip = self._mode_man.get_raster_clip()
         scoreman = ScoreManager2()
         for raster in self._raster_list:
@@ -587,6 +612,7 @@ class Heatmap(object):
         other_sc = [item[1] for item in other_scores]
 
         result = pearsonr(my_sc, other_sc)
+
         print result
 
         print "Get Z scores"
@@ -595,9 +621,22 @@ class Heatmap(object):
         other_z = zscore(other_sc)
 
         result = pearsonr(my_z, other_z)
+
         print result
+
         return result
 
+    def dump_da_score_file(self, filename):
+        """
+        Dump simple score files that can be incorporated into the SPSS CSV file.
+        """
+        f = open(filename, 'w')
+        score_list = self.get_da_scores()
+        for item in score_list:
+            da_id = item[0]
+            score = item[1]
+            f.write("%d, %f\n" % (da_id, score))
+        f.close()
 
     def plot_das(self, file_name, log_score=False, z_score=False):
 
@@ -646,6 +685,8 @@ class Heatmap(object):
 
         # Make a list of scores and pass into score manager
         score_list = [(raster, raster.get_score()) for raster in self._raster_list]
+
+#        print score_list
 
         score_man = ScoreManager(score_list)
         score_man.set_clip_level(0.5, clip_color="#ff0000")
@@ -1155,11 +1196,14 @@ def test10():
     # h1.plot_das("temp/maps/plot_da.html")
     # x, y = h.pearson_da(other = h1)
 
-
 def test11():
 
     h = Heatmap()
     h.set_dataset(DATASET.JUNE)
+    # h.set_service_time("8:00")
+    h.set_service_day(SERVICE.MWF)
+#    h1.set_time_str("8:14")
+#    h1.set_time_str("8:00")
     # 43 id the filtered coverage I think
     # 35 is the stop count with distance decay
     # 37 is coverage with distance decay
@@ -1167,16 +1211,16 @@ def test11():
     # 40 is filtered frequency with decay
     # 51 is E2SFCS-2
     h.set_mode(51)
-    h.run()
+    h.run(force=True)
+
     h.to_shapefile()
 
     scores = h.get_da_scores()
     # print repr(scores)
 
-    for item in scores:
-        print item[0], ",", item[1]
+    # for item in scores:
+    #     print item[0], ",", item[1]
 
-    raise ValueError("mike done")
 
 
     # plotter = RasterPlot()
@@ -1184,12 +1228,11 @@ def test11():
     # plotter.plot()
 
     h.plot(z_score=True)
-
     h.plot_das("temp/maps/das.html", z_score=True)
-
     h.to_shapefile_da(use_z_scores=True, file_name="transit_zscore_2.shp")
-
     x, y = h.pearson_da()
+
+    raise ValueError("mike done")
 
 def test_random():
 
@@ -1197,7 +1240,6 @@ def test_random():
     h.set_dataset(DATASET.JUNE)
     h.set_service_time("8:00")
     h.set_service_day(SERVICE.MWF)
-
 
     while True:
         h.make_random_model()
@@ -1211,8 +1253,23 @@ def test_random():
         f.write("%s,%s,%s\n" % (repr(x), repr(y), repr(model)))
         f.close()
 
+def test_transit_score():
+
+    h = Heatmap()
+    h.set_mode(SPECIAL_MODE.TRANSIT_SCORE)
+    h.run()
+    h.plot(z_score=True)
+
+    h.plot_das("temp/maps/transit_score_das.html", z_score=True)
+    # h.to_shapefile_da(use_z_scores=True, file_name="transit_zscore_2.shp")
+
+    h.dump_da_score_file("temp/transit_score.csv")
+
+    x, y = h.pearson_da()
+
 if __name__ == "__main__":
 
+    # test_transit_score()
     # test_random()
     test11()
     raise ValueError("Done")
