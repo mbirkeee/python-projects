@@ -169,7 +169,11 @@ class DA(object):
         return self._transit_users
 
     def get_percent_transit_users(self):
-        return 100.0 * (float(self.get_transit_users())/float(self.get_population()))
+        users = float(self.get_transit_users())
+        pop = float(self.get_population())
+        p = 100.0 * (users / pop)
+        # print "PERCENT TRANSIT USERS", self.get_id(), users, pop, p
+        return p
 
     def get_centroid(self):
         raise ValueError("fixme")
@@ -497,6 +501,7 @@ class DaData(object):
 
     def load_file_transit_data(self, file_name):
 
+        print "opening file '%s'" % file_name
         f = open(file_name, "r")
 
         total_pop = 0
@@ -514,7 +519,7 @@ class DaData(object):
             transit_riders = int(parts[2].strip())
             pop = int(parts[3].strip())
 
-            # print "DA_ID:", da_id, "POP:", pop, "TRANSIT RIDERS:", transit_riders
+            print "DA_ID:", da_id, "POP:", pop, "TRANSIT RIDERS:", transit_riders
 
             total_pop += pop
             total_transit_riders += transit_riders
@@ -526,7 +531,8 @@ class DaData(object):
             if da.get_population() != pop:
                 raise ValueError("pop mismatch")
 
-            da.set_transit_users(4 * transit_riders)
+            # da.set_transit_users(4 * transit_riders)
+            da.set_transit_users(transit_riders)
 
         f.close()
 

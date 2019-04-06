@@ -11,18 +11,16 @@ class Runner(object):
     def run(self):
 
         self._data = {}
-        # self.load_data_file("rand_stop_decay_150.txt")
-        # self.load_data_file("rand_stop_decay_250.txt")
-        # self.load_data_file("rand_stop_decay_400.txt")
-        # self.load_data_file("rand_stop_decay_600.txt")
-        # self.load_data_file("rand.txt")
-        self.load_data_file2("rand_vary_pow.txt")
+        self.load_data_file("rand_stop_decay_150.txt")
+        self.load_data_file("rand_stop_decay_250.txt")
+        self.load_data_file("rand_stop_decay_400.txt")
+        self.load_data_file("rand_stop_decay_600.txt")
+        self.load_data_file("rand.txt")
+#        self.load_data_file2("rand_vary_pow.txt")
         self.plot()
 
 
     def plot(self):
-
-
 
         fig, ax = plt.subplots()
         # line1, = ax.loglog(x, y, label="July")
@@ -41,11 +39,11 @@ class Runner(object):
 
 
         ax.legend(loc='lower right')
-        # plt.title("Correlation vs Distance Decay")
-        plt.title("Correlation vs Population Factor")
+        plt.title("Correlation vs Distance Decay")
+        # plt.title("Correlation vs Population Factor")
         plt.ylabel("Correlation with actual ridership")
-        # plt.xlabel("Distance Decay (m)")
-        plt.xlabel("Population Factor (^pow)")
+        plt.xlabel("Distance Decay (m)")
+        # plt.xlabel("Population Factor (^pow)")
         plt.show()
 
     def load_data_file(self, filename):

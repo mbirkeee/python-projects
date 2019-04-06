@@ -268,11 +268,17 @@ class Runner(object):
                         area += intersection.get_area()
                         park_area_dict[da_id] = area
 
+        f = open("park_scores", "w")
+
         for da_id, total_area in total_area_dict.iteritems():
             park_area = park_area_dict.get(da_id)
             pcent = 100.0 * (park_area / total_area)
 
             print "DA ID: %d TOTAL %f PARK %f PERCENT %f" % (da_id, total_area, park_area, pcent)
+
+            f.write("%d,%2.2f\n" % (da_id, pcent))
+
+        f.close()
         # if total_raster_count > 0:
         #     print "Plotted %d rasters" % total_raster_count
 

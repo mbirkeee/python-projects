@@ -224,6 +224,28 @@ class Heatmap(object):
         # print "file_name_done", file_name
         return file_name
 
+    def write_transit_ridership_csv(self, filename):
+        other_scores = self._da_man.get_transit_percentages()
+        f = open(filename, 'w')
+        for item in other_scores:
+            print item
+            da_id = item[0]
+            score = item[1]
+            f.write("%d, %f\n" % (da_id, score))
+        f.close()
+
+    def write_da_score_csv(self, filename):
+        """
+        Dump simple score files that can be incorporated into the SPSS CSV file.
+        """
+        f = open(filename, 'w')
+        score_list = self.get_da_scores()
+        for item in score_list:
+            da_id = item[0]
+            score = item[1]
+            f.write("%d, %f\n" % (da_id, score))
+        f.close()
+
     def to_da_csv(self, file_name=None):
 
         scores = self.get_da_scores()
@@ -626,17 +648,6 @@ class Heatmap(object):
 
         return result
 
-    def dump_da_score_file(self, filename):
-        """
-        Dump simple score files that can be incorporated into the SPSS CSV file.
-        """
-        f = open(filename, 'w')
-        score_list = self.get_da_scores()
-        for item in score_list:
-            da_id = item[0]
-            score = item[1]
-            f.write("%d, %f\n" % (da_id, score))
-        f.close()
 
     def plot_das(self, file_name, log_score=False, z_score=False):
 
@@ -1200,7 +1211,7 @@ def test11():
 
     h = Heatmap()
     h.set_dataset(DATASET.JUNE)
-    # h.set_service_time("8:00")
+    h.set_service_time("8:00")
     h.set_service_day(SERVICE.MWF)
 #    h1.set_time_str("8:14")
 #    h1.set_time_str("8:00")
@@ -1210,12 +1221,14 @@ def test11():
     # 39 is frequency with decay
     # 40 is filtered frequency with decay
     # 51 is E2SFCS-2
-    h.set_mode(51)
-    h.run(force=True)
 
+    h.set_mode(58)
+    h.run(force=True)
     h.to_shapefile()
 
     scores = h.get_da_scores()
+    h.write_da_score_csv("mode_58.csv")
+    h.write_transit_ridership_csv("ridership_percentage.csv")
     # print repr(scores)
 
     # for item in scores:
@@ -1228,8 +1241,8 @@ def test11():
     # plotter.plot()
 
     h.plot(z_score=True)
-    h.plot_das("temp/maps/das.html", z_score=True)
-    h.to_shapefile_da(use_z_scores=True, file_name="transit_zscore_2.shp")
+    # h.plot_das("temp/maps/das.html", z_score=True)
+    # h.to_shapefile_da(use_z_scores=True, file_name="transit_zscore_2.shp")
     x, y = h.pearson_da()
 
     raise ValueError("mike done")

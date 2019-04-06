@@ -1,42 +1,156 @@
 import os
 
-# List of columns from the statscan data file to include in our CSV file
-
-INCLUDE_COLS = [
-    (  2, "total_pop"),
-    (  3, "private_dwellings"),
-    ( 17, "ave_household_size"),
-    ( 18, "dwellings"),
-    ( 19, "detached"),
-    ( 20, "highrise"),
-    ( 28, "married"),
-    ( 31, "no_highschool"),
-    ( 33, "post_secondary"),
-    ( 43, "employment_rate"),
-    ( 54, "bike_to_work"),
-    ( 97, "median_total_income"),
-    (119, "visible_minorities"),
-    (117, "aboriginal"),
-    (122, "owner"),
-    (123, "renter"),
-
-]
+from da_manager import DaData
 
 class Runner(object):
 
     def __init__(self):
 
+        self.INCLUDE_COLS = [
+            (  2, "pop_total"                           , None,                    ),
+            (  2, "da_area_km2"                         , self.get_da_km2,         ),
+            (  2, "pop_density_km2"                     , self.get_density,        ),
+            (  3, "dwellings_total"                    , None,                    ),  # usually the same as dwellings occupied, or a couple more
+            (  3, "dwellings_total_density_km2"         , self.get_density,         ),
+            ( 17, "ave_household_size"                  , None,                      ),
+            ( 18, "dwellings_occupied"                  , None,                      ),
+            ( 18, "dwellings_occupied_density_km2"      , self.get_density,          ),
+#            ( 19, "dwellings_occupied_detached"         , None                  ,       None),
+            ( 19, "dwellings_occupied_detached_percent" , self.get_percentage ,      "dwellings_occupied" ),
+            ( 20, "dwellings_occupied_highrise_percent" , self.get_percentage ,      "dwellings_occupied" ),
+            ( 28, "married_percent"                     , self.get_percentage_pop,       ),
+            ( 31, "education_no_highschool_percent"     , self.get_percentage_pop,       ),
+            ( 33, "education_post_secondary_percent"    , self.get_percentage_pop,       ),
+            ( 43, "employment_percent"                  , None,                    ),
+            ( 52, "transit_ridership_percent"           , self.get_percentage_pop,         ),               # Verified that our data from DaMan is good
+            ( 54, "cycle_percent"                       , self.get_percentage_pop,         ),
+            ( 97, "median_total_income"                 , None,                         ),
+            (120, "visible_minorities_percent"          , self.get_visible_minority_percentage,             ),
+#            (118, "aboriginal"                         , None,                                                 ),
+            (118, "aboriginal_percent"                  , self.get_percentage_pop,                              ),
+            (122, "owner_percent"                       , self.get_percentage,      "dwellings_total"           ),
+            (123, "renter_percent"                      , self.get_percentage,      "dwellings_total"           ),
+        ]
+
+        self._target_filename = None
+
         self._data_statscan = {}
         self._data_score_dict = {}
-        self._col_list = []
+        # self._col_list = []
         self._da_list = None
+        self._da_man = DaData()
+
+        self._column_data = {}
 
     def run(self):
+
+        # self.load_road_length("/Users/michael/Downloads/totalrdlengthDA.csv")
+        # raise ValueError("temp stop")
+
+        # self.test_ridership_percentage()
+        # raise ValueError("temp stop")
 
         self.load_statscan_headers("data/csv/statscan_da_data_headers.txt")
         self.load_statscan_data("data/csv/statscan_da_data.csv")
         self.load_da_scores("scores_for_spss")
         self.merge()
+
+    def get_da_km2(self, da_id, value, divide_by_col=None):
+        da = self._da_man.get_da(da_id)
+        area = da.get_area()
+        # print "da area", area
+        return area / 1000000.0
+
+    def get_density(self, da_id, value, divide_by_col=None):
+        """
+        Generic density function that divides by DA area (km^2)
+        """
+        return  value / self.get_da_km2(da_id, None)
+
+    def get_visible_minority_percentage(self, da_id, value, divide_by_col=None):
+        """
+        The statscan data is "not visible minority"
+        """
+        da = self._da_man.get_da(da_id)
+        pop = da.get_population()
+        p = 100.0 * float(value)/float(pop)
+
+        not_p = 100.0 - p
+
+        if not_p < 0.0:
+            not_p = 0.0
+
+        return not_p
+
+    def get_percentage_pop(self, da_id, value, divide_by_col=None):
+        da = self._da_man.get_da(da_id)
+        pop = da.get_population()
+        p = 100.0 * float(value)/float(pop)
+
+        if p > 100.0:
+            print "*"*80
+            print "*"*80
+            print "WARNING: Percentage > 100 for (population)", da_id, value, pop
+            print "*"*80
+            print "*"*80
+
+        return p
+
+    def get_percentage(self, da_id, value, divide_by_col=None):
+        """
+        Generic method to computed a percentage.
+
+        NOTE: Its possible to get percentages > 100. e.g., brighton has 20
+        occupied detached dwellings out of 17 dwellings total.
+        """
+
+        # print "want to divide value %f by column %s" % (value, repr(divide_by_col))
+
+        if value == 0:
+            return 0
+
+        col_data = self._column_data.get(divide_by_col)
+        divide_index = col_data.get('index')
+        # print "The divide index is: %d" % divide_index
+
+        parts = self._data_statscan.get(da_id)
+        # print "the parts are", parts
+        denominator = float(parts[divide_index])
+        # print "the denominator is", denominator
+
+        p = 100.0 * (float(value)/denominator)
+
+        if p > 100.0:
+            print "*"*80
+            print "*"*80
+            print "WARNING: Percentage > 100 for", da_id, value, divide_by_col
+            print "*"*80
+            print "*"*80
+
+            p = 100.0
+
+        return p
+
+    def load_road_length(self, filename):
+        """
+        The raw data Sarah computed in ArcGIS is in m/m^2.
+        We need to multiply by 1000 to convert to km/km^2
+        """
+        fout = open("roads_per_da_area.csv", "w")
+        f = open(filename, "r")
+        count = 0
+        for line in f:
+            count+=1
+            if count == 1: continue
+
+            print line
+            parts = line.split(",")
+            print parts
+
+            fout.write("%s,%.3f\n" % (parts[1], float(parts[3]) * 1000.0 ))
+
+        f.close()
+        fout.close()
 
     def load_da_scores(self, dirname):
 
@@ -65,19 +179,38 @@ class Runner(object):
         for line in f:
             line = line.strip()
 
-            for col in INCLUDE_COLS:
+            for col in self.INCLUDE_COLS:
                 index = col[0]
                 short_name = col[1]
+                func = col[2]
                 signature = "COL%d -" % index
+
+                try:
+                    divide_by_col = col[3]
+                except:
+                    divide_by_col = None
 
                 if line.startswith(signature):
                     # print "KEEP LINE: %s" % line
-                    self._col_list.append((index, short_name, line))
+                    # self._col_list.append((index, short_name, line))
+
+                    print "ADDING INDEX", index, short_name, signature, line
+
+                    self._column_data[short_name] = {
+                        'index' : index,
+                        'signature' : signature,
+                        'desc' : line,
+                        'func' : func,
+                        'divide_by_col' : divide_by_col
+                    }
 
         f.close()
 
-        for item in self._col_list:
-            print item
+        # for item in self._col_list:
+        #     print item
+
+        for key, value in self._column_data.iteritems():
+            print "KEY", key, "VALUE", repr(value)
 
     def load_statscan_data(self, filename):
         print "called", filename
@@ -103,6 +236,9 @@ class Runner(object):
             try:
                 da_id = parts[0].strip('"')
                 da_id = int(da_id)
+
+
+                # if da_id == 47110699:
                 self._data_statscan[da_id] = parts
 
             except:
@@ -146,8 +282,9 @@ class Runner(object):
 
         index = 0
 
-        target_filename = "temp/spss_2019_03_06.csv"
-        f = open(target_filename, "w")
+        self._target_filename = "temp/spss.csv"
+
+        f = open(self._target_filename, "w")
 
         header =  "index,da_id"
 
@@ -158,9 +295,12 @@ class Runner(object):
             header += ",%s" % score_name
 
         # Add the column names to the header
-        for col in self._col_list:
-            short_name = col[1]
-            header += ",%s" % short_name
+        col_names = [key for key in self._column_data.iterkeys()]
+        col_names = sorted(col_names)
+
+        for col_name in col_names:
+            print col_name
+            header += ",%s" % col_name
 
         f.write("%s\n" % header)
 
@@ -174,45 +314,130 @@ class Runner(object):
                 score = score_data.get(da_id)
                 line += ",%s" % score
 
-
             parts = self._data_statscan.get(da_id)
 
-            for col in self._col_list:
-                col_index = col[0]
-                description = col[2]
-                data = parts[col_index]
+            for col_name in col_names:
+                col_data = self._column_data.get(col_name)
 
-                pos = description.find(" - 25% sample")
-                print "This is the description", pos, description
+                col_index = col_data.get('index')
+                description = col_data.get('desc')
+                func = col_data.get('func')
 
-                if pos > 0:
-                    try:
-                        print "Went to multiply '%s' by 4" % data
-                        data = float(data) * 4.0
-                        data = "%f" % data
-                    except:
-                        data = ''
+                try:
+                    data = float(parts[col_index])
+                except:
+                    data = 0.0
+
+                if func is not None:
+                    divide_by_col = col_data.get('divide_by_col')
+                    data = func(da_id, data, divide_by_col=divide_by_col)
+
+#                pos = description.find(" - 25% sample")
+                print "Data: %f Description: %s" % (data, description)
+
+#                if pos > 0:
+#                    data *= 4.0
 
                 # Remove trailing zeros
-                data_parts = data.split('.')
-                if len(data_parts) == 2:
-                    decimal = data_parts[1]
-                    if int(decimal[1:]) == 0:
-                        data = data_parts[0]
+                data_str = "%f" % data
 
-                line += ",%s" % data
+                print "processing data", data
+
+                # data_parts = data_str.split('.')
+                # if len(data_parts) == 2:
+                #     decimal = data_parts[1]
+                #     if int(decimal[1:]) == 0:
+                #         data = data_parts[0]
+
+                line += ",%g" % data
 
             f.write("%s\n" % line)
             index += 1
 
         f.close()
 
-        f = open(target_filename, 'r')
+        # f = open(target_filename, 'r')
+        # for line in f:
+        #     print line.strip()
+        # f.close()
+
+
+    def display_result(self):
+
+        f = open(self._target_filename, 'r')
+        line_count = 0
+        col_titles = []
         for line in f:
-            print line.strip()
+            line_count += 1
+
+            parts = line.split(',')
+            parts = [item.strip() for item in parts]
+
+            if line_count == 1:
+                col_titles = parts
+            else:
+                print "-"*80
+                for col_index, value in enumerate(parts):
+
+                    print "%40s :   %s" % (col_titles[col_index], value)
+
         f.close()
+
+    def test1(self):
+        """
+        compare the population and transit riders we got a year ago
+        to the stuff in the latest downloaded statscan file.
+        Looking for discrepancies
+        """
+
+        pop_col = self._column_data.get('pop_total')
+        print pop_col
+        pop_col_index = pop_col.get('index')
+
+        transit_col = self._column_data.get('public_transit')
+        print transit_col
+        transit_index = transit_col.get('index')
+
+
+        das = self._da_man.get_das()
+        for da in das:
+
+            da_id = da.get_id()
+
+            parts = self._data_statscan.get(da_id)
+            # print parts
+
+
+            pop_1 = da.get_population()
+            users_1 = da.get_transit_users()
+            percent_1 = da.get_percent_transit_users()
+
+
+            pop_2 = float(parts[pop_col_index])
+
+            users_2 = float(parts[transit_index])
+
+            # print "this is the type of pop_2", type(pop_2)
+
+            # print da_id, pop_1, pop_2, users_1, percent_1
+
+            if int(pop_1) != int(pop_2):
+                raise ValueError("populations differ!!!!")
+
+            print "DA: %s pop %5d (%5d) users %4d (%4d) percent %f" % (repr(da_id), int(pop_1), int(pop_2),
+                                                                int(users_1), int(users_2), percent_1)
+
+
+
+        for k in self._column_data.iterkeys():
+            print k
+
+
 
 if __name__ == "__main__":
 
     runner = Runner()
     runner.run()
+    runner.display_result()
+
+    # runner.test1()

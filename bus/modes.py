@@ -453,6 +453,15 @@ MODE_DICT = {
         KEY.DEMAND_METHOD       : "pow_0.96",
         KEY.RASTER_CLIP         : "percent_6.5",
     },
+    58 : {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_HOUR,
+        KEY.SCORE_NEAREST_ONLY  : True,
+        KEY.DISTANCE_DECAY      : "grid_150",
+        KEY.STOP_DEMAND         : "grid_500",
+        KEY.DEMAND_METHOD       : "pow_0.85",
+        KEY.RASTER_CLIP         : "percent_5",
+    },
     SPECIAL_MODE.TRANSIT_SCORE : {
         KEY.SCORE_METHOD        : SCORE_METHOD.TRANSIT_SCORE
     },
