@@ -1215,20 +1215,24 @@ def test11():
     h.set_service_day(SERVICE.MWF)
 #    h1.set_time_str("8:14")
 #    h1.set_time_str("8:00")
+    # 34 is stop count - network buffer
     # 43 id the filtered coverage I think
     # 35 is the stop count with distance decay
     # 37 is coverage with distance decay
     # 39 is frequency with decay
     # 40 is filtered frequency with decay
     # 51 is E2SFCS-2
+    # 58 - tuned e2sfca - departs per hour
+    # 59 - tuned e2sfca - departs per week
 
-    h.set_mode(58)
+    h.set_mode(61)
     h.run(force=True)
     h.to_shapefile()
 
     scores = h.get_da_scores()
-    h.write_da_score_csv("mode_58.csv")
-    h.write_transit_ridership_csv("ridership_percentage.csv")
+    h.write_da_score_csv("score_filtered_freq_61"
+                         ".csv")
+    # h.write_transit_ridership_csv("ridership_percentage.csv")
     # print repr(scores)
 
     # for item in scores:
