@@ -8,6 +8,7 @@ from dataset import SERVICE
 class BUFFER_METHOD(object):
     NONE            = "none"
     CIRCLE_400      = "circle_400"
+    CIRCLE_500      = 'circle_500'
     CIRCLE_800      = "circle_800"
     SQUARE_709      = "square_709"
     DIAMOND_500     = "diamond_500"
@@ -17,6 +18,7 @@ class BUFFER_METHOD(object):
 
 BUFFER_LIST = [
     BUFFER_METHOD.CIRCLE_400,
+    BUFFER_METHOD.CIRCLE_500,
     BUFFER_METHOD.CIRCLE_800,
     BUFFER_METHOD.SQUARE_709,
     BUFFER_METHOD.DIAMOND_400,
@@ -486,9 +488,55 @@ MODE_DICT = {
         KEY.DISTANCE_DECAY      : 'grid_150'
     },
 
+    # Like 51 but with GRID buffers and departs per hour
+    62 : {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.DIAMOND_500,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_HOUR,
+        KEY.SCORE_NEAREST_ONLY  : True,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.GRID_250,
+        KEY.STOP_DEMAND         : DECAY_METHOD.GRID_250,
+        KEY.DEMAND_METHOD       : "pow_0.5"
+    },
+
+    # Like 51 but with GRID buffers and departs per hour
+    63 : {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.CIRCLE_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_DAY,
+        KEY.SCORE_NEAREST_ONLY  : True,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.GRID_150,
+        KEY.STOP_DEMAND         : DECAY_METHOD.GRID_250,
+        KEY.DEMAND_METHOD       : "pow_0.85",
+        KEY.RASTER_CLIP         : "percent_5",
+    },
+
+    # This is the "FREQUENCY" model with distance decay & filtering
+    64 : {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.CIRCLE_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_DAY,
+        KEY.SCORE_NEAREST_ONLY  : True,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.GRID_150
+    },
+    # This is the "FREQUENCY" model with distance decay & filtering
+    65 : {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.CIRCLE_500,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_DAY,
+        KEY.SCORE_NEAREST_ONLY  : True,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.GRID_150
+    },
+
+    # This is the "FREQUENCY" model with distance decay & filtering
+    66 : {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.DIAMOND_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_DAY,
+        KEY.SCORE_NEAREST_ONLY  : True,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.GRID_100
+    },
     SPECIAL_MODE.TRANSIT_SCORE : {
         KEY.SCORE_METHOD        : SCORE_METHOD.TRANSIT_SCORE
     },
+
+
+
 }
 
 class ModeMan(object):
