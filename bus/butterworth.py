@@ -1,29 +1,9 @@
 import math
 import random
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import numpy as np
 from scipy import special
-
-class Filter(object):
-
-    def __init__(self, dpass=250, e=1, n=6):
-        self._dpass = dpass
-        self._e = e
-        self._n = n
-
-    def set_dpass(self, dpass):
-        self._dpass = dpass
-
-    def butterworth(self, distance):
-
-        r = float(distance)/float(self._dpass)
-        rp = math.pow(r, self._n)
-        result = 1.0 / math.sqrt(1.0 + self._e * rp)
-        return result
-
-    def run(self, distance):
-        return self.butterworth(distance)
-
+from my_utils import Filter
 
 def get_factor(busses_per_hour, dpass):
 
@@ -134,21 +114,40 @@ def plot_butterworth_wait():
     plt.show()
 
 
-def plot_butterworth(dpass):
+def plot_butterworth():
+
+    dpass_data = {
+        150 : "Butterworth: dpass = 150m",
+        250 : "Butterworth: dpass = 250m",
+    }
 
     d = np.array(range(0, 500), dtype=np.float)
-    filter = Filter(dpass=dpass)
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    for dpass, caption in dpass_data.iteritems():
+        filter = Filter(dpass=dpass)
+
+        result = []
+        for dist in d:
+            decay = filter.butterworth(dist)
+            result.append(decay)
+
+
+        line, = ax.plot(d, result, label=caption)
+
+
+    # Add the exponential decay:
+    filter = Filter(2)
 
     result = []
     for dist in d:
-        decay = filter.butterworth(dist)
+        decay = filter.exp(dist)
         result.append(decay)
-
-    fig, ax = plt.subplots(figsize=(10, 6))
-    line2, = ax.plot(d, result, label="dpass = 250 meters")
+    line, = ax.plot(d, result, label="Exponential: -0.001(Distance)")
 
     ax.legend(loc='lower left')
-    plt.title("Decay vs. Distance with Butterworth Filter")
+    plt.title("Decay vs. Distance")
     plt.ylabel("Decay Value")
     plt.xlabel("Distance (meters)")
     plt.show()
@@ -197,9 +196,9 @@ def plot_wait(norm=False):
 
 if __name__ == "__main__":
 
-    plot_wait(norm=True)
-
-    # plot_butterworth_wait()
+#    plot_wait(norm=True)
+    plot_butterworth()
+#    plot_butterworth_wait()
     # comp(30, 15)
     # raise ValueError("done")
 

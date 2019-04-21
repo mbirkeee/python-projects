@@ -13,6 +13,7 @@ class BUFFER_METHOD(object):
     SQUARE_709      = "square_709"
     DIAMOND_500     = "diamond_500"
     DIAMOND_400     = "diamond_400"
+    DIAMOND_1500    = "diamond_1500"
     NETWORK_400     = "network_400"
     NETWORK_2000    = "network_2000"
 
@@ -23,6 +24,7 @@ BUFFER_LIST = [
     BUFFER_METHOD.SQUARE_709,
     BUFFER_METHOD.DIAMOND_400,
     BUFFER_METHOD.DIAMOND_500,
+    BUFFER_METHOD.DIAMOND_1500,
     BUFFER_METHOD.NETWORK_400,
     BUFFER_METHOD.NETWORK_2000,
 ]
@@ -39,10 +41,14 @@ class DECAY_METHOD(object):
     GRID_50         = "grid_50"
     GRID_100        = "grid_100"
     GRID_150        = "grid_150"
+    GRID_200        = "grid_200"
     GRID_250        = "grid_250"
     GRID_400        = "grid_400"
     GRID_1000       = "grid_1000"
     GRID_WALKSCORE  = "grid_99999"
+    EXPONENTIAL_1   = "exp_1"
+
+
 
 class SCORE_METHOD(object):
     STOP_COUNT              = "simple_stop_count"
@@ -531,10 +537,77 @@ MODE_DICT = {
         KEY.SCORE_NEAREST_ONLY  : True,
         KEY.DISTANCE_DECAY      : DECAY_METHOD.GRID_100
     },
+
+    # This is the "FREQUENCY" model with distance decay & filtering
+    67 : {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.DIAMOND_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_HOUR,
+        KEY.SCORE_NEAREST_ONLY  : True,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.GRID_100
+    },
+
+    # This is the "FREQUENCY" model with distance decay & filtering
+    68 : {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.DIAMOND_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_HOUR,
+        KEY.SCORE_NEAREST_ONLY  : True,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.EXPONENTIAL_1
+    },
+
+    # This is the "FREQUENCY" model with distance decay & filtering
+    69 : {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.DIAMOND_1500,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_HOUR,
+        KEY.SCORE_NEAREST_ONLY  : True,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.EXPONENTIAL_1
+    },
+    # This is the "FREQUENCY" model with distance decay & filtering
+    70 : {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.DIAMOND_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_HOUR,
+        KEY.SCORE_NEAREST_ONLY  : True,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.GRID_250
+    },
+
+    # This is the "FREQUENCY" model with distance decay & filtering
+    71 : {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.DIAMOND_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_DAY,
+        KEY.SCORE_NEAREST_ONLY  : True,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.GRID_250
+    },
+
+    72 : {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.DIAMOND_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_WEEK,
+        KEY.SCORE_NEAREST_ONLY  : True,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.GRID_250
+    },
+    73 : {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.DIAMOND_500,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_DAY,
+        KEY.SCORE_NEAREST_ONLY  : True,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.GRID_200
+    },
+
+    74 : {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.DIAMOND_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_DAY,
+        KEY.SCORE_NEAREST_ONLY  : True,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.GRID_150
+    },
+
+    75 : {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.DIAMOND_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_DAY,
+        KEY.SCORE_NEAREST_ONLY  : True,
+        KEY.DISTANCE_DECAY      : "grid_300"
+    },
+
+
     SPECIAL_MODE.TRANSIT_SCORE : {
         KEY.SCORE_METHOD        : SCORE_METHOD.TRANSIT_SCORE
     },
-
 
 
 }

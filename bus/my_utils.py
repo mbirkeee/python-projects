@@ -9,6 +9,12 @@ from geometry import Point
 
 # from dataset import BASE
 
+EXP_DECAY_PARAMS = {
+    'exp_1' : {'c' : 25.504, 'x' : -.001 },
+    'exp_2' : {'c' : 1.0, 'x' : -.001 },
+}
+
+
 PROJ = pyproj.Proj("+init=EPSG:32613")
 
 def is_shapefile(base):
@@ -258,6 +264,18 @@ class Filter(object):
 
     def set_dpass(self, dpass):
         self._dpass = dpass
+
+    def exp(self, distance):
+        """
+        This is an exponential decay as suggested by ehab
+        """
+        key = "exp_%d" % self._dpass
+        param_dict = EXP_DECAY_PARAMS.get(key)
+        c = param_dict.get('c')
+        x = param_dict.get('x')
+
+        result = c * math.pow(math.e, x * distance)
+        return result
 
     def butterworth(self, distance):
 

@@ -4,16 +4,23 @@ import string
 
 from data_manager import dataman_factory
 from da_manager import DaData
+from intersect import Intersect
 
+from modes import BUFFER_METHOD
 from dataset import DATASET
 
 class Runner(object):
 
-    def __init__(self):
+    def __init__(self, dataset):
 
-        self._dataman = None
-        self._daman = None
-        self._dataset = None
+        if dataset is None:
+            self._dataman = None
+            self._daman = None
+            self._dataset = None
+        else:
+            self._dataset = dataset
+            self._dataman = dataman_factory(self._dataset)
+            self._daman = DaData()
 
         self._valid_stop_ids = []
         self._valid_route_ids = []
@@ -29,6 +36,12 @@ class Runner(object):
         self._taps_per_date_dict = {}
         self._taps_per_day_dict = {}
 
+        self._smeared_da_taps = {}
+        self._smeared_da_users = {}
+        self._smeared_users_per_da = {}
+
+        self._stop_taps = {}
+        self._stop_to_da_smeared = {}
        # OBS  self._bad_stop_routes = {}
        # OBS  self._good_stop_routes = {}
 
@@ -102,22 +115,91 @@ class Runner(object):
 
     def get_filter_stops(self):
 
-        filter_stops =[
-            5904, # TAPS: 3264 NAME: Place Riel / Terminal E&S
-            5903, # TAPS: 993 NAME: Place Riel / Terminal W&N
-            5902, # TAPS: 800 NAME: Downtown Terminal East
-            5901, # TAPS: 749 NAME: Downtown Terminal West
-            5899, # TAPS: 874 NAME: Downtown Terminal North
-            5900, # TAPS: 619 NAME: Downtown Terminal South
-            5910, # TAPS: 444 NAME: Centre Mall Terminal I/B
-            5897, # TAPS: 416 NAME: 3rd Avenue / 23rd Street
-            5906, # TAPS: 395 NAME: Market Mall Terminal I/B
-            5912, # TAPS: 364 NAME: Confederation Terminal
-            4174, # TAPS: 358 NAME: Superstore
-            5908, # TAPS: 337 NAME: Lawson Terminal I/B
+        filter_stops_best_so_far =[
+            5904, # Place Riel / Terminal E&S
+            5903, # Place Riel / Terminal W&N
+            5902, # Downtown Terminal East
+            5901, # Downtown Terminal West
+            5899, # Downtown Terminal North
+            5900, # Downtown Terminal South
+            5897, # 3rd Avenue / 23rd Street
+            # 5909, # Centre Mall Terminal O/B
+            5910, # Centre Mall Terminal I/B
+            5906, # Market Mall Terminal I/B
+            # 5911, # Confederation Terminal
+            5912, # Confederation Terminal
+            4174, # Superstore
+            5908, # Lawson Terminal I/B
         ]
 
-        return
+        terminals_all =[
+            5904, # Place Riel / Terminal E&S
+            5903, # Place Riel / Terminal W&N
+            5902, # Downtown Terminal East
+            5901, # Downtown Terminal West
+            5899, # Downtown Terminal North
+            5900, # Downtown Terminal South
+            5413, # Downtown Terminal West1
+            5415, # Downtown Terminal West 2
+            5897, # 3rd Avenue / 23rd Street
+            5909, # Centre Mall Terminal O/B
+            5910, # Centre Mall Terminal I/B
+            5906, # Market Mall Terminal I/B
+            5905, # Market Mall Terminal O/B
+            5911, # Confederation Terminal
+            5912, # Confederation Terminal
+            5908, # Lawson Terminal I/B
+            5907, # Lawson Terminal O/B
+        ]
+
+        terminals_place_riel_bus_mall =[
+            5904, # Place Riel / Terminal E&S
+            5903, # Place Riel / Terminal W&N
+            5902, # Downtown Terminal East
+            5901, # Downtown Terminal West
+            5899, # Downtown Terminal North
+            5900, # Downtown Terminal South
+            5413, # Downtown Terminal West1
+            5415, # Downtown Terminal West 2
+            5897, # 3rd Avenue / 23rd Street
+        ]
+
+        terminals_suburban = [
+            5909, # Centre Mall Terminal O/B
+            5910, # Centre Mall Terminal I/B
+            5906, # Market Mall Terminal I/B
+            5905, # Market Mall Terminal O/B
+            5911, # Confederation Terminal
+            5912, # Confederation Terminal
+            5908, # Lawson Terminal I/B
+            5907, # Lawson Terminal O/B
+        ]
+
+
+        # Does not work well at all
+        top_tep = [
+            5908, # Lawson Terminal I/B
+            5912, # Confederation Terminal
+            3173, # 25th Street / 5th Avenue
+            4174, # Superstore
+            5556, # 8th Street / JYSK Store
+            4345, # Hunter / Vic
+            3629, # McKercher / Tait Crescent
+            3015, # Forest / 500-Block
+            3343, # 8th Street / McKercher
+            3170, # 25th Street / 3rd Avenue
+        ]
+
+         # Does not work well at all
+        top_two = [
+            5908, # Lawson Terminal I/B
+            5912, # Confederation Terminal
+        ]
+
+        # return []
+        # return filter_stops_best_so_far
+        return terminals_place_riel_bus_mall
+
         """
         if self._dataset == DATASET.JUNE:
 
@@ -166,17 +248,16 @@ class Runner(object):
 
     def run(self, filename):
 
+        if self._dataman is None:
+            if filename.find('jan') > 0:
+                self._dataset = DATASET.JUNE
+            else:
+                self._dataset = DATASET.JULY
 
-        if filename.find('jan') > 0:
-            self._dataset = DATASET.JUNE
-        else:
-            self._dataset = DATASET.JULY
-
-        self._dataman = dataman_factory(self._dataset)
-        self._daman = DaData()
+            self._dataman = dataman_factory(self._dataset)
+            self._daman = DaData()
 
         runner.make_valid_stop_list()
-
 
         self._skip_days = [
             '2018-09-01',
@@ -227,13 +308,18 @@ class Runner(object):
                 print parts
                 continue
 
-            skip_line = False
             invalid_stop_id = False
 
             info = parts[8].strip()
             info = self.clean_info(info)
             route = int(parts[4])
             stop = int(parts[5])
+
+            try:
+                bus_pass = int(parts[6].strip())
+            except:
+                bus_pass = -1000
+
             date = parts[2]
             t = parts[3]
 
@@ -266,12 +352,20 @@ class Runner(object):
             minutes = 60 * h + m
             # print "TIME", h, m, minutes
 
-            if minutes < 15*60 or minutes > 18*60:
+            if minutes < 6*60 or minutes > 9*60:
                 wrong_time_count += 1
                 continue
 
-                # print "SKIP INVALID TIME!!!!", wrong_time_count
-                # skip_line = True
+            # discard all non pass taps
+            if info.find("PassMultiridecard") < 0:
+                continue
+
+            if bus_pass < 10000:
+                print "PASS", bus_pass
+                continue
+
+            if stop in filter_stops:
+                continue
 
             route_data = self._taps_per_route_dict.get(route, {})
             tap_count = route_data.get('tap_count', 0)
@@ -308,20 +402,13 @@ class Runner(object):
 
             stop_count += 1
 
-            try:
-                bus_pass = int(parts[6].strip())
-            except:
-                bus_pass = None
-
-            # print "BUS PASS NO", bus_pass
-
-            if bus_pass is None:
-                pass
-                # print "SKIP NO BAS PASS"
-                # skip_line = True
-
             if stop in self._valid_stop_ids:
                 valid_count += 1
+
+                # Add count to stop map
+                user_list = self._stop_taps.get(stop, [])
+                user_list.append(bus_pass)
+                self._stop_taps[stop] = user_list
 
                 # Add count to DA
                 da = self._stop_to_da_map.get(stop)
@@ -334,6 +421,13 @@ class Runner(object):
                 user_list = self._da_departures.get(da_id, [])
                 user_list.append(bus_pass)
                 self._da_departures[da_id] = user_list
+
+                # "Smear" the taps across neighbouring DAs
+                smeared_data = self._stop_to_da_smeared.get(stop)
+                for smeared_id, fraction in smeared_data.iteritems():
+                    value = self._smeared_da_taps.get(smeared_id, 0.0)
+                    value += fraction
+                    self._smeared_da_taps[smeared_id] = value
 
                 # Add count to stop
                 c = self._valid_stop_dict.get(stop, 0)
@@ -370,10 +464,10 @@ class Runner(object):
         else:
             month = "sept"
 
-        print "SKIP FILE GENERATION" * 5
-        return
-
-        raise ValueError("temp stop in run")
+        # print "SKIP FILE GENERATION" * 5
+        # return
+        #
+        # raise ValueError("temp stop in run")
 
         f_out  = open("%s_taps_per_pop.csv" % month, "w")
         f2_out = open("%s_taps_per_stop.csv" % month, "w")
@@ -406,6 +500,34 @@ class Runner(object):
         f_out.close()
         f2_out.close()
         f3_out.close()
+
+        # Taps smeared accross neighbouring DAs
+        f = open("%s_smeared_taps_per_pop.csv" % month, "w")
+        for da_id, smeared_taps in self._smeared_da_taps.iteritems():
+            da = self._daman.get_da(da_id)
+            population = da.get_population()
+
+            taps_per_pop = float(smeared_taps)/float(population)
+            f.write("%d,%f\n" % (da_id, taps_per_pop))
+        f.close()
+
+        # Unique users smeared across DAs
+        for stop_id, pass_list in self._stop_taps.iteritems():
+            unique_users = len(list(set(pass_list)))
+            smeared_data = self._stop_to_da_smeared.get(stop_id)
+            for smeared_id, fraction in smeared_data.iteritems():
+                value = self._smeared_da_taps.get(smeared_id, 0.0)
+                value += fraction * float(unique_users)
+                self._smeared_users_per_da[smeared_id] = value
+
+        f = open("%s_smeared_users_per_pop.csv" % month, "w")
+        for da_id, smeared_users in self._smeared_users_per_da.iteritems():
+            da = self._daman.get_da(da_id)
+            population = da.get_population()
+
+            users_per_pop = 100.0 * float(smeared_users)/float(population)
+            f.write("%d,%f\n" % (da_id, users_per_pop))
+        f.close()
 
     def get_date_object(self, date_str):
         if self._dataset == DATASET.JULY:
@@ -556,7 +678,8 @@ class Runner(object):
 
         print "-------"
         for item in x:
-            print item[1], ":", item[0]
+            print item[1], ",", item[0]
+
 
     def rank_valid_stops(self):
 
@@ -614,21 +737,69 @@ class Runner(object):
                 break
         f.close()
 
-        print "total godd", total_good
+        print "total good", total_good
         print "total bad", total_bad
 
         print "total", total_good + total_bad
 
         print "valid stop IDs", len(self._valid_stop_ids)
 
+    def load_smeared_das(self):
+
+        self._dataset = DATASET.JULY
+        buffer_method = BUFFER_METHOD.DIAMOND_400
+        intersect = Intersect()
+
+        all_stops = self._dataman.get_stops()
+        # das = self._daman.get_das()
+
+        try:
+            intersect.load(buffer_method, self._dataset, all_stops)
+
+        except Exception as err:
+            print "Intersect().load() Exception: %s" % repr(err)
+            # self.make_buffers(all_stops, buffer_method)
+            # self._intersect.process(all_stops, das)
+            # self._intersect.to_shapefile(buffer_method, self._dataset, all_stops)
+
+        for stop in all_stops:
+            print stop.get_id()
+            total_stop_area = 0
+            intersections = intersect.get_intersections_for_group1_id(stop.get_id())
+            # print repr(intersections)
+
+            temp = {}
+
+            for item in intersections:
+                da_id = item[1]
+                p = item[0]
+                print da_id, p.get_area()
+                total_stop_area += p.get_area()
+                temp[da_id] = p.get_area()
+
+            data = {}
+            for da_id, area in temp.iteritems():
+                data[da_id] = area / total_stop_area
+
+            self._stop_to_da_smeared[stop.get_id()] = data
+
+            print "TOTAL AREA:::", total_stop_area
+
+        for stop_id, data in self._stop_to_da_smeared.iteritems():
+            print "STOP ID:", stop_id
+            for da_id, fraction in data.iteritems():
+                print " DA_ID:", da_id, "FRACTION", fraction
+
 if __name__ == "__main__":
 
-    runner = Runner()
+    runner = Runner(DATASET.JULY)
+    runner.load_smeared_das()
+
     runner.run("data/taps_sep_2018.csv")
 #     runner.run("data/taps_jan_2018.csv")
 
-#    runner.display_fare_types()
-#    runner.display_route_data()
+    runner.display_fare_types()
+    runner.display_route_data()
 
     runner.rank_valid_stops()
 

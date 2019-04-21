@@ -37,6 +37,9 @@ class Score(object):
             distance = point1.get_distance(point2, method="grid")
         elif method == 'crow':
             distance = point1.get_distance(point2, method="crow")
+        elif method == 'exp':
+            distance = point1.get_distance(point2, method="grid")
+
         else:
             raise ValueError("invalid method: %s" % method)
 
@@ -44,7 +47,11 @@ class Score(object):
             decay = self._walkscore_decay.get_decay(distance)
         else:
             self._filter.set_dpass(dpass)
-            decay = self._filter.butterworth(distance)
+            if method in ['grid', 'crow']:
+                decay = self._filter.butterworth(distance)
+            else:
+                decay = self._filter.exp(distance)
+
 
         return distance, decay
 

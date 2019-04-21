@@ -69,9 +69,9 @@ class Plotter(object):
         """
         for da in das:
             p = da.get_polygon()
-            p.set_attribute(ATTR.STROKE_COLOR, "#202020")
-            p.set_attribute(ATTR.STROKE_WEIGHT, 1)
-            p.set_attribute(ATTR.STROKE_OPACITY, 1)
+            p.set_attribute(ATTR.STROKE_COLOR, "#0000f0")
+            p.set_attribute(ATTR.STROKE_WEIGHT, 2)
+            p.set_attribute(ATTR.STROKE_OPACITY, 0.5)
             p.set_attribute(ATTR.FILL_COLOR, "#ffffff")
             p.set_attribute(ATTR.FILL_OPACITY, 0)
             self.add_polygon(p)

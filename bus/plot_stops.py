@@ -27,6 +27,7 @@ class Runner(object):
         except:
             self._stop_id = None
 
+        self._include_das = args.das
         self._markers = args.markers
         self._dataset = args.dataset
         self._buffer = args.buffer_method
@@ -44,21 +45,20 @@ class Runner(object):
         print "all stops:", self._all_stops
         print "output shapefile", self._output_shapefile
 
-
         if self._stop_id is None:
 
             plotter = Plotter()
             polypoint = Polyline()
 
-            routes = self._dataman.get_routes()
-            for route in routes:
-                segments = route.get_segments()
-
-                for segment in segments:
-                    segment.set_attribute(ATTR.STROKE_COLOR, "#0000ff")
-                    segment.set_attribute(ATTR.STROKE_WEIGHT, 3)
-                    segment.set_attribute(ATTR.STROKE_OPACITY, 0.8)
-                    plotter.add_polyline(segment)
+            # routes = self._dataman.get_routes()
+            # for route in routes:
+            #     segments = route.get_segments()
+            #
+            #     for segment in segments:
+            #         segment.set_attribute(ATTR.STROKE_COLOR, "#0000ff")
+            #         segment.set_attribute(ATTR.STROKE_WEIGHT, 2)
+            #         segment.set_attribute(ATTR.STROKE_OPACITY, 0.5)
+            #         plotter.add_polyline(segment)
 
             if self._all_stops:
                 stops = self._dataman.get_stops()
@@ -72,9 +72,25 @@ class Runner(object):
                     m2 = "%d - 2" % stop.get_id()
                     plotter.add_marker(stop.get_point(), m1, m2)
 
-            polypoint.set_attribute(ATTR.FILL_OPACITY, 0.8)
-            polypoint.set_attribute(ATTR.RADIUS, 90)
+            polypoint.set_attribute(ATTR.FILL_OPACITY, 0.5)
+            polypoint.set_attribute(ATTR.RADIUS, 60)
             plotter.add_polypoint(polypoint)
+
+            if self._include_das:
+                daman = DaData()
+                das = daman.get_das()
+                plotter.add_das(das)
+                # daman = DaData()
+                # das = daman.get_das()
+                # for da in das:
+                #     p = da.get_polygon()
+                #     # p.set_attribute(ATTR.FILL_COLOR, color)
+                #     # p.set_attribute(ATTR.FILL_OPACITY, opacity)
+                #     p.set_attribute(ATTR.STROKE_WEIGHT, 1)
+                #     p.set_attribute(ATTR.STROKE_COLOR, "#505050")
+                #     # p.set_attribute(ATTR.STROKE_OPACITY, 1)
+                #     plotter.add_polygon(p)
+
 
             if self._all_stops:
                 print "Total Stops:", len(stops)
@@ -165,6 +181,7 @@ if __name__ == "__main__":
    parser.add_argument("-d", "--dataset", help="june/july/brt", type=str, required=True)
    parser.add_argument("-b", "--buffer_method", help="buffer method", type=str, required=False)
    parser.add_argument("-m", "--markers", help="Include stop markers (slow and messy)", required=False, action='store_true')
+   parser.add_argument("-i", "--das", help="Include DA outlines", required=False, action='store_true')
    parser.add_argument("-a", "--all_stops", help="Default is just active stops", required=False, action='store_true')
    parser.add_argument("-o", "--output_shapefile", help="Write a stop shapefile", required=False, action='store_true')
 

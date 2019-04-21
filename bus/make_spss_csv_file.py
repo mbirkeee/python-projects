@@ -40,6 +40,13 @@ class Runner(object):
         self._da_list = None
         self._da_man = DaData()
 
+        self._da_list = [da.get_id() for da in self._da_man.get_das()]
+        self._da_list.sort()
+
+        # for item in self._da_list:
+        #     print item
+        # raise ValueError("temp stop")
+
         self._column_data = {}
 
     def run(self):
@@ -248,6 +255,8 @@ class Runner(object):
 
     def load_da_score_file(self, filename):
 
+        print "load_da_score_file CALLED", filename
+
         da_list = []
 
         data = {}
@@ -303,6 +312,9 @@ class Runner(object):
             header += ",%s" % col_name
 
         f.write("%s\n" % header)
+
+        # print "DA LIST:", len(self._da_list)
+        # raise ValueError("temp stop")
 
         # Loop through all the detected da_ids
         for da_id in self._da_list:

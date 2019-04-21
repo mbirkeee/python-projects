@@ -1225,7 +1225,7 @@ def test11():
     # 58 - tuned e2sfca - departs per hour
     # 59 - tuned e2sfca - departs per week
 
-    mode = 66
+    mode = 75
     h.set_mode(mode)
     h.run(force=True)
     h.to_shapefile()
