@@ -500,7 +500,6 @@ class ScoreManager2(object):
         raise ValueError("error getting clip score")
 
 
-
 class ScoreManager(object):
     """
     This class accepts a list of items and their scores.  It computes the

@@ -372,7 +372,8 @@ class Heatmap(object):
         das = self._da_man.get_das()
 
         # Use all stops to check if intersections should be updated
-        all_stops = self._dataman.get_stops()
+        # all_stops = self._dataman.get_stops()
+        all_stops = self._dataman.get_active_stops()
 
         if not self._route_ids:
             # Only include active stops
@@ -511,13 +512,18 @@ class Heatmap(object):
         """
         da_dict = {}
 
+        test_total_area = 0
+        test_total_score = 0
+
         if self._da_man is None:
             self._da_man = DaData()
 
         raster_clip = self._mode_man.get_raster_clip()
         scoreman = ScoreManager2()
         for raster in self._raster_list:
-            scoreman.add_score(raster, raster.get_score())
+            score = raster.get_score()
+            if score > 0:
+                scoreman.add_score(raster, score)
 
         clipped_count = 0
         clip_score, clip_count = scoreman.get_clipping_score(raster_clip)
@@ -535,12 +541,16 @@ class Heatmap(object):
                     # print "log(%f) --> %f" % (old_score, score)
 
             elif score > clip_score:
+                # pass
                 score = clip_score
                 clipped_count += 1
 
             # This is the area of the raster, not the DA! Don't get confused
             area = p.get_area()
             # print da_id, score, area
+
+            test_total_area += area
+            test_total_score += score
 
             da_data = da_dict.get(da_id, {})
             total_score = da_data.get('total_score', 0.0)
@@ -584,6 +594,9 @@ class Heatmap(object):
         if clipped_count:
             print "get_da_score(): clipped: %d (clip_score: %f total raster: %d)" %\
                   (clipped_count, clip_score, len(self._raster_list))
+
+        print "test_total_area", test_total_area
+        print "test_total_score", test_total_score
 
         return da_list
 
@@ -657,6 +670,8 @@ class Heatmap(object):
         # Compute the average score for the DAs
         score_list = self.get_da_scores()
 
+        print "Length of score list:", len(score_list)
+
         # Plot the DAs
         score_man = ScoreManager(score_list)
         score_man.set_clip_level(clip_level=1.0, clip_color="#ff0000")
@@ -697,7 +712,36 @@ class Heatmap(object):
         # Make a list of scores and pass into score manager
         score_list = [(raster, raster.get_score()) for raster in self._raster_list]
 
-#        print score_list
+        # Get a list of all rasters that are NOT in the score list
+        temp_raster_dict = {}
+        for r in self._raster_list:
+            da_id = r.get_parent_id()
+            da_rasters = temp_raster_dict.get(da_id, [])
+            da_rasters.append(r.get_id())
+            temp_raster_dict[da_id] = da_rasters
+            print "raster id", r.get_id(), r.get_parent_id()
+
+        das = self._da_man.get_das()
+
+        missing_rasters = []
+        print len(das)
+        total_raster_count = 0
+        for da in das:
+            rasters = da.get_rasters(100)
+            in_scores = temp_raster_dict.get(da.get_id(), [])
+            total_raster_count += len(rasters)
+            for raster in rasters:
+                if raster.get_id() in in_scores:
+                    pass
+                    # print "RASTER IN SCORES"
+                else:
+                    # print "RASTER NOT IN SCORES"
+                    missing_rasters.append(raster)
+
+
+        print "Length of score list:", len(score_list)
+        print "Length of all raster list:", total_raster_count
+        print "Length of missing rasters:", len(missing_rasters)
 
         score_man = ScoreManager(score_list)
         score_man.set_clip_level(0.5, clip_color="#ff0000")
@@ -714,6 +758,17 @@ class Heatmap(object):
 
             p.set_attribute(ATTR.FILL_COLOR, color)
             p.set_attribute(ATTR.FILL_OPACITY, opacity)
+            p.set_attribute(ATTR.STROKE_WEIGHT, 0)
+            p.set_attribute(ATTR.STROKE_COLOR, "#202020")
+            p.set_attribute(ATTR.STROKE_OPACITY, 0)
+            plotter.add_polygon(p)
+
+
+        for raster in missing_rasters:
+            p = raster.get_polygon()
+
+            p.set_attribute(ATTR.FILL_COLOR, "#000000")
+            p.set_attribute(ATTR.FILL_OPACITY, 0.25)
             p.set_attribute(ATTR.STROKE_WEIGHT, 0)
             p.set_attribute(ATTR.STROKE_COLOR, "#202020")
             p.set_attribute(ATTR.STROKE_OPACITY, 0)
@@ -1210,7 +1265,7 @@ def test10():
 def test11():
 
     h = Heatmap()
-    h.set_dataset(DATASET.JULY)
+    h.set_dataset(DATASET.BRT_1)
     h.set_service_time("8:00")
     h.set_service_day(SERVICE.MWF)
 #    h1.set_time_str("8:14")
@@ -1225,13 +1280,13 @@ def test11():
     # 58 - tuned e2sfca - departs per hour
     # 59 - tuned e2sfca - departs per week
 
-    mode = 75
+    mode = 40
     h.set_mode(mode)
-    h.run(force=True)
+    h.run()
     h.to_shapefile()
 
     scores = h.get_da_scores()
-    h.write_da_score_csv("score_filt_freq_july_%d.csv" % mode )
+    h.write_da_score_csv("score_filt_freq_brt1_%d.csv" % mode )
     # h.write_transit_ridership_csv("ridership_percentage.csv")
     # print repr(scores)
 
@@ -1244,8 +1299,9 @@ def test11():
     # plotter.add_heatmap(h, "Raster Score")
     # plotter.plot()
 
+    # h.plot(z_score=True)
     h.plot(z_score=True)
-    # h.plot_das("temp/maps/das.html", z_score=True)
+    h.plot_das("temp/maps/das.html", z_score=True)
     # h.to_shapefile_da(use_z_scores=True, file_name="transit_zscore_2.shp")
     x, y = h.pearson_da()
 
