@@ -47,6 +47,8 @@ class DECAY_METHOD(object):
     GRID_1000       = "grid_1000"
     GRID_WALKSCORE  = "grid_99999"
     EXPONENTIAL_1   = "exp_1"
+    EXPONENTIAL_2   = "exp_2"
+    EXPONENTIAL_3   = "exp_3"
 
 
 
@@ -604,6 +606,12 @@ MODE_DICT = {
         KEY.DISTANCE_DECAY      : "grid_300"
     },
 
+    76 : {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_DAY,
+        KEY.SCORE_NEAREST_ONLY  : True,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.EXPONENTIAL_3
+    },
 
     SPECIAL_MODE.TRANSIT_SCORE : {
         KEY.SCORE_METHOD        : SCORE_METHOD.TRANSIT_SCORE

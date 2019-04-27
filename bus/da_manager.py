@@ -207,6 +207,454 @@ class DaData(object):
         self.load_file_centroids("data/DA_centroids.csv")
         self.load_file_transit_data("data/2016_da_transit.csv")
 
+
+        self._clip_list = [
+            (40120939.687808506, 6734180.049213662, 33386759.638594843, 47110689),
+            (27565164.417724192, 13538499.169215938, 14026665.248508254, 47110691),
+            (22648336.60717187, 5626700.729742141, 17021635.87742973, 47110581),
+            (12066478.257345632, 8645823.480940143, 3420654.776405489, 47110664),
+            (8682532.895157836, 4612873.639667055, 4069659.2554907817, 47110397),
+            (5981952.573866785, 4541224.611850623, 1440727.9620161615, 47110699),
+            (5171295.089959195, 2683538.5774126346, 2487756.5125465603, 47110694),
+            (4989986.50603505, 3794544.6482810457, 1195441.8577540047, 47110524),
+            (3991756.613948376, 2554309.8354093027, 1437446.7785390732, 47110540),
+        ]
+
+
+        # This data can be used to clip DA polygons to get a much more realistic
+        # approximation of the populated areas
+        # self._clip_points = {
+        #     # This is the westside DA... e.g. near blairmore walmart
+        #     47110581 : [
+        #         (52.119256, -106.765271),
+        #         (52.141280, -106.765271),
+        #         (52.141280, -106.751404),
+        #         (52.119256, -106.751404)
+        #     ],
+        #     47110694 : [
+        #         (52.115015, -106.745332),
+        #         (52.104551, -106.745332),
+        #         (52.104551, -106.715892),
+        #         (52.115015, -106.715892)
+        #     ],
+        #     47110540 : [
+        #         (52.115085, -106.699720),
+        #         (52.106229, -106.699720),
+        #         (52.106229, -106.680867),
+        #         (52.115085, -106.680867),
+        #     ],
+        #     47110699 : [
+        #         (52.096483, -106.662102),
+        #         (52.070744, -106.662102),
+        #         (52.070744, -106.645623),
+        #         (52.096483, -106.645623)
+        #     ],
+        #     47110524 : [
+        #         (52.107555, -106.579190),
+        #         (52.083615, -106.579190),
+        #         (52.083615, -106.543656),
+        #         (52.107555, -106.543656)
+        #     ],
+        #     47110689 : [
+        #         (52.140231, -106.561423),
+        #         (52.120732, -106.561423),
+        #         (52.120732, -106.539879),
+        #         (52.140231, -106.539879)
+        #     ],
+        #     47110664 : [
+        #         (52.174050, -106.585627),
+        #         (52.157045, -106.585627),
+        #         (52.157045, -106.548548),
+        #         (52.174050, -106.548548)
+        #     ],
+        #     # North Industrial Area
+        #     47110691 : [
+        #         (52.180000, -106.691798),
+        #         (52.140824, -106.691798),
+        #         (52.140824, -106.620598),
+        #         (52.180000, -106.620598)
+        #     ],
+        #     # Airport
+        #     47110397 : [
+        #         (52.169926, -106.691456),
+        #         (52.156342, -106.691456),
+        #         (52.156342, -106.666565),
+        #         (52.169926, -106.666565)
+        #     ],
+        #     # Lakeview
+        #     47110147 : [
+        #         (52.096588, -106.605754),
+        #         (52.088705, -106.605754),
+        #         (52.088705, -106.586013),
+        #         (52.096588, -106.586013)
+        #     ]
+        # }
+        # self._clipping_polygons = {}
+        # self._clipped_polygons = {}
+        # self._make_clipping_polygons()
+        # self._clip()
+        #
+        # self._use_clipped_area()
+
+        self._lat_saskatoon_min =   52.065626
+        self._lat_saskatoon_max =   52.212493
+        self._lng_saskatoon_min = -106.777544
+        self._lng_saskatoon_max = -106.526575
+
+        # self._lat_saskatoon_min = 52.067740
+        # self._lat_saskatoon_max = 52.206957
+        # self._lng_saskatoon_min = -106.787424
+        # self._lng_saskatoon_max = -106.519849
+
+        self._increments = {
+            100 : {'lat' : .00089893575680, 'lng' :  .00146049608306}
+        }
+
+        self._all_rasters = None
+
+    def get_saskatoon_bounding_box(self):
+
+        bb = Polygon()
+        bb.add_point(Point(self._lat_saskatoon_min, self._lng_saskatoon_min))
+        bb.add_point(Point(self._lat_saskatoon_min, self._lng_saskatoon_max))
+        bb.add_point(Point(self._lat_saskatoon_max, self._lng_saskatoon_max))
+        bb.add_point(Point(self._lat_saskatoon_max, self._lng_saskatoon_min))
+        return bb
+
+    def get_all_rasters(self, stops):
+
+        increments = self._increments.get(100)
+        lat_inc = increments.get('lat')
+        lng_inc = increments.get('lng')
+
+        raster_count = 0
+
+        if self._all_rasters is None:
+            self._all_rasters = []
+
+            for lat_index in xrange(10000):
+                lat = self._lat_saskatoon_min + lat_index * lat_inc
+                if lat > self._lat_saskatoon_max:
+                    break
+
+                for lng_index in xrange(10000):
+                    lng = self._lng_saskatoon_min + lng_index * lng_inc
+                    if lng > self._lng_saskatoon_max:
+                        break
+
+                    print raster_count, "MAKE RASTER FOR", lat, lng
+
+                    p = Polygon()
+                    p.add_point(Point(lat,           lng))
+                    p.add_point(Point(lat,           lng + lng_inc))
+                    p.add_point(Point(lat + lat_inc, lng + lng_inc))
+                    p.add_point(Point(lat + lat_inc, lng))
+
+                    centroid = p.get_centroid()
+                    for stop in stops:
+                        distance_to_stop = centroid.get_distance(stop.get_point())
+                        # print distance_to_stop
+                        if distance_to_stop < 1000:
+                            self._all_rasters.append(Raster(None, None, p))
+                            raster_count += 1
+                            break
+
+        return self._all_rasters
+
+    def make_rasters(self, stops):
+
+        all_rasters = self.get_all_rasters(stops)
+
+        das = self.get_das()
+
+        # This is extremely brute force.  It could probably be sped up
+        # considerably by only generating potential raster boxes within
+        # the bounding box of the DA polygon
+
+        for da_index, da in enumerate(das):
+            print "Processing DA: %s: %d" % (da_index, da.get_id())
+            index = 1000
+            writer = ShapeFileWriter()
+            shapefile_name = RASTER_SHAPEFILE_TEMPLATE % ("100", da.get_id())
+
+            p = da.get_polygon()
+            for raster in all_rasters:
+                intersecting_polygons = p.intersect(raster.get_polygon())
+
+                for clipped in intersecting_polygons:
+                    writer.add_raster(Raster(da.get_id(), index, clipped))
+                    index += 1
+
+            writer.write(shapefile_name)
+
+    # def _use_clipped_area(self):
+    #     for da_id, p in self._clipped_polygons.iteritems():
+    #
+    #         da = self.get_da(da_id)
+    #         da_p = da.get_polygon()
+    #
+    #         old_area = da_p.get_area()
+    #         da_p.set_area(p.get_area())
+    #         new_area = da_p.get_area()
+    #
+    #         da.set_clipped_polygon(p)
+    #
+    #         f = 100.0 * new_area/old_area
+    #         print "DaData: Clipping DA %d area %.2f ---> %.2f ( %.2f%% )" % (da_id, old_area, new_area, f)
+
+#     def _clip(self):
+#
+#         for da_id, clipping_p in self._clipping_polygons.iteritems():
+#
+# #            da_p = self.get_polygon(da_id)
+#
+#             da = self.get_da(da_id)
+#             da_p = da.get_polygon()
+#
+#             intersection = da_p.intersect(clipping_p)
+#             if len(intersection) != 1:
+#                 raise ValueError('fixme!!')
+#             self._clipped_polygons[da_id] = intersection[0]
+
+    # def _make_clipping_polygons(self):
+    #
+    #     for da_id, points in self._clip_points.iteritems():
+    #         p = Polygon()
+    #         for point in points:
+    #             p.add_point(Point(point[0], point[1]))
+    #         self._clipping_polygons[da_id] = p
+
+    # def get_clipping_polygons(self):
+    #
+    #     result = []
+    #     for da_id, p in self._clipping_polygons.iteritems():
+    #         result.append(p)
+    #     return result
+    #
+    # def get_clipped_polygons(self):
+    #
+    #     result = []
+    #     for da_id, p in self._clipped_polygons.iteritems():
+    #         result.append(p)
+    #     return result
+
+    def load_file(self, file_name):
+
+        f = open(file_name, "r")
+
+        count = 0
+        for line in f:
+            count += 1
+            if count == 1: continue
+            # print line.strip()
+
+            parts=line.split(",")
+            da_id = int(parts[0].strip())
+            point_index = int(parts[1].strip())
+            lat = float(parts[2].strip())
+            lng = float(parts[3].strip())
+
+            # print da_id, point_index, lat, lng
+
+            point = Point(lat, lng)
+
+            da = self._da_dict.get(da_id)
+            if da is None:
+                da = DA(da_id)
+
+            da.add_point(point_index, point)
+            self._da_dict[da_id] = da
+
+        f.close()
+        print "DaData: Loaded %d points from %s" % (count, file_name)
+
+    def get_das(self):
+        return [da for da in self._da_dict.itervalues()]
+
+    def get_da(self, da_id):
+        return self._da_dict.get(da_id)
+
+    def load_file_transit_scores(self, size):
+
+        file_name = 'data/csv/transit_score_%d.csv' % size
+        f = open(file_name, 'r')
+        count = 0
+
+        data = {}
+
+        for line in f:
+            count += 1
+            if count == 1: continue
+            line=line.strip()
+            parts = line.split(',')
+            # print parts
+            da_id = int(parts[1].strip())
+            raster_id = int(parts[2].strip())
+            transit_score = int(parts[3].strip())
+
+            # print da_id, raster_id, transit_score
+
+            da_data = data.get(da_id, {})
+            da_data[raster_id] = transit_score
+            data[da_id] = da_data
+
+        f.close()
+
+        # print data
+
+        das = self.get_das()
+        for da in das:
+            da_id = da.get_id()
+            da_scores = data.get(da_id, {})
+            rasters = da.get_rasters(size)
+            for raster in rasters:
+                raster_id = raster.get_id()
+                score = da_scores.get(raster_id, 0)
+                raster.set_score(score)
+                print "Set transit score da_id: %d raster_id: %s score --> %d" % (da_id, raster_id, score)
+
+    def load_file_transit_data(self, file_name):
+
+        print "opening file '%s'" % file_name
+        f = open(file_name, "r")
+
+        total_pop = 0
+        total_transit_riders  = 0
+
+        count = 0
+        for line in f:
+            count += 1
+            if count == 1: continue
+
+            parts=line.split(",")
+            # print parts
+
+            da_id = int(parts[1].strip())
+            transit_riders = int(parts[2].strip())
+            pop = int(parts[3].strip())
+
+            print "DA_ID:", da_id, "POP:", pop, "TRANSIT RIDERS:", transit_riders
+
+            total_pop += pop
+            total_transit_riders += transit_riders
+
+            da = self.get_da(da_id)
+            if da is None:
+                raise ValueError("cant find DA: %d" % da_id)
+
+            if da.get_population() != pop:
+                raise ValueError("pop mismatch")
+
+            # da.set_transit_users(4 * transit_riders)
+            da.set_transit_users(transit_riders)
+
+        f.close()
+
+        print "DaData: Loaded total pop: %d total transit riders: %d" % (total_pop, 4 * total_transit_riders)
+        print "DaData: Loaded %d points from %s" % (count, file_name)
+
+        # das = self.get_das()
+        # if (count - 1)  != len(das):
+        #     raise ValueError("size mismatch: count: %d DAs: %d" % (count, len(das)))
+
+
+    def load_file_centroids(self, file_name):
+
+        f = open(file_name, "r")
+
+        count = 0
+        for line in f:
+            count += 1
+            if count == 1: continue
+
+            parts=line.split(",")
+            da_id = int(parts[1].strip())
+            lat = float(parts[2].strip())
+            lng = float(parts[3].strip())
+            pop = int(parts[4].strip())
+
+            centroid = Point(lat, lng)
+
+            da = self.get_da(da_id)
+            da.set_population(pop)
+
+            # data = self._data.get(da_id, {})
+
+            # data['centroid'] = centroid
+            # data['pop'] = pop
+            # self._data[da_id] = data
+
+        f.close()
+
+        print "DaData: Loaded %d centroids from %s" % (count, file_name)
+
+    def get_transit_percentages(self):
+
+        result = []
+        das = self.get_das()
+        for da in das:
+            percent = da.get_percent_transit_users()
+
+            # print "WARN-"*10
+            # percent *= da.get_population()
+
+            da_id = da.get_id()
+            result.append((da_id, percent))
+
+        result = sorted(result)
+        return result
+
+    def plot_percent_transit_users(self, file_name):
+        from plotter import Plotter, ATTR
+
+        plotter = Plotter()
+
+        min_percentage = None
+        max_percentage = None
+
+        percentages = self.get_transit_percentages()
+
+        for item in percentages:
+            percent = item[1]
+
+            if max_percentage is None or percent > max_percentage:
+                max_percentage = percent
+
+            if min_percentage is None or percent < min_percentage:
+                min_percentage = percent
+
+        for item in percentages:
+            percent = item[1]
+            da_id = item[0]
+
+            da = self.get_da(da_id)
+            p = da.get_polygon()
+
+            opacity = float(percent) / float(max_percentage)
+
+            p.set_attribute(ATTR.FILL_COLOR, "#FF0000")
+            p.set_attribute(ATTR.FILL_OPACITY, opacity)
+            p.set_attribute(ATTR.STROKE_WEIGHT, 1)
+            p.set_attribute(ATTR.STROKE_COLOR, "#202020")
+            p.set_attribute(ATTR.STROKE_OPACITY, 1)
+            plotter.add_polygon(p)
+
+        plotter.plot(file_name)
+
+
+class DaData_ORIG(object):
+
+    def __init__(self):
+
+        self._da_dict = {}
+
+        # self._data = {}
+        # self._polygons = {}
+
+        self.load_file("data/DA_polygon_points.csv")
+        self.load_file_centroids("data/DA_centroids.csv")
+        self.load_file_transit_data("data/2016_da_transit.csv")
+
         # This data can be used to clip DA polygons to get a much more realistic
         # approximation of the populated areas
         self._clip_points = {

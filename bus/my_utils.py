@@ -12,6 +12,7 @@ from geometry import Point
 EXP_DECAY_PARAMS = {
     'exp_1' : {'c' : 25.504, 'x' : -.001 },
     'exp_2' : {'c' : 1.0, 'x' : -.001 },
+    'exp_3' : {'c' : 1.0, 'x' : -.01 },
 }
 
 

@@ -11,8 +11,8 @@ from scipy.stats import pearsonr
 #DEPENDANT_VAR =  'jan_taps_per_stop'
 #DEPENDANT_VAR =  'sept_user_percentage'
 #DEPENDANT_VAR =  'jan_user_percentage'
-DEPENDANT_VAR = 'sept_smeared_taps_per_pop'
-#DEPENDANT_VAR = 'sept_smeared_users_per_pop'
+DEPENDANT_VAR = 'sept_buffered_taps_per_pop'
+#DEPENDANT_VAR = 'sept_buffered_users_per_pop'
 
 SCORE_VAR = 'score_filt_freq_july_66'
 
@@ -220,7 +220,7 @@ class Runner(object):
         result = sorted(result)
         result.reverse()
 
-        print "COLUMN                                           PEARSON'S", DEPENDANT_VAR
+        print "COLUMN                        PEARSON'S", DEPENDANT_VAR
         print "-----------------------------------------------------------"
 
 
@@ -277,12 +277,17 @@ class Runner(object):
         ax.scatter(x, y)
 
         plt.subplots_adjust(left=0.1, right=.9, top=0.9, bottom=0.1)
+
+        plt.title("Taps per Person per DA vs. Accessibility Score")
+        plt.ylabel("Taps per Person per DA ")
+        plt.xlabel("Accessibility Score (Filtered Frequency)")
+
         plt.show()
 
 if __name__ == "__main__":
 
     runner = Runner()
     runner.run()
-    runner.scatterplot("score_filt_freq_july_66", DEPENDANT_VAR)
+    runner.scatterplot("score_filt_freq_july_40", DEPENDANT_VAR)
 #    runner.display_result()
 
