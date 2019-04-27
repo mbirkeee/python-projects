@@ -20,6 +20,8 @@ class ShapeFileWriter(object):
 
     def write_stop_file(self, file_name):
 
+        f = open("stop_file.csv", "w")
+
         driver = ogr.GetDriverByName('Esri Shapefile')
         ds = driver.CreateDataSource(file_name)
         # layer = ds.CreateLayer('', None, ogr.wkbPolygon)
@@ -34,6 +36,8 @@ class ShapeFileWriter(object):
         defn = layer.GetLayerDefn()
 
         ## If there are multiple geometries, put the "for" loop here
+
+        f.write("fid,stop_id,stop_name,lat,lng\n")
 
         for i, stop in enumerate(self._stop_list):
 
@@ -54,12 +58,14 @@ class ShapeFileWriter(object):
             feature.SetGeometry(geom)
             layer.CreateFeature(feature)
 
+            f.write("%d,%d,%s,%f,%f\n" % (i+1, stop_id, name, lat, lon))
             feature = geom = None  # destroy these
 
         # Save and close everything
         ds = layer = feature = geom = None
 
         print "Wrote %s" % file_name
+        f.close()
 
     def write_stop_da_intersections(self, intersection_list, file_name):
 
