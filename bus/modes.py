@@ -15,6 +15,7 @@ class BUFFER_METHOD(object):
     DIAMOND_400     = "diamond_400"
     DIAMOND_1500    = "diamond_1500"
     NETWORK_400     = "network_400"
+    NETWORK_532     = "network_532"
     NETWORK_2000    = "network_2000"
 
 BUFFER_LIST = [
@@ -49,7 +50,7 @@ class DECAY_METHOD(object):
     EXPONENTIAL_1   = "exp_1"
     EXPONENTIAL_2   = "exp_2"
     EXPONENTIAL_3   = "exp_3"
-
+    POLY_1          = "poly_1"
 
 
 class SCORE_METHOD(object):
@@ -611,6 +612,23 @@ MODE_DICT = {
         KEY.SCORE_METHOD        : SCORE_METHOD.DEPARTURES_PER_DAY,
         KEY.SCORE_NEAREST_ONLY  : True,
         KEY.DISTANCE_DECAY      : DECAY_METHOD.EXPONENTIAL_3
+    },
+
+    77: {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_532,
+        KEY.SCORE_METHOD        : SCORE_METHOD.STOP_COUNT,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.POLY_1
+    },
+
+    78: {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_400,
+        KEY.SCORE_METHOD        : SCORE_METHOD.STOP_COUNT,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.POLY_1
+    },
+    79: {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_532,
+        KEY.SCORE_METHOD        : SCORE_METHOD.STOP_COUNT,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.GRID_250
     },
 
     SPECIAL_MODE.TRANSIT_SCORE : {

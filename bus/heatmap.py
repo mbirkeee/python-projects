@@ -308,7 +308,9 @@ class Heatmap(object):
             return False
 
         buffer_man = None
-        if buffer_method in [BUFFER_METHOD.NETWORK_400, BUFFER_METHOD.NETWORK_2000]:
+        if buffer_method in [BUFFER_METHOD.NETWORK_400,
+                             BUFFER_METHOD.NETWORK_532,
+                             BUFFER_METHOD.NETWORK_2000]:
             buffer_man = BufferManager(buffer_method, self._dataset)
 
         print "Making stop buffers for %d stops..." % len(stops)
@@ -1265,7 +1267,7 @@ def test10():
 def test11():
 
     h = Heatmap()
-    h.set_dataset(DATASET.BRT_1)
+    h.set_dataset(DATASET.JULY)
     h.set_service_time("8:00")
     h.set_service_day(SERVICE.MWF)
 #    h1.set_time_str("8:14")
@@ -1280,13 +1282,13 @@ def test11():
     # 58 - tuned e2sfca - departs per hour
     # 59 - tuned e2sfca - departs per week
 
-    mode = 40
+    mode = 79
     h.set_mode(mode)
-    h.run()
+    h.run(force=True)
     h.to_shapefile()
 
     scores = h.get_da_scores()
-    h.write_da_score_csv("score_filt_freq_brt1_%d.csv" % mode )
+    h.write_da_score_csv("score_stop_count_%d.csv" % mode )
     # h.write_transit_ridership_csv("ridership_percentage.csv")
     # print repr(scores)
 

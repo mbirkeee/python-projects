@@ -39,7 +39,8 @@ class Score(object):
             distance = point1.get_distance(point2, method="crow")
         elif method == 'exp':
             distance = point1.get_distance(point2, method="grid")
-
+        elif method == 'poly':
+            distance = point1.get_distance(point2, method="grid")
         else:
             raise ValueError("invalid method: %s" % method)
 
@@ -49,10 +50,12 @@ class Score(object):
             self._filter.set_dpass(dpass)
             if method in ['grid', 'crow']:
                 decay = self._filter.butterworth(distance)
-            else:
+            elif method in ['exp']:
                 decay = self._filter.exp(distance)
-
-
+            elif method in ['poly']:
+                decay = self._filter.poly(distance)
+            else:
+                raise ValueError("bad method")
         return distance, decay
 
     def get_score(self, raster, stop_tuples):
@@ -390,11 +393,29 @@ class Score(object):
             if not raster_p.intersects(stop_p): continue
 
             distance_decay_method = self._mode_man.get_distance_decay()
-            if distance_decay_method != None:
-                distance_decay = get_butterworth_decay(distance_decay_method, stop.get_point(), raster_point)
-                print "DISTANCE DECAY: %f" % distance_decay
+
+            parts = distance_decay_method.split("_")
+            method = parts[0]
+            distance = int(parts[1])
+
+            # print "DISTANCE DECAY METH", distance_decay_method, distance
+            # raise ValueError('gggg')
+
+            if method in ['poly']:
+                self._filter.set_dpass(distance)
+                distance_decay = self._filter.poly(distance)
+            elif method in ['grid']:
+                self._filter.set_dpass(distance)
+                distance_decay = self._filter.butterworth(distance)
             else:
-                distance_decay = 1.0
+                raise ValueError("fixme")
+
+
+            # if distance_decay_method != None:
+            #     distance_decay = get_butterworth_decay(distance_decay_method, stop.get_point(), raster_point)
+            #     print "DISTANCE DECAY: %f" % distance_decay
+            # else:
+            #     distance_decay = 1.0
 
             a = distance_decay
             score += a

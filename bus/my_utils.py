@@ -266,6 +266,27 @@ class Filter(object):
     def set_dpass(self, dpass):
         self._dpass = dpass
 
+
+    def poly1(self, distance):
+        result = 0.8309
+        result = result - distance * 0.0027
+        result = result + 3e-6 * math.pow(distance, 2)
+        result = result - 2e-9 * math.pow(distance, 3)
+        result = result + 6e-13 * math.pow(distance, 4)
+        result = result - 1e-16 * math.pow(distance, 5)
+        result = result + 6e-21 * math.pow(distance, 6)
+
+        return result
+
+
+    def poly(self, distance):
+
+        # print "self._dpass", self._dpass, type(self._dpass)
+        if self._dpass == 1:
+            return self.poly1(distance)
+
+        raise ValueError("polynomail not defined")
+
     def exp(self, distance):
         """
         This is an exponential decay as suggested by ehab
