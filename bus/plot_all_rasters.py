@@ -54,75 +54,84 @@ class Runner(object):
         print "Len active stops", len(all_stops)
         print "Len rasters", len(all_rasters)
 
-        raise ValueError('temp stop')
-        # if self._da_id is None:
-        #     das = self._daman.get_das()
-        #     file_name = "temp/maps/das_all.html"
-        #
-        # else:
-        #     das = [self._daman.get_da(self._da_id)]
-        #     file_name = "temp/maps/da_%d.html" % self._da_id
-        #     da = das[0]
-        #     p = da.get_polygon()
-        #     self._plot_stops = True
-        #
-        #     if self._buffer_method not in BUFFER_LIST:
-        #         for buffer_method in BUFFER_LIST:
-        #             print "Valid buffer method: %s" % buffer_method
-        #         raise ValueError("Need valid buffer method")
-        #
-        #     intersect = Intersect()
-        #
-        #     # all_stops = self._dataman.get_stops()
-        #     all_stops = self._dataman.get_stops()
-        #     intersect.load(self._buffer_method, self._dataset, all_stops)
-        #
-        #     intersecting_stops = intersect.get_intersections_for_group2_id(da.get_id())
-        #
-        #     for stop_tuple in intersecting_stops:
-        #         p = stop_tuple[0]
-        #         stop_id = stop_tuple[1]
-        #         print stop_tuple
-        #         plotter.add_polygon(p)
-        #         if self._marker_flag:
-        #             title = "%d" % stop_id
-        #             plotter.add_marker(p.get_centroid(), title, title)
-        #
-        #             stop = self._dataman.get_stop(stop_id)
-        #             plotter.add_marker(stop.get_point(), title, title)
-        #
-        #             stop.make_buffer(BUFFER_METHOD.CIRCLE_400)
-        #             stop_p = stop.get_buffer()
-        #             stop_p.set_attribute(ATTR.FILL_OPACITY, 0)
-        #             plotter.add_polygon(stop_p)
-        #
-        # total_raster_count = 0
-        # for da in das:
-        #     p = da.get_polygon()
-        #     p.set_attribute(ATTR.FILL_COLOR, "#0000ff")
-        #     plotter.add_polygon(p)
-        #
-        #     p2 = da.get_clipped_polygon()
-        #     p2.set_attribute(ATTR.FILL_COLOR, "#0000ff")
-        #     plotter.add_polygon(p2)
-        #
-        #     if self._marker_flag:
-        #         centroid = p.get_centroid()
-        #         title = "%d" % da.get_id()
-        #         hover = "hover"
-        #         plotter.add_marker(centroid, title, hover)
-        #
-        #     if self._raster_flag:
-        #         rasters = da.get_rasters(100)
-        #         for raster in rasters:
-        #             p = raster.get_polygon()
-        #             p.set_attribute(ATTR.FILL_OPACITY, 0)
-        #             plotter.add_polygon(p)
-        #             total_raster_count += 1
-        #
-        # plotter.plot(file_name)
-        # if total_raster_count > 0:
-        #     print "Plotted %d rasters" % total_raster_count
+
+        plotter = Plotter()
+        for stop in all_stops:
+            stop.make_buffer("circle_500")
+            p = stop.get_buffer()
+            p.set_attribute(ATTR.FILL_OPACITY, 0)
+            plotter.add_polygon(p)
+
+        plotter.plot("temp/maps/all_stops_1000_%s.html" % self._dataset)
+
+        if self._da_id is None:
+            das = self._daman.get_das()
+            file_name = "temp/maps/das_all.html"
+
+        else:
+            das = [self._daman.get_da(self._da_id)]
+            file_name = "temp/maps/da_%d.html" % self._da_id
+            da = das[0]
+            p = da.get_polygon()
+            self._plot_stops = True
+
+            if self._buffer_method not in BUFFER_LIST:
+                for buffer_method in BUFFER_LIST:
+                    print "Valid buffer method: %s" % buffer_method
+                raise ValueError("Need valid buffer method")
+
+            intersect = Intersect()
+
+            # all_stops = self._dataman.get_stops()
+            all_stops = self._dataman.get_stops()
+            intersect.load(self._buffer_method, self._dataset, all_stops)
+
+            intersecting_stops = intersect.get_intersections_for_group2_id(da.get_id())
+
+            for stop_tuple in intersecting_stops:
+                p = stop_tuple[0]
+                stop_id = stop_tuple[1]
+                print stop_tuple
+                plotter.add_polygon(p)
+                if self._marker_flag:
+                    title = "%d" % stop_id
+                    plotter.add_marker(p.get_centroid(), title, title)
+
+                    stop = self._dataman.get_stop(stop_id)
+                    plotter.add_marker(stop.get_point(), title, title)
+
+                    stop.make_buffer(BUFFER_METHOD.CIRCLE_400)
+                    stop_p = stop.get_buffer()
+                    stop_p.set_attribute(ATTR.FILL_OPACITY, 0)
+                    plotter.add_polygon(stop_p)
+
+        total_raster_count = 0
+        for da in das:
+            p = da.get_polygon()
+            p.set_attribute(ATTR.FILL_COLOR, "#0000ff")
+            plotter.add_polygon(p)
+
+            p2 = da.get_clipped_polygon()
+            p2.set_attribute(ATTR.FILL_COLOR, "#0000ff")
+            plotter.add_polygon(p2)
+
+            if self._marker_flag:
+                centroid = p.get_centroid()
+                title = "%d" % da.get_id()
+                hover = "hover"
+                plotter.add_marker(centroid, title, hover)
+
+            if self._raster_flag:
+                rasters = da.get_rasters(100)
+                for raster in rasters:
+                    p = raster.get_polygon()
+                    p.set_attribute(ATTR.FILL_OPACITY, 0)
+                    plotter.add_polygon(p)
+                    total_raster_count += 1
+
+        plotter.plot(file_name)
+        if total_raster_count > 0:
+            print "Plotted %d rasters" % total_raster_count
 
         self.da_stats()
 

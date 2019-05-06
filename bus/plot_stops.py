@@ -1,4 +1,5 @@
 import argparse
+import random
 
 from my_utils import seconds_to_string
 from my_utils import seconds_to_depart_time
@@ -45,6 +46,8 @@ class Runner(object):
         print "all stops:", self._all_stops
         print "output shapefile", self._output_shapefile
 
+        buffer_man = BufferManager(buffer_method=self._buffer, dataset=self._dataset)
+
         if self._stop_id is None:
 
             plotter = Plotter()
@@ -71,6 +74,10 @@ class Runner(object):
                     m1 = "%d - 1" % stop.get_id()
                     m2 = "%d - 2" % stop.get_id()
                     plotter.add_marker(stop.get_point(), m1, m2)
+
+                stop.make_buffer(self._buffer, buffer_manager=buffer_man)
+                buf = stop.get_buffer()
+                plotter.add_polygon(buf)
 
             polypoint.set_attribute(ATTR.FILL_OPACITY, 0.5)
             polypoint.set_attribute(ATTR.RADIUS, 60)
@@ -103,7 +110,8 @@ class Runner(object):
                 self.to_shapefile(stops)
         else:
 
-            buffer_man = BufferManager(buffer_method=self._buffer, dataset=self._dataset)
+            buffer_man_400 = BufferManager(buffer_method="network_400", dataset=self._dataset)
+            buffer_man_532 = BufferManager(buffer_method="network_532", dataset=self._dataset)
             daman = DaData()
 
             plotter = Plotter()
@@ -113,10 +121,12 @@ class Runner(object):
 
             if self._buffer:
                 intersect = Intersect()
-                all_stops = self._dataman.get_stops()
+
+                all_stops = self._dataman.get_active_stops()
 
                 intersect.load(self._buffer, self._dataset, all_stops)
                 intersecting_das = intersect.get_intersections_for_group1_id(stop.get_id())
+
 
                 for item in intersecting_das:
                     print "Stop intersects DA:", repr(item)
@@ -126,11 +136,32 @@ class Runner(object):
                     print " - Area", da.get_area()
 
                     p = item[0]
+
+                    p.set_attribute(ATTR.FILL_COLOR, "#0000ff")
+                    p.set_attribute(ATTR.STROKE_WEIGHT, 3)
+
+                    random_opacity = float(random.randint(0,1000))/1000.0
+                    random_opacity = 0.20 + 0.5 * random_opacity
+                    p.set_attribute(ATTR.FILL_OPACITY, random_opacity)
                     plotter.add_polygon(p)
 
-                stop.make_buffer(self._buffer, buffer_manager=buffer_man)
+                    print "intersection DA", da_id, "Area", p.get_area()
+
+                # stop.make_buffer(self._buffer, buffer_manager=buffer_man)
+                # buffer_p = stop.get_buffer()
+                # plotter.add_polygon(buffer_p)
+
+                stop.make_buffer("circle_400")
                 buffer_p = stop.get_buffer()
                 plotter.add_polygon(buffer_p)
+
+                # stop.make_buffer("network_400", buffer_manager=buffer_man_400)
+                # buffer_p = stop.get_buffer()
+                # plotter.add_polygon(buffer_p)
+
+                # stop.make_buffer("network_532", buffer_manager=buffer_man_532)
+                # buffer_p = stop.get_buffer()
+                # plotter.add_polygon(buffer_p)
 
                 plotter.plot("temp/maps/stop_%d_buffer_%s_%s.html" % (stop.get_id(), self._buffer, self._dataset))
             else:

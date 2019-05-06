@@ -380,6 +380,7 @@ class Score(object):
 
         score = 0
         raster_p = raster.get_polygon()
+
         raster_point = raster_p.get_centroid()
 
         for item in stop_tuples:
@@ -392,33 +393,10 @@ class Score(object):
 
             if not raster_p.intersects(stop_p): continue
 
-            distance_decay_method = self._mode_man.get_distance_decay()
-
-            parts = distance_decay_method.split("_")
-            method = parts[0]
-            distance = int(parts[1])
-
-            # print "DISTANCE DECAY METH", distance_decay_method, distance
-            # raise ValueError('gggg')
-
-            if method in ['poly']:
-                self._filter.set_dpass(distance)
-                distance_decay = self._filter.poly(distance)
-            elif method in ['grid']:
-                self._filter.set_dpass(distance)
-                distance_decay = self._filter.butterworth(distance)
-            else:
-                raise ValueError("fixme")
-
-
-            # if distance_decay_method != None:
-            #     distance_decay = get_butterworth_decay(distance_decay_method, stop.get_point(), raster_point)
-            #     print "DISTANCE DECAY: %f" % distance_decay
-            # else:
-            #     distance_decay = 1.0
-
-            a = distance_decay
-            score += a
+            decay_method = self._mode_man.get_distance_decay()
+            distance, decay_factor = self.get_decay_factor(stop.get_point(), raster_point, decay_method)
+            # print "distance, decay_factor", distance, decay_factor
+            score += decay_factor
 
         return score
 

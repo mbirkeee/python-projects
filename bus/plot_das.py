@@ -31,7 +31,7 @@ class Runner(object):
         self._dataset = args.dataset
 
         # self._dataman = DataManager(self._dataset, link_route_shapes=False, link_stops=False)
-        self._dataman = dataman_factory(self._dataset, link_route_shapes=False, link_stops=False)
+        self._dataman = dataman_factory(self._dataset, link_route_shapes=False, link_stops=True)
 
         self._daman = DaData()
 
@@ -67,7 +67,9 @@ class Runner(object):
             p = stop_tuple[0]
             stop_id = stop_tuple[1]
 
+            # Get rid of the valley road stop
             if stop_id == 5913: continue
+
             print stop_tuple
             plotter.add_polygon(p)
             if self._marker_flag:
@@ -93,16 +95,8 @@ class Runner(object):
 
         plotter = Plotter()
 
-        all_stops = self._dataman.get_stops()
-
-        # This hack gets rid of the valley road stop
-        # all_stops_filtered = []
-        # for stop in all_stops:
-        #     # print repr(stop)
-        #     print stop.get_id()
-        #     if stop.get_id() == 5913:
-        #         continue
-        #     all_stops_filtered.append(stop)
+        # all_stops = self._dataman.get_stops()
+        all_stops = self._dataman.get_active_stops()
 
         # saskatoon_bb = self._daman.get_saskatoon_bounding_box()
         # plotter.add_polygon(saskatoon_bb)
@@ -120,8 +114,6 @@ class Runner(object):
             for da_id in self._da_list:
                 das.append(self._daman.get_da(da_id))
                 self.add_da(da_id, plotter, all_stops)
-
-
 
         total_raster_count = 0
         for da in das:
@@ -150,7 +142,7 @@ class Runner(object):
                     print "DA ID %s RASTER ID %s" % (da.get_id(), raster.get_id())
 
                     p = raster.get_polygon()
-                    p.set_attribute(ATTR.FILL_OPACITY, 0)
+                    p.set_attribute(ATTR.FILL_OPACITY, 0.1)
                     plotter.add_polygon(p)
                     total_raster_count += 1
 
@@ -158,7 +150,7 @@ class Runner(object):
         if total_raster_count > 0:
             print "Plotted %d rasters" % total_raster_count
 
-        # self.da_stats()
+        self.da_stats()
 
     def da_stats(self):
 
@@ -171,7 +163,7 @@ class Runner(object):
         for da in das:
 
             da_id = da.get_id()
-            area = da.get_area()/1000000.0
+            area = da.get_area_orig()/1000000.0
 
             size_before.append(area)
 
@@ -184,6 +176,7 @@ class Runner(object):
             # print da_id, area
 
             total_raster_area = total_raster_area / 1000000.0
+
             size_after.append(total_raster_area)
 
             diff = abs(area-total_raster_area)
@@ -213,12 +206,14 @@ class Runner(object):
         print "The number of DAs is:", len(result)
 
         print "before"
+        print "max", max(size_before)
         print "ave", sp.average(size_before)
         print "med", sp.median(size_before)
         print "std", sp.std(size_before)
         print "sum", sp.sum(size_before)
 
         print "after"
+        print "max", max(size_after)
         print "ave", sp.average(size_after)
         print "med", sp.median(size_after)
         print "std", sp.std(size_after)

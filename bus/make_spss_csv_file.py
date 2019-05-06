@@ -168,6 +168,10 @@ class Runner(object):
                 print "skipping file %s" % filename
                 continue
 
+            if not file.endswith(".csv"):
+                print "skipping file", filename
+                continue
+
             print "CONSIDER FILE", filename
 
             parts = file.split('.')

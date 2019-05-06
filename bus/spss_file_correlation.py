@@ -2,12 +2,12 @@ import os
 import numpy as np
 from da_manager import DaData
 from scipy.stats import pearsonr
-
+import scipy
 
 #DEPENDANT_VAR =  'transit_ridership_percent'
 #DEPENDANT_VAR =  'sept_taps_per_stop'
 #DEPENDANT_VAR =  'sept_taps_per_pop'
-#DEPENDANT_VAR = 'sept_taps_per_pop'
+# DEPENDANT_VAR = 'sept_taps_per_pop'
 #DEPENDANT_VAR =  'jan_taps_per_stop'
 #DEPENDANT_VAR =  'sept_user_percentage'
 #DEPENDANT_VAR =  'jan_user_percentage'
@@ -214,6 +214,8 @@ class Runner(object):
             # print "pearsons", r
             header = headers[col]
 
+            # r_ln = pearsonr(scipy.log(transit_ridership_data), scipy.log(c))
+
             r = (abs(r[0]), r[0])
             result.append((r, header))
 
@@ -279,8 +281,9 @@ class Runner(object):
         plt.subplots_adjust(left=0.1, right=.9, top=0.9, bottom=0.1)
 
         plt.title("Taps per Person per DA vs. Accessibility Score")
-        plt.ylabel("Taps per Person per DA ")
-        plt.xlabel("Accessibility Score (Filtered Frequency)")
+        plt.ylabel("Taps per Person per DA (%s)" % var2_name)
+        plt.xlabel("Accessibility Score (%s)" % var1_name)
+        plt.savefig('plot_scatterplot.png', bbox_inches='tight')
 
         plt.show()
 

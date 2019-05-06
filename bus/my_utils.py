@@ -9,6 +9,55 @@ from geometry import Point
 
 # from dataset import BASE
 
+# The following is some actual trip data the Ehab got from the city of stoon
+EHAB_TRIP_DATA = [
+    (0   ,100.00 ),
+    (50  , 82.40 ),
+    (100 , 66.69 ),
+    (150 , 54.68 ),
+    (200 , 43.96 ),
+    (250 , 36.71 ),
+    (300 , 29.76 ),
+    (350 , 25.76 ),
+    (400 , 22.21 ),
+    (450 , 18.73 ),
+    (500 , 16.01 ),
+    (550 , 13.60 ),
+    (600 , 11.86 ),
+    (650 , 10.27 ),
+    (700 ,  8.99 ),
+    (750 ,  7.85 ),
+    (800 ,  7.02 ),
+    (850 ,  6.27 ),
+    (900 ,  5.59 ),
+    (950 ,  5.06 ),
+    (1000,  4.53 ),
+    (1050,  4.08 ),
+    (1100,  3.70 ),
+    (1150,  3.47 ),
+    (1200,  3.25 ),
+    (1250,  3.02 ),
+    (1300,  2.87 ),
+    (1350,  2.72 ),
+    (1450,  2.42 ),
+    (1500,  2.27 ),
+    (1600,  1.96 ),
+    (1650,  1.81 ),
+    (1700,  1.74 ),
+    (1800,  1.59 ),
+    (1850,  1.51 ),
+    (1950,  1.36 ),
+    (2050,  1.21 ),
+    (2300,  0.83 ),
+    (2450,  0.60 ),
+    (2500,  0.53 ),
+    (2550,  0.45 ),
+    (2700,  0.23 ),
+    (2750,  0.15 ),
+    (2800,  0.08 ),
+    (2850,  0.00 ),
+]
+
 EXP_DECAY_PARAMS = {
     'exp_1' : {'c' : 25.504, 'x' : -.001 },
     'exp_2' : {'c' : 1.0, 'x' : -.001 },
@@ -267,8 +316,12 @@ class Filter(object):
         self._dpass = dpass
 
 
-    def poly1(self, distance):
-        result = 0.8309
+    def poly1_OLD(self, distance):
+        """
+        Got this from excel curve fitting
+        """
+
+        result = 0.8903
         result = result - distance * 0.0027
         result = result + 3e-6 * math.pow(distance, 2)
         result = result - 2e-9 * math.pow(distance, 3)
@@ -278,6 +331,45 @@ class Filter(object):
 
         return result
 
+    def poly1(self, distance):
+
+        if distance == 0.0:
+            return 1.0
+
+        found = False
+        for i, data in enumerate(EHAB_TRIP_DATA):
+            dist_stop = float(data[0])
+            percent_stop = float(data[1])
+
+            # print "compare %f to %f" % (distance, dist_stop)
+            if distance < dist_stop:
+                found = True
+                # print "Got a hit at index %d" % i
+                break
+
+        if not found:
+            return 0.0
+
+        data_start = EHAB_TRIP_DATA[i-1]
+
+        dist_start = data_start[0]
+        percent_start = data_start[1]
+
+        # print "previous", dist_start, percent_start
+
+        inc_dist = distance - dist_start
+        inc_factor = inc_dist / (dist_stop - dist_start)
+
+        # print "inc_factor", inc_factor
+
+        percent_inc = inc_factor * (percent_start - percent_stop)
+        percent = percent_start - percent_inc
+
+        # print "got percent!!", percent
+
+        result = percent / 100.0
+        # print "return", result
+        return result
 
     def poly(self, distance):
 
@@ -285,7 +377,7 @@ class Filter(object):
         if self._dpass == 1:
             return self.poly1(distance)
 
-        raise ValueError("polynomail not defined")
+        raise ValueError("polynomial not defined")
 
     def exp(self, distance):
         """

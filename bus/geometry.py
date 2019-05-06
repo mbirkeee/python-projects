@@ -206,8 +206,6 @@ class Polygon(object):
         # print "Area test", self._area, area2
         return self._area
 
-
-
     def get_ogr_poly(self):
 
         if self._ogr_poly is None:

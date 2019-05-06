@@ -36,12 +36,12 @@ class Runner(object):
         self._taps_per_date_dict = {}
         self._taps_per_day_dict = {}
 
-        self._smeared_da_taps = {}
-        self._smeared_da_users = {}
-        self._smeared_users_per_da = {}
+        self._buffered_da_taps = {}
+        self._buffered_da_users = {}
+        self._buffered_users_per_da = {}
 
         self._stop_taps = {}
-        self._stop_to_da_smeared = {}
+        self._stop_to_da_buffered = {}
        # OBS  self._bad_stop_routes = {}
        # OBS  self._good_stop_routes = {}
 
@@ -277,6 +277,7 @@ class Runner(object):
 
         expected_cols = None
         stop_count = 0
+        keep_count = 0
         bad_count = 0
         bad_route_count = 0
         transfer_count = 0
@@ -323,25 +324,39 @@ class Runner(object):
             date = parts[2]
             t = parts[3]
 
-            # Skip transfers all transfers
+            # ----------------------------------------------------------------
+            # Filter all transfers
+            # ----------------------------------------------------------------
             if info.find('ansfer') > 0:
                 transfer_count += 1
                 # print "SKIPPING TRANSFER"
                 # skip_line = True
                 continue
 
+            # ----------------------------------------------------------------
+            # Filter if not a valid route
+            # ----------------------------------------------------------------
             if route not in self._valid_route_ids:
                 bad_route_count += 1
                 # print "SKIPPING BAD ROUTE", bad_route_count
                 continue
 
+            # ----------------------------------------------------------------
+            # Filter if bad stop ID
+            # ----------------------------------------------------------------
             if stop in [0, 9999]:
                 invalid_stop_id = True
                 continue
 
+            # ----------------------------------------------------------------
+            # Filter if invalid stop ID (we dont know about)
+            # ----------------------------------------------------------------
             if not stop in self._valid_stop_ids:
                 continue
 
+            # ----------------------------------------------------------------
+            # Filter if on a "skip day"
+            # ----------------------------------------------------------------
             if date in self._skip_days:
                 continue
 
@@ -352,20 +367,31 @@ class Runner(object):
             minutes = 60 * h + m
             # print "TIME", h, m, minutes
 
+            # ----------------------------------------------------------------
+            # Filter if not between 6AM and 9AM
+            # ----------------------------------------------------------------
             if minutes < 6*60 or minutes > 9*60:
                 wrong_time_count += 1
                 continue
 
-            # discard all non pass taps
-            if info.find("PassMultiridecard") < 0:
-                continue
+            # ----------------------------------------------------------------
+            # Filter if not a bus pass
+            # ----------------------------------------------------------------
+ #           if info.find("PassMultiridecard") < 0:
+ #               continue
 
-            if bus_pass < 10000:
-                print "PASS", bus_pass
-                continue
+            # ----------------------------------------------------------------
+            # Filter if invalid bus pass
+            # ----------------------------------------------------------------
+#            if bus_pass < 10000:
+#                print "PASS", bus_pass
+#                continue
 
-            if stop in filter_stops:
-                continue
+
+#            if stop in filter_stops:
+#                continue
+
+            keep_count += 1
 
             route_data = self._taps_per_route_dict.get(route, {})
             tap_count = route_data.get('tap_count', 0)
@@ -423,11 +449,11 @@ class Runner(object):
                 self._da_departures[da_id] = user_list
 
                 # "Smear" the taps across neighbouring DAs
-                smeared_data = self._stop_to_da_smeared.get(stop)
-                for smeared_id, fraction in smeared_data.iteritems():
-                    value = self._smeared_da_taps.get(smeared_id, 0.0)
+                buffered_data = self._stop_to_da_buffered.get(stop)
+                for buffered_id, fraction in buffered_data.iteritems():
+                    value = self._buffered_da_taps.get(buffered_id, 0.0)
                     value += fraction
-                    self._smeared_da_taps[smeared_id] = value
+                    self._buffered_da_taps[buffered_id] = value
 
                 # Add count to stop
                 c = self._valid_stop_dict.get(stop, 0)
@@ -445,6 +471,8 @@ class Runner(object):
 
 
         print "Read %d records" % (count - 1)
+
+        print "keep count", keep_count
 
         # print "bad stop (e.g., 9999) count:", bad_count
         # print "transfer count", transfer_count
@@ -501,31 +529,31 @@ class Runner(object):
         f2_out.close()
         f3_out.close()
 
-        # Taps smeared accross neighbouring DAs
-        f = open("%s_smeared_taps_per_pop.csv" % month, "w")
-        for da_id, smeared_taps in self._smeared_da_taps.iteritems():
+        # Taps buffered accross neighbouring DAs
+        f = open("%s_buffered_taps_per_pop.csv" % month, "w")
+        for da_id, buffered_taps in self._buffered_da_taps.iteritems():
             da = self._daman.get_da(da_id)
             population = da.get_population()
 
-            taps_per_pop = float(smeared_taps)/float(population)
+            taps_per_pop = float(buffered_taps)/float(population)
             f.write("%d,%f\n" % (da_id, taps_per_pop))
         f.close()
 
-        # Unique users smeared across DAs
+        # Unique users buffered across DAs
         for stop_id, pass_list in self._stop_taps.iteritems():
             unique_users = len(list(set(pass_list)))
-            smeared_data = self._stop_to_da_smeared.get(stop_id)
-            for smeared_id, fraction in smeared_data.iteritems():
-                value = self._smeared_da_taps.get(smeared_id, 0.0)
+            buffered_data = self._stop_to_da_buffered.get(stop_id)
+            for buffered_id, fraction in buffered_data.iteritems():
+                value = self._buffered_da_taps.get(buffered_id, 0.0)
                 value += fraction * float(unique_users)
-                self._smeared_users_per_da[smeared_id] = value
+                self._buffered_users_per_da[buffered_id] = value
 
-        f = open("%s_smeared_users_per_pop.csv" % month, "w")
-        for da_id, smeared_users in self._smeared_users_per_da.iteritems():
+        f = open("%s_buffered_users_per_pop.csv" % month, "w")
+        for da_id, buffered_users in self._buffered_users_per_da.iteritems():
             da = self._daman.get_da(da_id)
             population = da.get_population()
 
-            users_per_pop = 100.0 * float(smeared_users)/float(population)
+            users_per_pop = 100.0 * float(buffered_users)/float(population)
             f.write("%d,%f\n" % (da_id, users_per_pop))
         f.close()
 
@@ -744,13 +772,15 @@ class Runner(object):
 
         print "valid stop IDs", len(self._valid_stop_ids)
 
-    def load_smeared_das(self):
+    def load_buffered_das(self):
 
         self._dataset = DATASET.JULY
         buffer_method = BUFFER_METHOD.DIAMOND_400
         intersect = Intersect()
 
-        all_stops = self._dataman.get_stops()
+        # buffer_man_532 = BufferManager(buffer_method="network_532", dataset=self._dataset)
+
+        all_stops = self._dataman.get_active_stops()
         # das = self._daman.get_das()
 
         try:
@@ -781,11 +811,11 @@ class Runner(object):
             for da_id, area in temp.iteritems():
                 data[da_id] = area / total_stop_area
 
-            self._stop_to_da_smeared[stop.get_id()] = data
+            self._stop_to_da_buffered[stop.get_id()] = data
 
             print "TOTAL AREA:::", total_stop_area
 
-        for stop_id, data in self._stop_to_da_smeared.iteritems():
+        for stop_id, data in self._stop_to_da_buffered.iteritems():
             print "STOP ID:", stop_id
             for da_id, fraction in data.iteritems():
                 print " DA_ID:", da_id, "FRACTION", fraction
@@ -793,7 +823,7 @@ class Runner(object):
 if __name__ == "__main__":
 
     runner = Runner(DATASET.JULY)
-    runner.load_smeared_das()
+    runner.load_buffered_das()
 
     runner.run("data/taps_sep_2018.csv")
 #     runner.run("data/taps_jan_2018.csv")

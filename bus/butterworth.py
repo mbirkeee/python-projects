@@ -111,6 +111,7 @@ def plot_butterworth_wait():
     plt.ylabel("Decay Value")
     plt.xlabel("Wait Time (minutes)")
     plt.subplots_adjust(left=0.1, right=.9, top=0.9, bottom=0.1)
+    plt.savefig('plot_scatterplot.png', bbox_inches='tight')
     plt.show()
 
 
@@ -123,6 +124,7 @@ def plot_butterworth():
 
     d = np.array(range(0, 500), dtype=np.float)
 
+    # fig, ax = plt.subplots(figsize=(10, 6))
     fig, ax = plt.subplots(figsize=(10, 6))
 
     for dpass, caption in dpass_data.iteritems():
@@ -136,20 +138,30 @@ def plot_butterworth():
 
         line, = ax.plot(d, result, label=caption)
 
-
     # Add the exponential decay:
     filter = Filter(2)
-
     result = []
     for dist in d:
         decay = filter.exp(dist)
         result.append(decay)
     line, = ax.plot(d, result, label="Exponential: -0.001(Distance)")
 
+    # Add the polynomial decay:
+    filter = Filter(1)
+    result = []
+
+    for dist in d:
+        decay = filter.poly(dist)
+        result.append(decay)
+
+    line, = ax.plot(d, result, label="Polynomial: 6th Ord. fitted to trip data")
+
     ax.legend(loc='lower left')
     plt.title("Decay vs. Distance")
     plt.ylabel("Decay Value")
     plt.xlabel("Distance (meters)")
+    plt.savefig('temp/plot_butterworth.png', bbox_inches='tight')
+
     plt.show()
 
 def plot_wait(norm=False):

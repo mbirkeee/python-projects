@@ -1282,13 +1282,13 @@ def test11():
     # 58 - tuned e2sfca - departs per hour
     # 59 - tuned e2sfca - departs per week
 
-    mode = 79
+    mode = 40
     h.set_mode(mode)
     h.run(force=True)
     h.to_shapefile()
 
     scores = h.get_da_scores()
-    h.write_da_score_csv("score_stop_count_%d.csv" % mode )
+    h.write_da_score_csv("score_filt_freq_july_%d.csv" % mode )
     # h.write_transit_ridership_csv("ridership_percentage.csv")
     # print repr(scores)
 

@@ -1,6 +1,7 @@
 bus/password.py
 bus/data
 bus/junk
+bus/scores_for_spss/*.csv
 *.pyc
 .DS_Store
 .idea

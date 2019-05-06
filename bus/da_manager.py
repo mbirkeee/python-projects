@@ -35,6 +35,10 @@ class Raster(object):
     def get_polygon(self):
         return self._polygon
 
+    def get_area(self):
+        p = self.get_polygon()
+        return p.get_area()
+
     def get_centroid(self):
         if self._centroid is None:
             self._centroid = self._polygon.get_centroid()
@@ -64,6 +68,7 @@ class DA(object):
         self._point_dict = {}
         self._polygon = None
         self._clipped_polygon = None
+        self._clipped_area = None
         self._population = None
         self._transit_users = None
         self._score = None
@@ -143,10 +148,17 @@ class DA(object):
         print "DA: %d rasters: %d" % (self.get_id(), len(self._rasters))
         return self._rasters
 
-    # def get_unclipped_area(self):
-    #     return self._polygon.get_area()
+    def get_area_orig(self):
+        polygon = self.get_polygon()
+        return polygon.get_area()
+
+    def set_clipped_area(self, area):
+        self._clipped_area = area
 
     def get_area(self):
+        if self._clipped_area is not None:
+            return self._clipped_area
+
         polygon = self.get_polygon()
         return polygon.get_area()
 
@@ -200,117 +212,69 @@ class DaData(object):
 
         self._da_dict = {}
 
-        # self._data = {}
-        # self._polygons = {}
-
         self.load_file("data/DA_polygon_points.csv")
         self.load_file_centroids("data/DA_centroids.csv")
         self.load_file_transit_data("data/2016_da_transit.csv")
-
-
-        self._clip_list = [
-            (40120939.687808506, 6734180.049213662, 33386759.638594843, 47110689),
-            (27565164.417724192, 13538499.169215938, 14026665.248508254, 47110691),
-            (22648336.60717187, 5626700.729742141, 17021635.87742973, 47110581),
-            (12066478.257345632, 8645823.480940143, 3420654.776405489, 47110664),
-            (8682532.895157836, 4612873.639667055, 4069659.2554907817, 47110397),
-            (5981952.573866785, 4541224.611850623, 1440727.9620161615, 47110699),
-            (5171295.089959195, 2683538.5774126346, 2487756.5125465603, 47110694),
-            (4989986.50603505, 3794544.6482810457, 1195441.8577540047, 47110524),
-            (3991756.613948376, 2554309.8354093027, 1437446.7785390732, 47110540),
-        ]
-
-
-        # This data can be used to clip DA polygons to get a much more realistic
-        # approximation of the populated areas
-        # self._clip_points = {
-        #     # This is the westside DA... e.g. near blairmore walmart
-        #     47110581 : [
-        #         (52.119256, -106.765271),
-        #         (52.141280, -106.765271),
-        #         (52.141280, -106.751404),
-        #         (52.119256, -106.751404)
-        #     ],
-        #     47110694 : [
-        #         (52.115015, -106.745332),
-        #         (52.104551, -106.745332),
-        #         (52.104551, -106.715892),
-        #         (52.115015, -106.715892)
-        #     ],
-        #     47110540 : [
-        #         (52.115085, -106.699720),
-        #         (52.106229, -106.699720),
-        #         (52.106229, -106.680867),
-        #         (52.115085, -106.680867),
-        #     ],
-        #     47110699 : [
-        #         (52.096483, -106.662102),
-        #         (52.070744, -106.662102),
-        #         (52.070744, -106.645623),
-        #         (52.096483, -106.645623)
-        #     ],
-        #     47110524 : [
-        #         (52.107555, -106.579190),
-        #         (52.083615, -106.579190),
-        #         (52.083615, -106.543656),
-        #         (52.107555, -106.543656)
-        #     ],
-        #     47110689 : [
-        #         (52.140231, -106.561423),
-        #         (52.120732, -106.561423),
-        #         (52.120732, -106.539879),
-        #         (52.140231, -106.539879)
-        #     ],
-        #     47110664 : [
-        #         (52.174050, -106.585627),
-        #         (52.157045, -106.585627),
-        #         (52.157045, -106.548548),
-        #         (52.174050, -106.548548)
-        #     ],
-        #     # North Industrial Area
-        #     47110691 : [
-        #         (52.180000, -106.691798),
-        #         (52.140824, -106.691798),
-        #         (52.140824, -106.620598),
-        #         (52.180000, -106.620598)
-        #     ],
-        #     # Airport
-        #     47110397 : [
-        #         (52.169926, -106.691456),
-        #         (52.156342, -106.691456),
-        #         (52.156342, -106.666565),
-        #         (52.169926, -106.666565)
-        #     ],
-        #     # Lakeview
-        #     47110147 : [
-        #         (52.096588, -106.605754),
-        #         (52.088705, -106.605754),
-        #         (52.088705, -106.586013),
-        #         (52.096588, -106.586013)
-        #     ]
-        # }
-        # self._clipping_polygons = {}
-        # self._clipped_polygons = {}
-        # self._make_clipping_polygons()
-        # self._clip()
-        #
-        # self._use_clipped_area()
+        self.load_file_clipped_areas("data/csv/clipped_da_areas_500m.csv")
 
         self._lat_saskatoon_min =   52.065626
         self._lat_saskatoon_max =   52.212493
         self._lng_saskatoon_min = -106.777544
         self._lng_saskatoon_max = -106.526575
 
-        # self._lat_saskatoon_min = 52.067740
-        # self._lat_saskatoon_max = 52.206957
-        # self._lng_saskatoon_min = -106.787424
-        # self._lng_saskatoon_max = -106.519849
-
         self._increments = {
             100 : {'lat' : .00089893575680, 'lng' :  .00146049608306}
         }
 
         self._all_rasters = None
+
+    def load_file_clipped_areas(self, filename):
+        """
+        This applies the clipped area to the DA polygons
+        """
+        count = 0
+        f = open(filename, "r")
+
+        result = []
+
+        for line in f:
+            count += 1
+            if count == 1: continue
+            line = line.strip()
+            parts=line.split(",")
+            da_id = int(parts[0].strip())
+            area_orig = float(parts[1].strip())
+            area_clipped = float(parts[2].strip())
+            # print da_id, area_orig, area_clipped
+            da = self.get_da(da_id)
+            # print "GOT DA, current area", da.get_area()
+            da.set_clipped_area(area_clipped)
+
+            difference = 100.0 * ( area_orig - area_clipped ) / area_orig
+
+            result.append((difference, da_id, area_orig, area_clipped))
+
+        f.close()
+
+        return
+
+        # This section makes a temp CVS file for inclusion in the thesis
+        result.sort(reverse=True)
+
+        f = open("temp.csv", "w")
+
+        for item in result:
+            print item
+            da_id = item[1]
+            difference = item[0]
+            diff_display = "%.2f" % difference
+            area_orig = item[2]
+            area_orig_display = "%.2f" % (area_orig/1000000.0)
+            area_clipped = item[3]
+            area_clipped_display = "%.2f" % (area_clipped/1000000.0)
+            f.write("%d,%s,%s,%s\n" % (da_id, area_orig_display, area_clipped_display, diff_display))
+
+        f.close()
 
     def get_saskatoon_bounding_box(self):
 
@@ -322,6 +286,14 @@ class DaData(object):
         return bb
 
     def get_all_rasters(self, stops):
+
+        from make_stop_intersections import BufferManager
+
+        buffer_man = BufferManager(buffer_method='network_400', dataset='july')
+
+        print "length stops:", len(stops)
+
+#        raise ValueError("temp stop")
 
         increments = self._increments.get(100)
         lat_inc = increments.get('lat')
@@ -351,19 +323,36 @@ class DaData(object):
                     p.add_point(Point(lat + lat_inc, lng))
 
                     centroid = p.get_centroid()
+
+                    found = False
                     for stop in stops:
+
                         distance_to_stop = centroid.get_distance(stop.get_point())
                         # print distance_to_stop
+
                         if distance_to_stop < 1000:
-                            self._all_rasters.append(Raster(None, None, p))
-                            raster_count += 1
-                            break
+
+                            stop.make_buffer("network_400", buffer_manager=buffer_man)
+                            buf = stop.get_buffer()
+
+                            if buf.intersect(p):
+                                print "raster intersects a buffer"
+                                found = True
+                                break
+
+                    if found:
+                        self._all_rasters.append(Raster(None, None, p))
+                        raster_count += 1
 
         return self._all_rasters
 
     def make_rasters(self, stops):
 
         all_rasters = self.get_all_rasters(stops)
+
+        print "Len of all rasters", len(all_rasters)
+
+        raise ValueError("temp stop")
 
         das = self.get_das()
 
@@ -1173,7 +1162,55 @@ def test4():
 
     print total_users/ 100.0 , total_pop, total_users/total_pop
 
+def test5():
+    """
+    Just check all the DA areas
+    """
+    daman = DaData()
+    das = daman.get_das()
+
+    total_raster_count = 0
+
+    result = []
+
+    areas_clipped = []
+    areas_orig = []
+
+    for da in das:
+        da_id = da.get_id()
+        area = da.get_area()
+
+        raster_area = 0
+        rasters = da.get_rasters(100)
+        for raster in rasters:
+            raster_area += raster.get_area()
+
+        if abs(area - raster_area) > 100:
+            print da_id, area, raster_area, da.get_area_orig()
+            raise ValueError("DA NOT CLIPPED!!!")
+
+    print "total rasters", total_raster_count
+
+    # f = open("clipped_da_areas_500m.csv", "w")
+    # f.write("da_id,area_orig,area_clipped\n")
+
+    # result.sort(reverse=True)
+    #
+    # for item in result:
+    #     print item
+    #     difference = item[0]
+    #     da_id = item[1]
+    #     area_orig = item[2]
+    #     area_clipped = item[3]
+
+        # if difference > 0.1:
+        #     f.write("%d,%f,%f\n" % (da_id, area_orig, area_clipped))
+
+ #   f.close()
+
 
 if __name__ == "__main__":
 
-    make_transit_user_shapefile()
+    test5()
+
+    # make_transit_user_shapefile()
