@@ -30,6 +30,9 @@ class Runner(object):
         self._buffer_method = args.buffer_method
         self._dataset = args.dataset
 
+        self._pop_sort_method = args.population
+        self._limit_result_count = args.limit
+
         # self._dataman = DataManager(self._dataset, link_route_shapes=False, link_stops=False)
         self._dataman = dataman_factory(self._dataset, link_route_shapes=False, link_stops=True)
 
@@ -102,7 +105,7 @@ class Runner(object):
         # plotter.add_polygon(saskatoon_bb)
 
         if self._da_id is None:
-            das = self._daman.get_das()
+            das = self._daman.get_das(population=self._pop_sort_method, limit=self._limit_result_count)
             file_name = "temp/maps/das_all.html"
 
         else:
@@ -114,6 +117,9 @@ class Runner(object):
             for da_id in self._da_list:
                 das.append(self._daman.get_da(da_id))
                 self.add_da(da_id, plotter, all_stops)
+
+        for da in das:
+            print "Plotting DA: %s" % repr(da)
 
         total_raster_count = 0
         for da in das:
@@ -132,14 +138,14 @@ class Runner(object):
             if self._marker_flag:
                 centroid = p.get_centroid()
                 title = "%d" % da.get_id()
-                hover = "hover"
+                hover = "pop: %s" % repr(da.get_population())
+
                 plotter.add_marker(centroid, title, hover)
 
             if self._raster_flag:
                 rasters = da.get_rasters(100)
                 for raster in rasters:
-
-                    print "DA ID %s RASTER ID %s" % (da.get_id(), raster.get_id())
+                    # print "DA ID %s RASTER ID %s" % (da.get_id(), raster.get_id())
 
                     p = raster.get_polygon()
                     p.set_attribute(ATTR.FILL_OPACITY, 0.1)
@@ -227,7 +233,8 @@ if __name__ == "__main__":
     parser.add_argument("-m", "--markers", help="Include stop markers (slow and messy)", required=False, action='store_true')
     parser.add_argument("-r", "--rasters", help="Include rasters", required=False, action='store_true')
     parser.add_argument("-b", "--buffer_method", help="Stop buffer method", required=False, type=str)
-
+    parser.add_argument("-p", "--population", help="Sort by Population (asc/desc)", required=False, type=str)
+    parser.add_argument("-l", "--limit", help="Limit to limit=X DAs", required=False, type=int)
     args = parser.parse_args()
 
     runner = Runner(args)

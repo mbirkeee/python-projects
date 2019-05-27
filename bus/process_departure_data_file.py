@@ -357,8 +357,9 @@ class Runner(object):
             # ----------------------------------------------------------------
             # Filter if on a "skip day"
             # ----------------------------------------------------------------
-            if date in self._skip_days:
-                continue
+
+            # if date in self._skip_days:
+            #     continue
 
             # Examine the time
             t_parts = t.split(":")
@@ -370,23 +371,24 @@ class Runner(object):
             # ----------------------------------------------------------------
             # Filter if not between 6AM and 9AM
             # ----------------------------------------------------------------
-            if minutes < 6*60 or minutes > 9*60:
-                wrong_time_count += 1
-                continue
+
+            # if minutes < 6*60 or minutes > 9*60:
+            #     wrong_time_count += 1
+            #    continue
 
             # ----------------------------------------------------------------
             # Filter if not a bus pass
             # ----------------------------------------------------------------
- #           if info.find("PassMultiridecard") < 0:
- #               continue
+
+            # if info.find("PassMultiridecard") < 0:
+            #     continue
 
             # ----------------------------------------------------------------
             # Filter if invalid bus pass
             # ----------------------------------------------------------------
-#            if bus_pass < 10000:
-#                print "PASS", bus_pass
-#                continue
-
+            # if bus_pass < 10000:
+            #    print "PASS", bus_pass
+            #    continue
 
 #            if stop in filter_stops:
 #                continue
@@ -816,10 +818,27 @@ class Runner(object):
             print "TOTAL AREA:::", total_stop_area
 
         for stop_id, data in self._stop_to_da_buffered.iteritems():
-            print "STOP ID:", stop_id
+            total = 0
+            # print "STOP ID:", stop_id
             for da_id, fraction in data.iteritems():
-                print " DA_ID:", da_id, "FRACTION", fraction
+                # print " DA_ID:", da_id, "FRACTION", fraction
+                total += fraction
+            print "STOP ID:", stop_id, total
 
+            # if total < 0.98:
+            #     for da_id, fraction in data.iteritems():
+            #         data[da_id] = fraction / total
+
+        for stop_id, data in self._stop_to_da_buffered.iteritems():
+            total = 0
+            # print "STOP ID:", stop_id
+            for da_id, fraction in data.iteritems():
+                # print " DA_ID:", da_id, "FRACTION", fraction
+                total += fraction
+            print "STOP ID FIXED:", stop_id, total
+
+
+        # raise ValueError("temp stop")
 if __name__ == "__main__":
 
     runner = Runner(DATASET.JULY)

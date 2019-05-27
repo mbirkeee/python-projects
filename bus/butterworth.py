@@ -138,13 +138,21 @@ def plot_butterworth():
 
         line, = ax.plot(d, result, label=caption)
 
-    # Add the exponential decay:
+    # Add the exponential (-0.001) decay:
     filter = Filter(2)
     result = []
     for dist in d:
         decay = filter.exp(dist)
         result.append(decay)
-    line, = ax.plot(d, result, label="Exponential: -0.001(Distance)")
+    line, = ax.plot(d, result, label="Exponential: -0.001 X Distance")
+
+    # Add the exponential decay:
+    filter = Filter(4)
+    result = []
+    for dist in d:
+        decay = filter.exp(dist)
+        result.append(decay)
+    line, = ax.plot(d, result, label="Exponential: -0.003 X Distance")
 
     # Add the polynomial decay:
     filter = Filter(1)

@@ -11,10 +11,10 @@ import scipy
 #DEPENDANT_VAR =  'jan_taps_per_stop'
 #DEPENDANT_VAR =  'sept_user_percentage'
 #DEPENDANT_VAR =  'jan_user_percentage'
-DEPENDANT_VAR = 'sept_buffered_taps_per_pop'
-#DEPENDANT_VAR = 'sept_buffered_users_per_pop'
+# DEPENDANT_VAR = 'sept_buffered_taps_per_pop'
+DEPENDANT_VAR = 'sept_buffered_users_per_pop'
 
-SCORE_VAR = 'score_filt_freq_july_66'
+SCORE_VAR = 'score_filt_freq_july_40'
 
 class Runner(object):
 
@@ -146,7 +146,7 @@ class Runner(object):
 
         count = 0
         f = open("temp/spss.csv")
-        lines = []
+        lines_raw = []
 
         for line in f:
             count += 1
@@ -162,12 +162,12 @@ class Runner(object):
                         self._score_col = i
 
             else:
-                lines.append(line.strip())
+                lines_raw.append(line.strip())
 
-        print "Considering %d of %d DAs" % (len(lines), (count - 1))
+        print "Considering %d of %d DAs" % (len(lines_raw), (count - 1))
         f.close()
-        lines = self.remove_outliers(lines)
-
+        lines = self.remove_outliers(lines_raw)
+        #lines = lines_raw
 
         print "Considering %d of %d DAs" % (len(lines), (count - 1))
 
@@ -262,14 +262,23 @@ class Runner(object):
 
         lines = self.remove_outliers(lines)
 
+        # for line in lines:
+        #     print line
+        # raise ValueError("temp stop")
+
         x = []
         y = []
 
+        print "Considering %d lines" % len(lines)
         for line in lines:
             parts = line.split(",")
 
-            x.append(self.my_float(parts[self._score_col]))
-            y.append(self.my_float(parts[self._dependant_col]))
+            # print parts
+            # print "score col",parts[self._score_col], self._score_col
+            # print "dep col", parts[self._dependant_col], self._dependant_col
+
+            y.append(self.my_float(parts[self._score_col]))
+            x.append(self.my_float(parts[self._dependant_col]))
 
         fig, ax = plt.subplots(figsize=(10, 6))
 
@@ -281,8 +290,8 @@ class Runner(object):
         plt.subplots_adjust(left=0.1, right=.9, top=0.9, bottom=0.1)
 
         plt.title("Taps per Person per DA vs. Accessibility Score")
-        plt.ylabel("Taps per Person per DA (%s)" % var2_name)
-        plt.xlabel("Accessibility Score (%s)" % var1_name)
+        plt.xlabel("Taps per Person per DA (%s)" % var2_name)
+        plt.ylabel("Accessibility Score (%s)" % var1_name)
         plt.savefig('plot_scatterplot.png', bbox_inches='tight')
 
         plt.show()

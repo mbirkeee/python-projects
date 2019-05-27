@@ -43,10 +43,11 @@ from my_utils import get_butterworth_decay
 class HeatmapColor(object):
     def __init__(self):
 
-        self._data = self.load_csv_file("CoolWarmUChar257.csv")
+        # TODO: Is this actually used?
+        self._data = self.load_csv_file("data/csv/CoolWarmUChar257.csv")
 
     def load_csv_file(self, filename):
-        f = open("CoolWarmUChar257.csv")
+        f = open(filename, "r")
         line_count = 0
 
         result = []
@@ -521,6 +522,10 @@ class Heatmap(object):
             self._da_man = DaData()
 
         raster_clip = self._mode_man.get_raster_clip()
+
+        print "This is the raster clip!!!", raster_clip
+        # raise ValueError("temp sttop")
+
         scoreman = ScoreManager2()
         for raster in self._raster_list:
             score = raster.get_score()
@@ -543,9 +548,10 @@ class Heatmap(object):
                     # print "log(%f) --> %f" % (old_score, score)
 
             elif score > clip_score:
+                print "NOT CLIPPING!!!!!!", score, clip_score
                 # pass
-                score = clip_score
-                clipped_count += 1
+                # score = clip_score
+                # clipped_count += 1
 
             # This is the area of the raster, not the DA! Don't get confused
             area = p.get_area()
@@ -1282,19 +1288,22 @@ def test11():
     # 58 - tuned e2sfca - departs per hour
     # 59 - tuned e2sfca - departs per week
 
-    mode = 40
+    mode = 35
     h.set_mode(mode)
     h.run(force=True)
     h.to_shapefile()
 
-    scores = h.get_da_scores()
-    h.write_da_score_csv("score_filt_freq_july_%d.csv" % mode )
+    # scores = h.get_da_scores()
+    # h.write_da_score_csv("scores_for_spss/score_coverage_july_%d.csv" % mode )
+    # h.write_da_score_csv("scores_for_spss/score_filt_coverage_july_%d.csv" % mode )
+    # h.write_da_score_csv("scores_for_spss/score_freq_july_%d.csv" % mode )
+    # h.write_da_score_csv("scores_for_spss/score_filt_freq_july_%d.csv" % mode )
+    h.write_da_score_csv("scores_for_spss/score_stop_count_july_%d.csv" % mode )
     # h.write_transit_ridership_csv("ridership_percentage.csv")
     # print repr(scores)
 
     # for item in scores:
     #     print item[0], ",", item[1]
-
 
 
     # plotter = RasterPlot()

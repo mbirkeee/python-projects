@@ -76,8 +76,8 @@ class Runner(object):
 
         print ave, std_dev
 
-        print "Pearsons R skewed", pearsonr(data, other)
-        print "Pearsons R natlog", pearsonr(data_ln, other_ln)
+        print "Pearsons R skewed", pearsonr(data, other), len(data)
+        print "Pearsons R natlog", pearsonr(data_ln, other_ln), len(data_ln)
 
         fig, ax = plt.subplots(figsize=(10, 6))
 
@@ -97,7 +97,7 @@ class Runner(object):
         plt.ylabel("Accessibility Score")
         plt.xlabel("Taps/Person")
         ax.scatter(data, other)
-
+        plt.savefig('plot_da_scatterplot.png', bbox_inches='tight')
         plt.show()
 
         fig, ax = plt.subplots(figsize=(10, 6))
@@ -105,10 +105,21 @@ class Runner(object):
         plt.title("Accessibility Score vs Taps/Person (Sept. 2018 Weekdays 6AM-9AM)")
         plt.ylabel("ln( Accessibility Score )")
         plt.xlabel("ln( Taps/Person )")
+        plt.savefig('plot_da_scatterplot_natlog.png', bbox_inches='tight')
+
         plt.show()
 
+    def plot_scores(self, file_name):
+
+        data = self.read_file(file_name, punt=0)
+
+        for k, v in data.iteritems():
+            print k, v
 
 if __name__ == "__main__":
 
     runner = Runner()
-    runner.plot("scores_for_spss/sept_buffered_taps_per_pop.csv", "scores_for_spss/score_filt_freq_july_83.csv")
+    # runner.plot("scores_for_spss/sept_taps_per_pop.csv", "scores_for_spss/score_filt_freq_july_40.csv")
+    runner.plot_scores("scores_for_spss/score_filt_freq_july_40.csv")
+
+    # runner.plot("scores_for_spss/sept_buffered_taps_per_pop.csv", "scores_for_spss/score_filt_freq_july_40.csv")

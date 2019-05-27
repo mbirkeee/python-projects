@@ -60,9 +60,12 @@ class Runner(object):
         self.load_statscan_headers("data/csv/statscan_da_data_headers.txt")
         self.load_statscan_data("data/csv/statscan_da_data.csv")
         self.load_da_scores("scores_for_spss")
+        self.load_da_scores("scores_for_spss/permanent")
+
         self.merge()
 
     def get_da_km2(self, da_id, value, divide_by_col=None):
+
         da = self._da_man.get_da(da_id)
         area = da.get_area()
         # print "da area", area

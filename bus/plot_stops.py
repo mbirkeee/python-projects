@@ -159,9 +159,9 @@ class Runner(object):
                 # buffer_p = stop.get_buffer()
                 # plotter.add_polygon(buffer_p)
 
-                # stop.make_buffer("network_532", buffer_manager=buffer_man_532)
-                # buffer_p = stop.get_buffer()
-                # plotter.add_polygon(buffer_p)
+                stop.make_buffer("network_532", buffer_manager=buffer_man_532)
+                buffer_p = stop.get_buffer()
+                plotter.add_polygon(buffer_p)
 
                 plotter.plot("temp/maps/stop_%d_buffer_%s_%s.html" % (stop.get_id(), self._buffer, self._dataset))
             else:

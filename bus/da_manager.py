@@ -457,8 +457,31 @@ class DaData(object):
         f.close()
         print "DaData: Loaded %d points from %s" % (count, file_name)
 
-    def get_das(self):
-        return [da for da in self._da_dict.itervalues()]
+    def get_das(self, population=None, limit=None):
+
+        da_list =  [da for da in self._da_dict.itervalues()]
+        if population is None:
+            return da_list
+
+        print "want to sort DAs by population"
+        s = []
+        for da in da_list:
+            # print repr(da)
+            pop = da.get_population()
+            s.append((pop, da))
+
+        if population == 'desc':
+            s = sorted(s)
+        else:
+            s = sorted(s, reverse=True)
+
+        for i, item in enumerate(s):
+            print i, item
+
+        if limit is not None:
+            s = s[:limit]
+
+        return [item[1] for item in s]
 
     def get_da(self, da_id):
         return self._da_dict.get(da_id)
