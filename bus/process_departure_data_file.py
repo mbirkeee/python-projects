@@ -372,26 +372,29 @@ class Runner(object):
             # Filter if not between 6AM and 9AM
             # ----------------------------------------------------------------
 
-            # if minutes < 6*60 or minutes > 9*60:
-            #     wrong_time_count += 1
-            #    continue
+            if minutes < 6*60 or minutes > 9*60:
+                wrong_time_count += 1
+                continue
 
             # ----------------------------------------------------------------
             # Filter if not a bus pass
             # ----------------------------------------------------------------
 
-            # if info.find("PassMultiridecard") < 0:
-            #     continue
+            if info.find("PassMultiridecard") < 0:
+                continue
 
             # ----------------------------------------------------------------
             # Filter if invalid bus pass
             # ----------------------------------------------------------------
-            # if bus_pass < 10000:
-            #    print "PASS", bus_pass
-            #    continue
+            if bus_pass < 10000:
+               print "PASS", bus_pass
+               continue
 
-#            if stop in filter_stops:
-#                continue
+            # ----------------------------------------------------------------
+            # Filter if in "filter stops"
+            # ----------------------------------------------------------------
+            if stop in filter_stops:
+                continue
 
             keep_count += 1
 
@@ -531,7 +534,7 @@ class Runner(object):
         f2_out.close()
         f3_out.close()
 
-        # Taps buffered accross neighbouring DAs
+        # Taps buffered across neighbouring DAs
         f = open("%s_buffered_taps_per_pop.csv" % month, "w")
         for da_id, buffered_taps in self._buffered_da_taps.iteritems():
             da = self._daman.get_da(da_id)
@@ -554,9 +557,9 @@ class Runner(object):
         for da_id, buffered_users in self._buffered_users_per_da.iteritems():
             da = self._daman.get_da(da_id)
             population = da.get_population()
-
             users_per_pop = 100.0 * float(buffered_users)/float(population)
             f.write("%d,%f\n" % (da_id, users_per_pop))
+
         f.close()
 
     def get_date_object(self, date_str):
@@ -819,12 +822,14 @@ class Runner(object):
 
         for stop_id, data in self._stop_to_da_buffered.iteritems():
             total = 0
-            # print "STOP ID:", stop_id
+            print "STOP ID:", stop_id
             for da_id, fraction in data.iteritems():
-                # print " DA_ID:", da_id, "FRACTION", fraction
+                print " DA_ID:", da_id, "FRACTION", fraction
                 total += fraction
             print "STOP ID:", stop_id, total
 
+        # raise  ValueError("temp stop")
+            # Not sure what is going on here??
             # if total < 0.98:
             #     for da_id, fraction in data.iteritems():
             #         data[da_id] = fraction / total
@@ -837,8 +842,8 @@ class Runner(object):
                 total += fraction
             print "STOP ID FIXED:", stop_id, total
 
-
         # raise ValueError("temp stop")
+
 if __name__ == "__main__":
 
     runner = Runner(DATASET.JULY)
