@@ -372,9 +372,9 @@ class Runner(object):
             # Filter if not between 6AM and 9AM
             # ----------------------------------------------------------------
 
-            if minutes < 6*60 or minutes > 9*60:
-                wrong_time_count += 1
-                continue
+            #if minutes < 6*60 or minutes > 9*60:
+            #    wrong_time_count += 1
+            #    continue
 
             # ----------------------------------------------------------------
             # Filter if not a bus pass
@@ -506,6 +506,17 @@ class Runner(object):
         f2_out = open("%s_taps_per_stop.csv" % month, "w")
         f3_out = open("%s_user_percentage.csv" % month, "w")
 
+        all_das = self._daman.get_das()
+        all_da_ids = [da.get_id() for da in all_das]
+        zero_da_ids = []
+        non_zero_das = [k for k in self._da_departures.iterkeys()]
+        for da_id in all_da_ids:
+            if da_id in non_zero_das:
+                continue
+            print "must add zeros DA", da_id
+            zero_da_ids.append(da_id)
+
+
         for da_id, depart_users in self._da_departures.iteritems():
             depart_count = len(depart_users)
             unique_users = len(list(set(depart_users)))
@@ -530,9 +541,19 @@ class Runner(object):
             f2_out.write("%d,%f\n" % (da_id, taps_per_stop))
             f3_out.write("%d,%f\n" % (da_id, user_percentage))
 
+        for da_id in zero_da_ids:
+            f_out.write("%d,0" % da_id)
+
         f_out.close()
         f2_out.close()
         f3_out.close()
+
+        for da in all_das:
+            da_id = da.get_id()
+            print da_id
+
+        print "da count", len(all_das)
+        raise ValueError("temp stop")
 
         # Taps buffered across neighbouring DAs
         f = open("%s_buffered_taps_per_pop.csv" % month, "w")

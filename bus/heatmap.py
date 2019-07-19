@@ -1273,7 +1273,7 @@ def test10():
 def test11():
 
     h = Heatmap()
-    h.set_dataset(DATASET.JULY)
+    h.set_dataset(DATASET.BRT)
     h.set_service_time("8:00")
     h.set_service_day(SERVICE.MWF)
 #    h1.set_time_str("8:14")
@@ -1288,7 +1288,7 @@ def test11():
     # 58 - tuned e2sfca - departs per hour
     # 59 - tuned e2sfca - departs per week
 
-    mode = 35
+    mode = 40 
     h.set_mode(mode)
     h.run(force=True)
     h.to_shapefile()
@@ -1297,8 +1297,8 @@ def test11():
     # h.write_da_score_csv("scores_for_spss/score_coverage_july_%d.csv" % mode )
     # h.write_da_score_csv("scores_for_spss/score_filt_coverage_july_%d.csv" % mode )
     # h.write_da_score_csv("scores_for_spss/score_freq_july_%d.csv" % mode )
-    # h.write_da_score_csv("scores_for_spss/score_filt_freq_july_%d.csv" % mode )
-    h.write_da_score_csv("scores_for_spss/score_stop_count_july_%d.csv" % mode )
+    h.write_da_score_csv("scores_for_spss/score_filt_freq_brt_%d.csv" % mode )
+    #h.write_da_score_csv("scores_for_spss/score_frequency_july_%d.csv" % mode )
     # h.write_transit_ridership_csv("ridership_percentage.csv")
     # print repr(scores)
 
@@ -1358,7 +1358,7 @@ if __name__ == "__main__":
     test11()
     raise ValueError("Done")
 
-    mode = 13
+    mode = 1
     d1 = DATASET.JULY
     d2 = DATASET.BRT_1
 
