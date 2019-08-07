@@ -239,13 +239,27 @@ class Heatmap(object):
         """
         Dump simple score files that can be incorporated into the SPSS CSV file.
         """
+        natlog_list = []
         f = open(filename, 'w')
         score_list = self.get_da_scores()
         for item in score_list:
             da_id = item[0]
             score = item[1]
             f.write("%d, %f\n" % (da_id, score))
+
+            try:
+                score_ln = math.log(score)
+                natlog_list.append(score_ln)
+            except Exception as err:
+                print "Error", repr(err)
+
+
+
         f.close()
+        print "MEAN LN", np.mean(natlog_list)
+        print "STD LN", np.std(natlog_list)
+
+        raise ValueError("temp stop")
 
     def to_da_csv(self, file_name=None):
 
@@ -1273,7 +1287,7 @@ def test10():
 def test11():
 
     h = Heatmap()
-    h.set_dataset(DATASET.BRT)
+    h.set_dataset(DATASET.JULY)
     h.set_service_time("8:00")
     h.set_service_day(SERVICE.MWF)
 #    h1.set_time_str("8:14")
@@ -1288,7 +1302,7 @@ def test11():
     # 58 - tuned e2sfca - departs per hour
     # 59 - tuned e2sfca - departs per week
 
-    mode = 40 
+    mode = 95 
     h.set_mode(mode)
     h.run(force=True)
     h.to_shapefile()
@@ -1297,7 +1311,8 @@ def test11():
     # h.write_da_score_csv("scores_for_spss/score_coverage_july_%d.csv" % mode )
     # h.write_da_score_csv("scores_for_spss/score_filt_coverage_july_%d.csv" % mode )
     # h.write_da_score_csv("scores_for_spss/score_freq_july_%d.csv" % mode )
-    h.write_da_score_csv("scores_for_spss/score_filt_freq_brt_%d.csv" % mode )
+    # h.write_da_score_csv("scores_for_spss/score_filt_freq_brt_%d.csv" % mode )
+    h.write_da_score_csv("scores_for_spss/score_july_mode_%d.csv" % mode )
     #h.write_da_score_csv("scores_for_spss/score_frequency_july_%d.csv" % mode )
     # h.write_transit_ridership_csv("ridership_percentage.csv")
     # print repr(scores)
