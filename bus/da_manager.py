@@ -352,7 +352,7 @@ class DaData(object):
 
         print "Len of all rasters", len(all_rasters)
 
-        raise ValueError("temp stop")
+        # raise ValueError("temp stop")
 
         das = self.get_das()
 
