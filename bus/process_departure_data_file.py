@@ -474,9 +474,7 @@ class Runner(object):
 
         f.close()
 
-
         print "Read %d records" % (count - 1)
-
         print "keep count", keep_count
 
         # print "bad stop (e.g., 9999) count:", bad_count
@@ -506,6 +504,7 @@ class Runner(object):
         f2_out = open("%s_taps_per_stop.csv" % month, "w")
         f3_out = open("%s_user_percentage.csv" % month, "w")
 
+        # Added this section to detect DAs with no taps
         all_das = self._daman.get_das()
         all_da_ids = [da.get_id() for da in all_das]
         zero_da_ids = []
@@ -515,7 +514,6 @@ class Runner(object):
                 continue
             print "must add zeros DA", da_id
             zero_da_ids.append(da_id)
-
 
         for da_id, depart_users in self._da_departures.iteritems():
             depart_count = len(depart_users)
@@ -542,7 +540,7 @@ class Runner(object):
             f3_out.write("%d,%f\n" % (da_id, user_percentage))
 
         for da_id in zero_da_ids:
-            f_out.write("%d,0" % da_id)
+            f_out.write("%d,0.0\n" % da_id)
 
         f_out.close()
         f2_out.close()

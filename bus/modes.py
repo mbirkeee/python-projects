@@ -50,7 +50,7 @@ class DECAY_METHOD(object):
     EXPONENTIAL_1   = "exp_1"
     EXPONENTIAL_2   = "exp_2"
     EXPONENTIAL_3   = "exp_3"
-    EXPONENTIAL_4   = "exp_4"
+    EXPONENTIAL_4   = "exp_4"   # This is -0.003
     POLY_1          = "poly_1"
 
 
@@ -734,6 +734,21 @@ MODE_DICT = {
         KEY.SCORE_NEAREST_ONLY  : False,
     },
 
+    95 : {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_532,
+        KEY.SCORE_METHOD        : SCORE_METHOD.STOP_COUNT
+    },
+
+    96 : {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_532,
+        KEY.SCORE_METHOD        : SCORE_METHOD.COVERAGE,
+    },
+
+    97 : {
+        KEY.BUFFER_METHOD       : BUFFER_METHOD.NETWORK_532,
+        KEY.SCORE_METHOD        : SCORE_METHOD.COVERAGE,
+        KEY.DISTANCE_DECAY      : DECAY_METHOD.EXPONENTIAL_4
+    },
 
     SPECIAL_MODE.TRANSIT_SCORE : {
         KEY.SCORE_METHOD        : SCORE_METHOD.TRANSIT_SCORE
