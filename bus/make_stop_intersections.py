@@ -101,6 +101,7 @@ class BufferManager(object):
             #     polygon.add_point(Point(item[0], item[1]))
 
             self._data[stop_id] = polygon
+            print "shape polygon area", polygon.get_area()
 
             if len(shape.parts) > 1:
                 print "Stop ID", stop_id, "parts", len(shape.parts)

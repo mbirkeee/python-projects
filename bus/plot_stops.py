@@ -79,6 +79,9 @@ class Runner(object):
                 buf = stop.get_buffer()
                 plotter.add_polygon(buf)
 
+                print "TEMP BREAK AFTER ONE STOP"
+                break
+
             polypoint.set_attribute(ATTR.FILL_OPACITY, 0.5)
             polypoint.set_attribute(ATTR.RADIUS, 60)
             plotter.add_polypoint(polypoint)

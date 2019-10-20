@@ -1287,7 +1287,9 @@ def test10():
 def test11():
 
     h = Heatmap()
-    h.set_dataset(DATASET.JULY)
+    h.set_dataset(DATASET.BRT_1)
+#    h.set_dataset(DATASET.JULY)
+#    h.set_dataset(DATASET.JULY)
     h.set_service_time("8:00")
     h.set_service_day(SERVICE.MWF)
 #    h1.set_time_str("8:14")
@@ -1302,7 +1304,7 @@ def test11():
     # 58 - tuned e2sfca - departs per hour
     # 59 - tuned e2sfca - departs per week
 
-    mode = 95 
+    mode = 27
     h.set_mode(mode)
     h.run(force=True)
     h.to_shapefile()
